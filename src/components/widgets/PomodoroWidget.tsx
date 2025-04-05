@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { getWidget } from '@/lib/widgetAPI';
 import { Timer, RotateCcw, Play, Pause } from 'lucide-react';
+import { WidgetState } from '@/lib/widgetAPI';
 
 // Helper function to format seconds into MM:SS
 const formatTime = (seconds: number): string => {
@@ -15,8 +16,14 @@ interface PomodoroWidgetProps {
   widgetName: string;
 }
 
+// Define the expected state shape for the Pomodoro widget
+interface PomodoroWidgetState {
+  timeLeft: number;
+  isRunning: boolean;
+}
+
 const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
-  const [state, setState] = useState({ timeLeft: 1500, isRunning: false });
+  const [state, setState] = useState<PomodoroWidgetState>({ timeLeft: 1500, isRunning: false });
   const widget = getWidget(widgetName);
 
   useEffect(() => {
@@ -26,12 +33,18 @@ const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
       
       // Get initial state
       const initialState = widget.getState();
-      setState(initialState);
+      setState({
+        timeLeft: initialState.timeLeft ?? 1500,
+        isRunning: initialState.isRunning ?? false
+      });
       
       // Setup an interval to poll for state changes
       const stateInterval = setInterval(() => {
         const currentState = widget.getState();
-        setState(currentState);
+        setState({
+          timeLeft: currentState.timeLeft ?? state.timeLeft,
+          isRunning: currentState.isRunning ?? state.isRunning
+        });
       }, 500);
       
       return () => clearInterval(stateInterval);
