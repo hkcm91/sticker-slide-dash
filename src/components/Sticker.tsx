@@ -1,8 +1,8 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
-import { Trash } from 'lucide-react';
+import { Trash, RotateCw } from 'lucide-react';
 
 interface StickerProps {
   sticker: StickerType;
@@ -11,6 +11,7 @@ interface StickerProps {
   isDraggable: boolean;
   className?: string;
   onDelete?: (sticker: StickerType) => void;
+  onUpdate?: (sticker: StickerType) => void;
 }
 
 const Sticker = ({ 
@@ -19,12 +20,25 @@ const Sticker = ({
   onClick, 
   isDraggable, 
   className,
-  onDelete 
+  onDelete,
+  onUpdate
 }: StickerProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [size, setSize] = useState(60); // Default size for placed stickers
+  const [size, setSize] = useState(sticker.size || 60); // Use sticker's size or default
+  const [rotation, setRotation] = useState(sticker.rotation || 0); // Use sticker's rotation or default
   const stickerRef = useRef<HTMLDivElement>(null);
+
+  // Effect to update the sticker in parent component when size or rotation changes
+  useEffect(() => {
+    if (sticker.placed && onUpdate) {
+      onUpdate({
+        ...sticker,
+        size,
+        rotation
+      });
+    }
+  }, [size, rotation, sticker.placed]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     setIsDragging(true);
@@ -71,6 +85,25 @@ const Sticker = ({
     }
   };
 
+  // Add keyboard event handler for rotation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isHovered && e.key.toLowerCase() === 'r') {
+        setRotation((prev) => (prev + 15) % 360);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isHovered]);
+
+  const handleRotate = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the widget
+    setRotation((prev) => (prev + 15) % 360);
+  };
+
   return (
     <div
       ref={stickerRef}
@@ -95,7 +128,9 @@ const Sticker = ({
               top: `${sticker.position.y}px`,
               width: `${size}px`,
               height: `${size}px`,
-              zIndex: 10
+              transform: `rotate(${rotation}deg)`,
+              zIndex: 10,
+              transition: 'transform 0.2s ease'
             } 
           : {}
       }
@@ -106,16 +141,32 @@ const Sticker = ({
           alt={sticker.name} 
           className="w-full h-full p-2" 
           draggable={false}
+          style={{ backgroundColor: 'transparent' }}
         />
         
-        {/* Delete button - only shown when hovering over placed stickers */}
-        {sticker.placed && isHovered && onDelete && (
-          <div 
-            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 cursor-pointer hover:bg-red-600 transition-colors z-20"
-            onClick={handleDelete}
-          >
-            <Trash size={12} />
-          </div>
+        {/* Controls - only shown when hovering over placed stickers */}
+        {sticker.placed && isHovered && (
+          <>
+            {/* Delete button */}
+            {onDelete && (
+              <div 
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 cursor-pointer hover:bg-red-600 transition-colors z-20"
+                onClick={handleDelete}
+                title="Delete sticker"
+              >
+                <Trash size={12} />
+              </div>
+            )}
+            
+            {/* Rotate button */}
+            <div 
+              className="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20"
+              onClick={handleRotate}
+              title="Rotate sticker (or press R)"
+            >
+              <RotateCw size={12} />
+            </div>
+          </>
         )}
       </div>
     </div>

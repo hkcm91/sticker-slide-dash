@@ -5,6 +5,8 @@ export interface Sticker {
   icon: string;
   position: { x: number; y: number };
   placed: boolean;
+  size?: number;
+  rotation?: number;
 }
 
 export interface WidgetData {

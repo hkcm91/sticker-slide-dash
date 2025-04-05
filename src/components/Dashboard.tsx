@@ -21,12 +21,12 @@ const starIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.
 const bookIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>');
 
 const initialStickers: StickerType[] = [
-  { id: '1', name: 'Heart', icon: heartIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '2', name: 'Home', icon: homeIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '3', name: 'Coffee', icon: coffeeIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '4', name: 'Sun', icon: sunIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '5', name: 'Star', icon: starIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '6', name: 'Book', icon: bookIcon, position: { x: 0, y: 0 }, placed: false },
+  { id: '1', name: 'Heart', icon: heartIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
+  { id: '2', name: 'Home', icon: homeIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
+  { id: '3', name: 'Coffee', icon: coffeeIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
+  { id: '4', name: 'Sun', icon: sunIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
+  { id: '5', name: 'Star', icon: starIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
+  { id: '6', name: 'Book', icon: bookIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
 ];
 
 const widgetDataMap: Record<string, WidgetData> = {
@@ -38,13 +38,51 @@ const widgetDataMap: Record<string, WidgetData> = {
   'Book': { title: 'Book Widget', content: 'Access your reading list and book notes.' },
 };
 
+// Function to add a custom widget to the widget data map
+export const addCustomWidget = (name: string, title: string, content: string) => {
+  widgetDataMap[name] = { title, content };
+};
+
 const Dashboard = () => {
-  const [stickers, setStickers] = useState<StickerType[]>(initialStickers);
+  const [stickers, setStickers] = useState<StickerType[]>([]);
   const [background, setBackground] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [activeSticker, setActiveSticker] = useState<StickerType | null>(null);
   const [isRepositioning, setIsRepositioning] = useState(false);
   const { toast } = useToast();
+  
+  // Load stickers and background from localStorage on component mount
+  useEffect(() => {
+    // Load stickers
+    const savedStickers = localStorage.getItem('stickers');
+    if (savedStickers) {
+      setStickers(JSON.parse(savedStickers));
+    } else {
+      setStickers(initialStickers);
+    }
+    
+    // Load background
+    const savedBackground = localStorage.getItem('background');
+    if (savedBackground) {
+      setBackground(savedBackground);
+    }
+  }, []);
+  
+  // Save stickers to localStorage whenever they change
+  useEffect(() => {
+    if (stickers.length > 0) {
+      localStorage.setItem('stickers', JSON.stringify(stickers));
+    }
+  }, [stickers]);
+  
+  // Save background to localStorage whenever it changes
+  useEffect(() => {
+    if (background) {
+      localStorage.setItem('background', background);
+    } else {
+      localStorage.removeItem('background');
+    }
+  }, [background]);
   
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
     e.dataTransfer.setData('stickerId', sticker.id);
@@ -81,7 +119,7 @@ const Dashboard = () => {
     } else {
       toast({
         title: "Sticker placed!",
-        description: "Click on the sticker to open the widget. Scroll to resize or delete it.",
+        description: "Click on the sticker to open the widget. Scroll to resize, R key to rotate, or delete it.",
         duration: 3000,
       });
     }
@@ -124,6 +162,14 @@ const Dashboard = () => {
       description: "The sticker has been sent back to the sidebar.",
       duration: 3000,
     });
+  };
+  
+  const handleUpdateSticker = (updatedSticker: StickerType) => {
+    setStickers(prevStickers => 
+      prevStickers.map(s => 
+        s.id === updatedSticker.id ? updatedSticker : s
+      )
+    );
   };
 
   // Get the widget data for the active sticker
@@ -168,6 +214,7 @@ const Dashboard = () => {
                   onClick={handleStickerClick}
                   isDraggable={true}
                   onDelete={handleDeleteSticker}
+                  onUpdate={handleUpdateSticker}
                 />
               ))}
             </div>
