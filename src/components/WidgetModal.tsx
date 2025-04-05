@@ -3,6 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
+import PomodoroWidgetUI from './widgets/PomodoroWidget';
 
 interface WidgetModalProps {
   isOpen: boolean;
@@ -14,6 +15,16 @@ interface WidgetModalProps {
 const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps) => {
   if (!sticker || !widgetData) return null;
 
+  // Determine if we have a custom component for this widget type
+  const renderWidgetContent = () => {
+    if (sticker.widgetType === 'Pomodoro') {
+      return <PomodoroWidgetUI widgetName="Pomodoro" />;
+    }
+    
+    // Default content if no special widget is available
+    return <div className="py-4">{widgetData.content}</div>;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -23,12 +34,12 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
             {widgetData.title}
           </DialogTitle>
           <DialogDescription>
-            This is a simple widget that will be expanded in the future.
+            {sticker.widgetType 
+              ? `This is a ${sticker.widgetType} widget with special functionality.` 
+              : "This is a simple widget that will be expanded in the future."}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          {widgetData.content}
-        </div>
+        {renderWidgetContent()}
       </DialogContent>
     </Dialog>
   );

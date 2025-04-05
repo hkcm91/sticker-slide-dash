@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { addWidget, createIcon } from '@/utils/widgetHelpers';
+import { registerWidget, WidgetAPI } from '@/lib/widgetAPI';
 
 /**
  * This is an example file showing how to create your own custom widget
@@ -11,17 +12,47 @@ import { addWidget, createIcon } from '@/utils/widgetHelpers';
 // 1. Create a custom icon for your widget
 const weatherIcon = createIcon('W', '#2196F3'); // 'W' for Weather, with blue background
 
-// 2. Add your widget to the dashboard
+// 2. Create your widget logic
+const weatherWidgetLogic: WidgetAPI = {
+  init() {
+    console.log('Weather widget initialized');
+  },
+  
+  getState() {
+    return {
+      temperature: 72,
+      condition: 'Sunny',
+      lastUpdated: new Date().toLocaleTimeString()
+    };
+  },
+  
+  setState(newState) {
+    // In a real widget, you would update your state here
+    console.log('Setting new state:', newState);
+  },
+  
+  trigger(action, payload) {
+    console.log(`Weather widget action: ${action}`, payload);
+    // In a real widget, you would handle actions here
+  }
+};
+
+// 3. Register your widget with the system
+registerWidget('Weather', weatherWidgetLogic);
+
+// 4. Add your widget to the dashboard
 // This makes it available in the dashboard's widget system
 addWidget('Weather', 'Weather Widget', 'Check the current weather in your area.');
 
-// 3. Create your custom widget component if you need more advanced functionality
+// 5. Create your custom widget component if you need more advanced functionality
 const WeatherWidget = () => {
+  const state = weatherWidgetLogic.getState();
+  
   return (
     <div className="p-4 bg-blue-100 rounded-lg">
       <h3 className="text-lg font-bold mb-2">Current Weather</h3>
-      <p>Sunny, 72°F</p>
-      <p className="text-sm text-gray-600 mt-2">Last updated: just now</p>
+      <p>{state.condition}, {state.temperature}°F</p>
+      <p className="text-sm text-gray-600 mt-2">Last updated: {state.lastUpdated}</p>
     </div>
   );
 };
@@ -32,8 +63,10 @@ export default WeatherWidget;
  * How to use:
  * 
  * 1. Create a file like this for your own widget
- * 2. Customize the icon, name, title, and content
- * 3. The widget will automatically be available in the dashboard
+ * 2. Define your widget logic using the WidgetAPI interface
+ * 3. Register your widget with the system
+ * 4. Add your widget to the dashboard
+ * 5. Create a UI component for your widget (optional)
  * 
- * That's it! No need to modify any other files.
+ * The widget will automatically be available in the dashboard!
  */

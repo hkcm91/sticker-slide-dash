@@ -7,6 +7,7 @@ import Sticker from './Sticker';
 import WidgetModal from './WidgetModal';
 import BackgroundUploader from './BackgroundUploader';
 import { useToast } from '@/hooks/use-toast';
+import pomodoroSticker from '@/widgets/PomodoroSticker';
 
 // Import cozy icons from lucide-react
 import { Heart, Home, Coffee, Sun, Star, BookOpen } from 'lucide-react';
@@ -27,6 +28,7 @@ const initialStickers: StickerType[] = [
   { id: '4', name: 'Sun', icon: sunIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
   { id: '5', name: 'Star', icon: starIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
   { id: '6', name: 'Book', icon: bookIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
+  pomodoroSticker,
 ];
 
 const widgetDataMap: Record<string, WidgetData> = {
@@ -36,6 +38,7 @@ const widgetDataMap: Record<string, WidgetData> = {
   'Sun': { title: 'Sun Widget', content: 'Check today\'s sunrise and sunset times.' },
   'Star': { title: 'Star Widget', content: 'View your starred and favorite items.' },
   'Book': { title: 'Book Widget', content: 'Access your reading list and book notes.' },
+  'Pomodoro': { title: 'Pomodoro Timer', content: 'A simple Pomodoro timer to help you stay focused.' },
 };
 
 // Function to add a custom widget to the widget data map
