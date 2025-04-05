@@ -81,7 +81,7 @@ const Dashboard = () => {
     } else {
       toast({
         title: "Sticker placed!",
-        description: "Click on the sticker to open the widget.",
+        description: "Click on the sticker to open the widget. Scroll to resize or delete it.",
         duration: 3000,
       });
     }
@@ -107,6 +107,23 @@ const Dashboard = () => {
 
   const handleBackgroundChange = (url: string | null) => {
     setBackground(url);
+  };
+
+  const handleDeleteSticker = (sticker: StickerType) => {
+    // Update the stickers array to mark the sticker as not placed
+    setStickers(prevStickers => 
+      prevStickers.map(s => 
+        s.id === sticker.id 
+          ? { ...s, placed: false, position: { x: 0, y: 0 } } 
+          : s
+      )
+    );
+    
+    toast({
+      title: "Sticker removed!",
+      description: "The sticker has been sent back to the sidebar.",
+      duration: 3000,
+    });
   };
 
   // Get the widget data for the active sticker
@@ -139,7 +156,7 @@ const Dashboard = () => {
             <p className="text-gray-600 mb-6">
               {placedStickers.length === 0 
                 ? "Drag stickers from the sidebar and drop them here" 
-                : "Click on stickers to open widgets, drag to reposition"}
+                : "Click on stickers to open widgets, drag to reposition, scroll to resize"}
             </p>
             
             <div className="mt-6 h-full">
@@ -149,7 +166,8 @@ const Dashboard = () => {
                   sticker={sticker}
                   onDragStart={handleDragStart}
                   onClick={handleStickerClick}
-                  isDraggable={true}  // Make placed stickers draggable
+                  isDraggable={true}
+                  onDelete={handleDeleteSticker}
                 />
               ))}
             </div>
