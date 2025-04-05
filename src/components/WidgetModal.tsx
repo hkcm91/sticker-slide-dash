@@ -48,10 +48,14 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
       const commonActions = ['start', 'stop', 'reset', 'refresh', 'increment', 'decrement', 'toggle'];
       commonActions.forEach(action => {
         try {
-          // We'll call trigger but check its return value without actually running side effects
-          const result = widget?.trigger(action, null);
-          if (result) {
-            actions.push(action);
+          // We'll need to check if the trigger method exists before trying to call it
+          if (widget?.trigger) {
+            // Store the result of trigger in a variable first
+            const result = widget.trigger(action, null);
+            // Then check if the result is truthy
+            if (result) {
+              actions.push(action);
+            }
           }
         } catch (e) {
           // Ignore errors as we're just probing for available actions
