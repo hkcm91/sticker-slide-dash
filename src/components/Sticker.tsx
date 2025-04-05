@@ -19,12 +19,17 @@ const Sticker = ({ sticker, onDragStart, onClick, isDraggable, className }: Stic
     setIsDragging(true);
     e.dataTransfer.setData('stickerId', sticker.id);
     
-    // Set the drag image to be the sticker element
+    // Calculate offset from the top-left corner of the sticker
     if (stickerRef.current) {
-      // Create a clone for the drag image
       const rect = stickerRef.current.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
       const offsetY = e.clientY - rect.top;
+      
+      // Store these offsets in the dataTransfer object
+      e.dataTransfer.setData('offsetX', String(offsetX));
+      e.dataTransfer.setData('offsetY', String(offsetY));
+      
+      // Set the drag image to be the sticker element
       e.dataTransfer.setDragImage(stickerRef.current, offsetX, offsetY);
     }
     

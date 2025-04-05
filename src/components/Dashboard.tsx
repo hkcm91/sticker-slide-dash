@@ -8,30 +8,31 @@ import WidgetModal from './WidgetModal';
 import BackgroundUploader from './BackgroundUploader';
 import { useToast } from '@/hooks/use-toast';
 
-// Import our custom icons
-import analyticsIcon from '../assets/icons/analytics-icon.svg';
-import calendarIcon from '../assets/icons/calendar-icon.svg';
-import weatherIcon from '../assets/icons/weather-icon.svg';
-import notesIcon from '../assets/icons/notes-icon.svg';
-import tasksIcon from '../assets/icons/tasks-icon.svg';
-import chartIcon from '../assets/icons/chart-icon.svg';
+// Import cozy icons from lucide-react
+import { Heart, Home, Coffee, Sun, Star, BookOpen } from 'lucide-react';
+
+// Create SVG strings from the Lucide icons
+const getIconSvg = (Icon: any) => {
+  const svgString = Icon.render().props.children.props.children;
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svgString}</svg>`;
+};
 
 const initialStickers: StickerType[] = [
-  { id: '1', name: 'Analytics', icon: analyticsIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '2', name: 'Calendar', icon: calendarIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '3', name: 'Weather', icon: weatherIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '4', name: 'Notes', icon: notesIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '5', name: 'Tasks', icon: tasksIcon, position: { x: 0, y: 0 }, placed: false },
-  { id: '6', name: 'Chart', icon: chartIcon, position: { x: 0, y: 0 }, placed: false },
+  { id: '1', name: 'Heart', icon: getIconSvg(Heart), position: { x: 0, y: 0 }, placed: false },
+  { id: '2', name: 'Home', icon: getIconSvg(Home), position: { x: 0, y: 0 }, placed: false },
+  { id: '3', name: 'Coffee', icon: getIconSvg(Coffee), position: { x: 0, y: 0 }, placed: false },
+  { id: '4', name: 'Sun', icon: getIconSvg(Sun), position: { x: 0, y: 0 }, placed: false },
+  { id: '5', name: 'Star', icon: getIconSvg(Star), position: { x: 0, y: 0 }, placed: false },
+  { id: '6', name: 'Book', icon: getIconSvg(BookOpen), position: { x: 0, y: 0 }, placed: false },
 ];
 
 const widgetDataMap: Record<string, WidgetData> = {
-  'Analytics': { title: 'Analytics Widget', content: 'Here you can view your analytics data.' },
-  'Calendar': { title: 'Calendar Widget', content: 'Plan your schedule and manage events.' },
-  'Weather': { title: 'Weather Widget', content: 'Check the latest weather forecast.' },
-  'Notes': { title: 'Notes Widget', content: 'Keep track of your ideas and notes.' },
-  'Tasks': { title: 'Tasks Widget', content: 'Manage your to-do list and track progress.' },
-  'Chart': { title: 'Chart Widget', content: 'Visualize your data with interactive charts.' },
+  'Heart': { title: 'Heart Widget', content: 'Track your favorites and loved items.' },
+  'Home': { title: 'Home Widget', content: 'Control your smart home devices.' },
+  'Coffee': { title: 'Coffee Widget', content: 'Find the best coffee shops nearby.' },
+  'Sun': { title: 'Sun Widget', content: 'Check today\'s sunrise and sunset times.' },
+  'Star': { title: 'Star Widget', content: 'View your starred and favorite items.' },
+  'Book': { title: 'Book Widget', content: 'Access your reading list and book notes.' },
 };
 
 const Dashboard = () => {
@@ -51,9 +52,13 @@ const Dashboard = () => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const stickerId = e.dataTransfer.getData('stickerId');
+    const offsetX = parseInt(e.dataTransfer.getData('offsetX') || '0', 10);
+    const offsetY = parseInt(e.dataTransfer.getData('offsetY') || '0', 10);
+    
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // Calculate position accounting for the offset
+    const x = e.clientX - rect.left - offsetX;
+    const y = e.clientY - rect.top - offsetY;
     
     setStickers(prevStickers => 
       prevStickers.map(sticker => 
