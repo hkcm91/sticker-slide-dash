@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -38,10 +39,13 @@ const Dashboard = () => {
   const [background, setBackground] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [activeSticker, setActiveSticker] = useState<StickerType | null>(null);
+  const [isRepositioning, setIsRepositioning] = useState(false);
   const { toast } = useToast();
   
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
     e.dataTransfer.setData('stickerId', sticker.id);
+    // Record if we're repositioning an already placed sticker
+    setIsRepositioning(sticker.placed);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -59,11 +63,22 @@ const Dashboard = () => {
       )
     );
     
-    toast({
-      title: "Sticker placed!",
-      description: "You can move it around or click to open the widget.",
-      duration: 3000,
-    });
+    // Show different toast messages based on whether we're placing or repositioning
+    if (isRepositioning) {
+      toast({
+        title: "Sticker repositioned!",
+        description: "Your sticker has been moved to a new position.",
+        duration: 3000,
+      });
+    } else {
+      toast({
+        title: "Sticker placed!",
+        description: "Click on the sticker to open the widget.",
+        duration: 3000,
+      });
+    }
+    
+    setIsRepositioning(false);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -116,7 +131,7 @@ const Dashboard = () => {
             <p className="text-gray-600 mb-6">
               {placedStickers.length === 0 
                 ? "Drag stickers from the sidebar and drop them here" 
-                : "Click on placed stickers to open their widgets"}
+                : "Click on stickers to open widgets, drag to reposition"}
             </p>
             
             <div className="mt-6 h-full">
@@ -126,7 +141,7 @@ const Dashboard = () => {
                   sticker={sticker}
                   onDragStart={handleDragStart}
                   onClick={handleStickerClick}
-                  isDraggable={false}
+                  isDraggable={true}  // Make placed stickers draggable
                 />
               ))}
             </div>

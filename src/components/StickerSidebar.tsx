@@ -24,11 +24,11 @@ const StickerSidebar = ({ stickers, onDragStart, onStickerClick }: StickerSideba
   return (
     <div 
       className={`bg-gray-50 border-r border-gray-200 h-full transition-all duration-300 flex flex-col ${
-        isCollapsed ? 'w-12' : 'w-64'
+        isCollapsed ? 'w-12' : 'w-24'
       }`}
     >
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        {!isCollapsed && <h2 className="font-bold text-lg">Stickers</h2>}
+        {!isCollapsed && <h2 className="font-bold text-sm">Stickers</h2>}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -39,7 +39,7 @@ const StickerSidebar = ({ stickers, onDragStart, onStickerClick }: StickerSideba
         </Button>
       </div>
 
-      <div className={`flex-1 overflow-y-auto p-2 ${isCollapsed ? 'hidden' : 'grid grid-cols-2 gap-3'}`}>
+      <div className={`flex-1 overflow-y-auto p-2 ${isCollapsed ? 'hidden' : 'grid grid-cols-1 gap-3'}`}>
         {availableStickers.map((sticker) => (
           <Sticker
             key={sticker.id}
@@ -47,6 +47,7 @@ const StickerSidebar = ({ stickers, onDragStart, onStickerClick }: StickerSideba
             onDragStart={onDragStart}
             onClick={onStickerClick}
             isDraggable={true}
+            className="mx-auto"
           />
         ))}
       </div>
@@ -57,7 +58,7 @@ const StickerSidebar = ({ stickers, onDragStart, onStickerClick }: StickerSideba
             className="w-8 h-24 bg-sticker-purple text-white flex items-center justify-center rounded-r-md cursor-pointer"
             onClick={toggleSidebar}
           >
-            <span className="transform rotate-90 whitespace-nowrap text-xs font-bold">OPEN STICKERS</span>
+            <span className="transform rotate-90 whitespace-nowrap text-xs font-bold">OPEN</span>
           </div>
         </div>
       )}

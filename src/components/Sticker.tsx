@@ -39,12 +39,12 @@ const Sticker = ({ sticker, onDragStart, onClick, isDraggable, className }: Stic
     <div
       ref={stickerRef}
       className={cn(
-        'select-none cursor-pointer p-3 rounded-md bg-white shadow-md flex flex-col items-center justify-center transition-all',
+        'select-none cursor-pointer p-3 rounded-full bg-white shadow-md flex items-center justify-center transition-all',
         isDragging ? 'opacity-50' : 'opacity-100',
-        isDraggable ? 'cursor-grab active:cursor-grabbing' : '',
+        isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         className
       )}
-      draggable={isDraggable}
+      draggable={isDraggable || sticker.placed}  // Make placed stickers draggable too
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={() => onClick(sticker)}
@@ -54,24 +54,20 @@ const Sticker = ({ sticker, onDragStart, onClick, isDraggable, className }: Stic
               position: 'absolute', 
               left: `${sticker.position.x}px`,
               top: `${sticker.position.y}px`,
-              width: '80px',
-              height: '80px',
+              width: '60px',
+              height: '60px',
               zIndex: 10
             } 
           : {}
       }
     >
-      <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center mb-1">
+      <div className="w-full h-full flex items-center justify-center">
         <img 
           src={sticker.icon} 
           alt={sticker.name} 
-          className="w-6 h-6" 
+          className="w-8 h-8" 
           draggable={false}
         />
-      </div>
-      <span className="text-xs font-medium mt-1">{sticker.name}</span>
-      <div className="absolute -bottom-2 -right-2 w-5 h-5 rounded-full bg-sticker-purple text-white text-xs flex items-center justify-center">
-        +
       </div>
     </div>
   );
