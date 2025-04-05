@@ -5,6 +5,7 @@ import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from './widgets/PomodoroWidget';
 import { getWidget } from '@/lib/widgetAPI';
+import { Button } from './ui/button';
 
 interface WidgetModalProps {
   isOpen: boolean;
@@ -40,6 +41,23 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
       const widget = getWidget(sticker.widgetType);
       const state = widget?.getState() || {};
       
+      // Get widget actions to display buttons
+      const actions: string[] = [];
+      
+      // Try to determine available actions by testing common ones
+      const commonActions = ['start', 'stop', 'reset', 'refresh', 'increment', 'decrement', 'toggle'];
+      commonActions.forEach(action => {
+        try {
+          // We'll call trigger but check its return value without actually running side effects
+          const result = widget?.trigger(action, null);
+          if (result) {
+            actions.push(action);
+          }
+        } catch (e) {
+          // Ignore errors as we're just probing for available actions
+        }
+      });
+      
       return (
         <div className="py-4">
           <div className="bg-gray-100 p-4 rounded-md mb-4">
@@ -48,6 +66,26 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
               {JSON.stringify(state, null, 2)}
             </pre>
           </div>
+          
+          {actions.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium mb-2">Actions:</h3>
+              <div className="flex flex-wrap gap-2">
+                {actions.map(action => (
+                  <Button 
+                    key={action}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => widget?.trigger(action)}
+                    className="capitalize"
+                  >
+                    {action}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <p className="text-sm text-gray-600">{widgetData.content}</p>
         </div>
       );

@@ -46,8 +46,10 @@ export const createSimpleWidget = (options: {
       // Check if this action is defined in the actions map
       if (actions[action]) {
         state = actions[action](state, payload);
+        return true;
       } else {
         console.warn(`Action '${action}' not defined for widget '${name}'`);
+        return false;
       }
     }
   };
@@ -105,4 +107,32 @@ export const createSimpleIcon = (
   }
   
   return canvas.toDataURL('image/png');
+};
+
+/**
+ * Processes a widget package ZIP file
+ * This is a placeholder implementation that would normally extract and process ZIP contents
+ */
+export const processWidgetPackage = async (zipFile: File, widgetName: string): Promise<Sticker | null> => {
+  try {
+    console.log(`Processing widget package: ${zipFile.name}`);
+    
+    // In a real implementation, we would:
+    // 1. Extract the ZIP file
+    // 2. Load the manifest.json
+    // 3. Process the widget code
+    // 4. Register the widget with the system
+    
+    // For now, just return a placeholder widget
+    return createSimpleWidget({
+      name: widgetName,
+      title: `${widgetName} from Package`,
+      description: `This widget was loaded from the ${zipFile.name} package.`,
+      icon: createSimpleIcon('📦', '#6200EA'),
+      initialState: { status: 'installed' }
+    });
+  } catch (error) {
+    console.error("Error processing widget package:", error);
+    return null;
+  }
 };

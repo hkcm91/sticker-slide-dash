@@ -11,6 +11,7 @@ export interface Sticker {
   rotation?: number;
   widgetType?: string; // Maps to a registered widget name
   isCustom?: boolean; // Flag for user-uploaded stickers
+  packageUrl?: string; // URL to widget package (for remote widgets)
 }
 
 export interface WidgetData {
@@ -36,4 +37,22 @@ export interface WidgetManifest {
     maxWidth?: number;
     maxHeight?: number;
   };
+  permissions?: {
+    apis?: Array<{
+      path: string;
+      methods: string[];
+    }>;
+    notifications?: boolean;
+    storage?: boolean;
+  };
+  settings?: Record<string, any>;
+}
+
+export interface UploadedWidget {
+  name: string;
+  manifest: WidgetManifest;
+  files: {
+    [path: string]: string | Blob;
+  };
+  icon?: string;
 }
