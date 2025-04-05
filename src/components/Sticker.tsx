@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
 import { Trash, RotateCw } from 'lucide-react';
+import Lottie from 'lottie-react';
 
 interface StickerProps {
   sticker: StickerType;
@@ -28,6 +29,21 @@ const Sticker = ({
   const [size, setSize] = useState(sticker.size || 60); // Use sticker's size or default
   const [rotation, setRotation] = useState(sticker.rotation || 0); // Use sticker's rotation or default
   const stickerRef = useRef<HTMLDivElement>(null);
+  const [lottieData, setLottieData] = useState<any>(null);
+  
+  // Load Lottie animation if available
+  useEffect(() => {
+    if (sticker.animation && sticker.animationType === 'lottie') {
+      try {
+        const animationData = typeof sticker.animation === 'string' && sticker.animation.startsWith('{') 
+          ? JSON.parse(sticker.animation) 
+          : sticker.animation;
+        setLottieData(animationData);
+      } catch (e) {
+        console.error('Failed to parse Lottie animation:', e);
+      }
+    }
+  }, [sticker.animation, sticker.animationType]);
 
   // Effect to update the sticker in parent component when size or rotation changes
   useEffect(() => {
@@ -104,6 +120,23 @@ const Sticker = ({
     setRotation((prev) => (prev + 15) % 360);
   };
 
+  // Render the sticker content based on type
+  const renderStickerContent = () => {
+    if (sticker.animationType === 'lottie' && lottieData) {
+      return <Lottie animationData={lottieData} loop={true} className="w-full h-full p-2" />;
+    } else {
+      return (
+        <img 
+          src={sticker.icon} 
+          alt={sticker.name} 
+          className="w-full h-full p-2" 
+          draggable={false}
+          style={{ backgroundColor: 'transparent' }}
+        />
+      );
+    }
+  };
+
   return (
     <div
       ref={stickerRef}
@@ -136,13 +169,7 @@ const Sticker = ({
       }
     >
       <div className="w-full h-full flex items-center justify-center relative">
-        <img 
-          src={sticker.icon} 
-          alt={sticker.name} 
-          className="w-full h-full p-2" 
-          draggable={false}
-          style={{ backgroundColor: 'transparent' }}
-        />
+        {renderStickerContent()}
         
         {/* Controls - only shown when hovering over placed stickers */}
         {sticker.placed && isHovered && (

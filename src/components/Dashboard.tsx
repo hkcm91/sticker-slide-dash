@@ -175,6 +175,33 @@ const Dashboard = () => {
     );
   };
 
+  // Handle the creation of a new custom sticker
+  const handleStickerCreated = (newSticker: StickerType) => {
+    setStickers(prevStickers => [...prevStickers, newSticker]);
+    
+    // Add a placeholder widget data for the custom sticker
+    if (!widgetDataMap[newSticker.name]) {
+      widgetDataMap[newSticker.name] = {
+        title: `${newSticker.name}`,
+        content: `This is a custom sticker you created. You can connect it to a widget by updating the widgetType property.`
+      };
+    }
+  };
+
+  // Handle permanently deleting a sticker
+  const handleStickerDelete = (sticker: StickerType) => {
+    // Only custom stickers can be permanently deleted
+    if (sticker.isCustom) {
+      setStickers(prevStickers => prevStickers.filter(s => s.id !== sticker.id));
+      
+      toast({
+        title: "Sticker deleted!",
+        description: "The custom sticker has been permanently removed.",
+        duration: 3000,
+      });
+    }
+  };
+
   // Get the widget data for the active sticker
   const activeWidgetData = activeSticker ? widgetDataMap[activeSticker.name] : null;
 
@@ -186,7 +213,9 @@ const Dashboard = () => {
       <StickerSidebar 
         stickers={stickers} 
         onDragStart={handleDragStart} 
-        onStickerClick={handleStickerClick} 
+        onStickerClick={handleStickerClick}
+        onStickerCreated={handleStickerCreated}
+        onStickerDelete={handleStickerDelete}
       />
       
       <div 

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from './widgets/PomodoroWidget';
+import { getWidget } from '@/lib/widgetAPI';
 
 interface WidgetModalProps {
   isOpen: boolean;
@@ -15,10 +16,41 @@ interface WidgetModalProps {
 const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps) => {
   if (!sticker || !widgetData) return null;
 
+  // Initialize the widget if it hasn't been yet
+  if (sticker.widgetType) {
+    const widget = getWidget(sticker.widgetType);
+    if (widget) {
+      try {
+        widget.init();
+      } catch (e) {
+        console.error(`Error initializing widget ${sticker.widgetType}:`, e);
+      }
+    }
+  }
+
   // Determine if we have a custom component for this widget type
   const renderWidgetContent = () => {
     if (sticker.widgetType === 'Pomodoro') {
       return <PomodoroWidgetUI widgetName="Pomodoro" />;
+    }
+    
+    // Check if there's a registered widget for this type
+    if (sticker.widgetType && getWidget(sticker.widgetType)) {
+      // This is a simple widget with API but no custom UI
+      const widget = getWidget(sticker.widgetType);
+      const state = widget?.getState() || {};
+      
+      return (
+        <div className="py-4">
+          <div className="bg-gray-100 p-4 rounded-md mb-4">
+            <h3 className="text-sm font-medium mb-2">Widget State:</h3>
+            <pre className="text-xs overflow-auto max-h-40">
+              {JSON.stringify(state, null, 2)}
+            </pre>
+          </div>
+          <p className="text-sm text-gray-600">{widgetData.content}</p>
+        </div>
+      );
     }
     
     // Default content if no special widget is available
@@ -30,13 +62,21 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <img src={sticker.icon} alt={sticker.name} className="w-6 h-6" />
+            <div className="w-6 h-6 flex items-center justify-center">
+              {sticker.animationType === 'lottie' ? (
+                <span className="text-xs">Lottie</span>
+              ) : (
+                <img src={sticker.icon} alt={sticker.name} className="w-6 h-6" />
+              )}
+            </div>
             {widgetData.title}
           </DialogTitle>
           <DialogDescription>
             {sticker.widgetType 
               ? `This is a ${sticker.widgetType} widget with special functionality.` 
-              : "This is a simple widget that will be expanded in the future."}
+              : sticker.isCustom
+                ? "This is a custom sticker. You can connect it to a widget by updating its widgetType property."
+                : "This is a simple widget that will be expanded in the future."}
           </DialogDescription>
         </DialogHeader>
         {renderWidgetContent()}
