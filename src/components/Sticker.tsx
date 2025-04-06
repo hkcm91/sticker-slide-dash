@@ -125,13 +125,21 @@ const Sticker = ({
     if (sticker.animationType === 'lottie' && lottieData) {
       return <Lottie animationData={lottieData} loop={true} className="w-full h-full p-2" />;
     } else {
+      // Force image refresh by using a key with the id and placed status
+      // This ensures the image is re-rendered when placed status changes
       return (
         <img 
+          key={`${sticker.id}-${sticker.placed ? 'placed' : 'tray'}`}
           src={sticker.icon} 
           alt={sticker.name} 
           className="w-full h-full p-2" 
           draggable={false}
           style={{ backgroundColor: 'transparent' }}
+          onError={(e) => {
+            console.error("Failed to load sticker image:", sticker.icon);
+            // Fallback to a generic icon
+            (e.target as HTMLImageElement).src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xOSAzSDVhMiAyIDAgMCAwLTIgMnYxNGEyIDIgMCAwIDAgMiAyaDE0YTIgMiAwIDAgMCAyLTJWNWEyIDIgMCAwIDAtMi0yWiIvPjxwYXRoIGQ9Ik04LjUgMTBhMS41IDEuNSAwIDEgMCAwLTMgMS41IDEuNSAwIDAgMCAwIDNaIi8+PHBhdGggZD0ibTIxIDE1LTMuODYtMy45NmEyIDIgMCAwIDAtMi44NCAwTDYgMjAiLz48L3N2Zz4=";
+          }}
         />
       );
     }

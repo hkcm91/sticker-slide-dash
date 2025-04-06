@@ -6,10 +6,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { ThemeToggle } from './ThemeToggle';
-import { Palette, Image, Sun } from 'lucide-react';
+import { Palette, Image, Sun, Upload, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
 
-const ThemeCustomizer = () => {
+interface ThemeCustomizerProps {
+  currentBackground: string | null;
+  onBackgroundChange: (url: string | null) => void;
+}
+
+const ThemeCustomizer = ({ currentBackground, onBackgroundChange }: ThemeCustomizerProps) => {
   const { theme, 
     updateSidebarStyle, 
     updateBackgroundStyle, 
@@ -18,6 +25,8 @@ const ThemeCustomizer = () => {
     updateBackgroundOpacity
   } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileInputRef, setFileInputRef] = useState<React.RefObject<HTMLInputElement>>(React.createRef());
 
   const gradientDirections = [
     { value: 'to-r', label: '→' },
@@ -42,7 +51,71 @@ const ThemeCustomizer = () => {
     { start: '#f2fce2', end: '#d3e4fd', name: 'Mint Breeze' },
     { start: '#fef7cd', end: '#fec6a1', name: 'Golden Hour' },
     { start: '#d6bcfa', end: '#9b87f5', name: 'Purple Dream' },
+    { start: '#ffc3a0', end: '#ffafbd', name: 'Soft Coral' },
+    { start: '#accbee', end: '#e7f0fd', name: 'Cool Blue' },
+    { start: '#d299c2', end: '#fef9d7', name: 'Pink Lemonade' },
   ];
+
+  // Background upload functionality
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    // Check file type
+    if (!file.type.match('image.*')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && typeof e.target.result === 'string') {
+        onBackgroundChange(e.target.result);
+        toast.success('Background updated successfully');
+        // Ensure we switch to image background style
+        updateBackgroundStyle('image');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveBackground = () => {
+    onBackgroundChange(null);
+    toast.success('Background removed');
+    // Revert to solid color background
+    updateBackgroundStyle('solid');
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -207,8 +280,58 @@ const ThemeCustomizer = () => {
             )}
             
             {theme.backgroundStyle === 'image' && (
-              <div className="text-sm text-muted-foreground">
-                <p>Use the background uploader in the bottom right of your dashboard to set an image.</p>
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Upload Image</h4>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={triggerFileInput}
+                    className="w-full flex items-center justify-center"
+                  >
+                    <Upload size={16} className="mr-2" />
+                    {currentBackground ? 'Change Background' : 'Upload Background'}
+                  </Button>
+                  
+                  {currentBackground && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleRemoveBackground}
+                      className="w-full flex items-center justify-center text-red-500 hover:text-red-600"
+                    >
+                      <X size={16} className="mr-2" />
+                      Remove Background
+                    </Button>
+                  )}
+                  
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  
+                  {currentBackground && (
+                    <div className="mt-2 relative h-20 rounded-md overflow-hidden border">
+                      <img 
+                        src={currentBackground} 
+                        alt="Current background" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <div 
+                    className="mt-2 border-2 border-dashed rounded-md p-4 text-center text-sm text-gray-500"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    Drag & drop an image here
+                  </div>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -233,6 +356,19 @@ const ThemeCustomizer = () => {
           </TabsContent>
         </Tabs>
       </PopoverContent>
+      
+      {isDragging && (
+        <div 
+          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+            <p className="text-lg font-medium">Drop your image here</p>
+          </div>
+        </div>
+      )}
     </Popover>
   );
 };

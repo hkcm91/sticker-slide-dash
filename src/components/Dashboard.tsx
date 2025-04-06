@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
 import StickerSidebar from './StickerSidebar';
 import Sticker from './Sticker';
 import WidgetModal from './WidgetModal';
-import BackgroundUploader from './BackgroundUploader';
 import ThemeCustomizer from './ThemeCustomizer';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
@@ -236,7 +236,7 @@ const Dashboard = () => {
   const placedStickers = stickers.filter(sticker => sticker.placed);
 
   const getBackgroundStyle = () => {
-    if (background) {
+    if (background && theme.backgroundStyle === 'image') {
       return {
         backgroundImage: `url(${background})`,
         backgroundSize: 'cover',
@@ -276,7 +276,7 @@ const Dashboard = () => {
       >
         <div 
           className={`absolute inset-0 ${
-            background ? 'bg-black/10' : 
+            background && theme.backgroundStyle === 'image' ? 'bg-black/10' : 
             theme.mode === 'dark' ? 'bg-gray-900' : 'bg-white'
           }`}
           style={{ opacity: theme.backgroundOpacity }}
@@ -317,12 +317,10 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <BackgroundUploader 
+        <ThemeCustomizer 
           onBackgroundChange={handleBackgroundChange} 
           currentBackground={background} 
         />
-        
-        <ThemeCustomizer />
       </div>
       
       {Array.from(openWidgets.entries()).map(([id, { sticker, isOpen }]) => {
