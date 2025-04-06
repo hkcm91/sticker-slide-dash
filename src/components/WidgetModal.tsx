@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -53,15 +53,17 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
       setWidgetState(state);
       
       // Detect available actions without triggering them
-      const actions = ['increment', 'decrement', 'reset', 'toggle'].filter(action => {
+      const actionTypes = ['increment', 'decrement', 'reset', 'toggle'];
+      const availableActionsList = actionTypes.filter(action => {
         try {
+          // Only check if trigger function exists, don't actually call it
           return typeof widget.trigger === 'function';
         } catch (e) {
           return false;
         }
       });
       
-      setAvailableActions(actions);
+      setAvailableActions(availableActionsList);
     } catch (e) {
       console.error(`Error initializing widget ${sticker.widgetType}:`, e);
     }
@@ -94,10 +96,9 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     }
   }, [sticker, iframeWidgetState]);
 
-  if (!sticker || !widgetData) return null;
-
-  // Function to handle widget actions
-  const handleWidgetAction = useCallback((action: string) => {
+  // Function to handle widget actions - defined outside of render 
+  // to ensure it doesn't cause re-renders or hook issues
+  const handleWidgetAction = (action: string) => {
     if (!sticker?.widgetType) return;
     
     const widget = getWidget(sticker.widgetType);
@@ -117,10 +118,12 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     } catch (e) {
       console.error(`Error triggering action ${action} on widget ${sticker.widgetType}:`, e);
     }
-  }, [sticker]);
+  };
 
-  // Memoize the renderWidgetContent function to prevent recreation on each render
-  const renderWidgetContent = useCallback(() => {
+  if (!sticker || !widgetData) return null;
+
+  // Render the widget content - this function should not use hooks
+  const renderWidgetContent = () => {
     if (!sticker) return null;
     
     if (sticker.widgetType === 'Pomodoro') {
@@ -255,7 +258,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     
     // Default content if no special widget is available
     return <div className="py-4">{widgetData.content}</div>;
-  }, [sticker, widgetData, widgetState, availableActions, actionHistory, handleWidgetAction]);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
