@@ -8,6 +8,7 @@ interface ToDoListState {
   count: number;
   active: boolean;
   lastUpdated: string;
+  lastReset?: string; // Add lastReset as optional property
 }
 
 // Initialize the state
@@ -98,7 +99,7 @@ const ToDoListWidget: WidgetAPI = {
 // Create and export the sticker
 export const toDoListSticker = createWidgetSticker({
   name: 'ToDoList',
-  letter: '📋',
+  letter: 'T', // Changed from emoji to a safe letter
   backgroundColor: '#6200EA',
   widgetAPI: ToDoListWidget,
   title: 'To Do List',

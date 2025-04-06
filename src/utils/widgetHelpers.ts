@@ -34,10 +34,31 @@ export const createIcon = (
   backgroundColor: string = '#4CAF50',
   textColor: string = 'white'
 ) => {
+  // Fix: Use only Latin1 characters in the SVG
+  // If we have emojis or other non-Latin1 characters, replace with a safe alternative
+  const safeLetter = letter.length > 0 ? (isSafeForBtoa(letter) ? letter : 'W') : 'W';
+  
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="10" fill="${backgroundColor}" />
-    <text x="12" y="16" font-family="Arial" font-size="12" fill="${textColor}" text-anchor="middle">${letter}</text>
+    <text x="12" y="16" font-family="Arial" font-size="12" fill="${textColor}" text-anchor="middle">${safeLetter}</text>
   </svg>`;
   
-  return "data:image/svg+xml;base64," + btoa(svg);
+  try {
+    return "data:image/svg+xml;base64," + btoa(svg);
+  } catch (error) {
+    console.error("Error encoding SVG:", error);
+    // Fallback to a simple SVG if encoding fails
+    return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${backgroundColor}" /></svg>`;
+  }
 };
+
+// Helper function to check if a string is safe for btoa
+function isSafeForBtoa(str: string): boolean {
+  // Check if the string contains only characters in the Latin1 range (0-255)
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) > 255) {
+      return false;
+    }
+  }
+  return true;
+}
