@@ -69,6 +69,18 @@ export default {
 					'purple-light': '#7c3aed',
 					blue: '#1e40af',
 					'blue-light': '#3b82f6',
+					// Add custom theme colors
+					peach: '#fde1d3',
+					lavender: '#e5deff',
+					mint: '#f2fce2',
+					sunshine: '#fef7cd',
+					coral: '#ffdee2',
+				},
+				theme: {
+					// Theme color variations for sidebar styles
+					default: '#9b87f5',
+					minimal: '#8e9196',
+					colorful: '#7e69ab',
 				}
 			},
 			borderRadius: {

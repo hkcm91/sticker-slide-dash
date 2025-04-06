@@ -24,6 +24,7 @@ interface StickerSidebarProps {
   onStickerCreated: (sticker: StickerType) => void;
   onStickerDelete: (sticker: StickerType) => void;
   onStickerUpdate?: (sticker: StickerType) => void;
+  sidebarStyle: 'default' | 'compact';
 }
 
 const StickerSidebar = ({ 
@@ -32,7 +33,8 @@ const StickerSidebar = ({
   onStickerClick, 
   onStickerCreated,
   onStickerDelete,
-  onStickerUpdate
+  onStickerUpdate,
+  sidebarStyle
 }: StickerSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

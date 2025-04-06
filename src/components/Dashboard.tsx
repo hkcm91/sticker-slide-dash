@@ -5,6 +5,8 @@ import StickerSidebar from './StickerSidebar';
 import Sticker from './Sticker';
 import WidgetModal from './WidgetModal';
 import BackgroundUploader from './BackgroundUploader';
+import ThemeCustomizer from './ThemeCustomizer';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 import pomodoroSticker from '@/widgets/PomodoroSticker';
 import { toDoListSticker } from '@/widgets/ToDoListWidget';
@@ -54,6 +56,7 @@ const Dashboard = () => {
   const [hasSeenHint, setHasSeenHint] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const { toast } = useToast();
+  const { theme } = useTheme();
   
   useEffect(() => {
     const savedStickers = localStorage.getItem('stickers');
@@ -232,8 +235,29 @@ const Dashboard = () => {
 
   const placedStickers = stickers.filter(sticker => sticker.placed);
 
+  const getBackgroundStyle = () => {
+    if (background) {
+      return {
+        backgroundImage: `url(${background})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+    
+    if (theme.backgroundStyle === 'gradient') {
+      const { startColor, endColor, direction } = theme.gradientOptions;
+      return {
+        background: `linear-gradient(${direction}, ${startColor}, ${endColor})`
+      };
+    }
+    
+    return {
+      backgroundColor: theme.backgroundColor
+    };
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className={`flex h-screen overflow-hidden ${theme.mode === 'dark' ? 'dark' : ''}`}>
       <StickerSidebar 
         stickers={stickers} 
         onDragStart={handleDragStart} 
@@ -241,19 +265,22 @@ const Dashboard = () => {
         onStickerCreated={handleStickerCreated}
         onStickerDelete={handleStickerDelete}
         onStickerUpdate={handleUpdateSticker}
+        sidebarStyle={theme.sidebarStyle}
       />
       
       <div 
-        className="flex-1 relative overflow-hidden"
+        className="flex-1 relative overflow-hidden transition-all duration-300"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        style={background ? {
-          backgroundImage: `url(${background})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        } : {}}
+        style={getBackgroundStyle()}
       >
-        <div className={`absolute inset-0 ${background ? 'bg-black/10' : 'bg-white'}`}>
+        <div 
+          className={`absolute inset-0 ${
+            background ? 'bg-black/10' : 
+            theme.mode === 'dark' ? 'bg-gray-900' : 'bg-white'
+          }`}
+          style={{ opacity: theme.backgroundOpacity }}
+        >
           {showHint && !hasSeenHint && (
             <div className="absolute bottom-8 right-8 z-10 animate-fade-in">
               <Alert className="w-72 bg-white/90 backdrop-blur-sm border-purple-200 shadow-lg">
@@ -294,6 +321,8 @@ const Dashboard = () => {
           onBackgroundChange={handleBackgroundChange} 
           currentBackground={background} 
         />
+        
+        <ThemeCustomizer />
       </div>
       
       {Array.from(openWidgets.entries()).map(([id, { sticker, isOpen }]) => {
