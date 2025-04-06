@@ -92,16 +92,37 @@ export default {
 				'slide-out-left': {
 					'0%': { transform: 'translateX(0)' },
 					'100%': { transform: 'translateX(-100%)' }
+				},
+				'pulse': {
+					'0%, 100%': { 
+						opacity: '1',
+						transform: 'scale(1)'
+					},
+					'50%': { 
+						opacity: '0.7',
+						transform: 'scale(1.05)'
+					}
+				},
+				'sparkle': {
+					'0%, 100%': { 
+						transform: 'scale(1) rotate(0deg)',
+						opacity: '1'
+					},
+					'50%': { 
+						transform: 'scale(1.2) rotate(15deg)',
+						opacity: '0.7'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'slide-in-left': 'slide-in-left 0.3s ease-out',
-				'slide-out-left': 'slide-out-left 0.3s ease-out'
+				'slide-out-left': 'slide-out-left 0.3s ease-out',
+				'pulse': 'pulse 3s ease-in-out infinite',
+				'sparkle': 'sparkle 2s ease-in-out infinite'
 			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

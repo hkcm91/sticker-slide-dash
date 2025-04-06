@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
-import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { processWidgetPackage } from '@/utils/widgetMaster';
 import { useToast } from '@/hooks/use-toast';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 
 interface StickerSidebarProps {
   stickers: StickerType[];
@@ -228,75 +229,90 @@ const StickerSidebar = ({
 
   return (
     <div 
-      className={`bg-gray-50 border-r border-gray-200 h-full transition-all duration-300 flex flex-col ${
+      className={`bg-gradient-to-br from-purple-50 to-blue-50 border-r border-purple-200 h-full transition-all duration-300 flex flex-col ${
         isCollapsed ? 'w-12' : 'w-72'
       }`}
     >
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        {!isCollapsed && <h2 className="font-bold text-sm">Stickers</h2>}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className={`ml-auto rounded-full bg-sticker-purple text-white hover:bg-sticker-purple-light`}
-          onClick={toggleSidebar}
-        >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </Button>
-      </div>
-
-      {!isCollapsed && (
-        <div className="p-2">
-          <StickerUploader onStickerCreated={onStickerCreated} />
-        </div>
-      )}
-
       {isCollapsed ? (
         <div className="flex-1 flex items-center justify-center">
-          <div 
-            className="w-8 h-24 bg-sticker-purple text-white flex items-center justify-center rounded-r-md cursor-pointer"
+          <button 
+            className="group h-32 w-10 focus:outline-none"
             onClick={toggleSidebar}
+            aria-label="Open sticker tray"
           >
-            <span className="transform rotate-90 whitespace-nowrap text-xs font-bold">OPEN</span>
-          </div>
+            <div className="relative overflow-hidden h-full w-full">
+              <div className="absolute inset-0 bg-gradient-to-b from-sticker-purple to-sticker-blue rounded-r-xl shadow-md transform transition-transform duration-300 group-hover:scale-105">
+                <div className="h-full w-full flex items-center justify-center">
+                  <ChevronRight className="text-white animate-pulse" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center rotate-12 transform group-hover:rotate-6 transition-transform duration-300">
+                  <Sparkles size={14} className="text-sticker-purple" />
+                </div>
+              </div>
+            </div>
+          </button>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col">
-          <div className="p-2 mb-2 bg-gray-100">
-            <h3 className="text-sm font-medium px-2 py-1">All Stickers</h3>
+        <>
+          <div className="p-4 border-b border-purple-200 bg-gradient-to-r from-sticker-purple to-sticker-blue shadow-sm flex items-center justify-between">
+            <h2 className="font-bold text-sm text-white flex items-center">
+              <Sparkles size={16} className="mr-2 animate-pulse" />
+              <span className="tracking-wide">Stickers</span>
+            </h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full bg-white/20 text-white hover:bg-white/30"
+              onClick={toggleSidebar}
+            >
+              <ChevronLeft size={16} />
+            </Button>
+          </div>
+
+          <div className="p-2">
+            <StickerUploader onStickerCreated={onStickerCreated} />
           </div>
           
-          <ScrollArea className="flex-1">
-            <div className="p-2 grid grid-cols-3 gap-3">
-              {availableStickers.map((sticker) => (
-                <div key={sticker.id} className="relative group flex flex-col items-center">
-                  <div className="relative">
-                    <Sticker
-                      sticker={sticker}
-                      onDragStart={onDragStart}
-                      onClick={() => handleStickerClick(sticker)}
-                      isDraggable={true}
-                      className="mx-auto sticker-in-tray"
-                    />
-                  </div>
-                  <p className="text-xs text-center mt-1 truncate w-full">{sticker.name}</p>
-                </div>
-              ))}
-              {availableStickers.length === 0 && (
-                <div className="col-span-3 text-center text-gray-500 text-xs mt-4">
-                  No stickers available.
-                  <br />
-                  Create one using the button above!
-                </div>
-              )}
+          <div className="flex-1 flex flex-col">
+            <div className="p-2 mb-2 bg-purple-100/50 backdrop-blur-sm">
+              <h3 className="text-sm font-medium px-2 py-1 text-sticker-purple">All Stickers</h3>
             </div>
-          </ScrollArea>
-        </div>
+            
+            <ScrollArea className="flex-1">
+              <div className="p-2 grid grid-cols-3 gap-3">
+                {availableStickers.map((sticker) => (
+                  <div key={sticker.id} className="relative group flex flex-col items-center">
+                    <div className="relative">
+                      <Sticker
+                        sticker={sticker}
+                        onDragStart={onDragStart}
+                        onClick={() => handleStickerClick(sticker)}
+                        isDraggable={true}
+                        className="mx-auto sticker-in-tray hover:scale-110 transition-transform duration-200"
+                      />
+                    </div>
+                    <p className="text-xs text-center mt-1 truncate w-full">{sticker.name}</p>
+                  </div>
+                ))}
+                {availableStickers.length === 0 && (
+                  <div className="col-span-3 text-center text-purple-500 text-xs mt-4">
+                    No stickers available.
+                    <br />
+                    Create one using the button above!
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </>
       )}
 
       <Sheet open={isEditing} onOpenChange={setIsEditing}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent className="sm:max-w-md bg-gradient-to-br from-white to-purple-50 border-l border-purple-200">
           <SheetHeader>
-            <SheetTitle>Edit Sticker</SheetTitle>
+            <SheetTitle className="text-sticker-purple flex items-center gap-2">
+              <Sparkles size={18} className="text-sticker-purple" /> Edit Sticker
+            </SheetTitle>
             <SheetDescription>
               Make changes to your sticker. Click save when you're done.
             </SheetDescription>
@@ -305,12 +321,14 @@ const StickerSidebar = ({
           {currentlyEditing && (
             <div className="py-4 space-y-6">
               <div className="flex justify-center mb-4">
-                <Avatar className="w-20 h-20">
+                <Avatar className="w-20 h-20 border-2 border-purple-200 shadow-md">
                   <AvatarImage 
                     src={previewUrl || currentlyEditing.icon} 
                     alt="Sticker preview" 
                   />
-                  <AvatarFallback>{editName.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-gradient-to-br from-sticker-purple to-sticker-blue text-white">
+                    {editName.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
               </div>
               
@@ -454,7 +472,7 @@ const StickerSidebar = ({
             </Button>
             <div className="flex-1"></div>
             <Button variant="outline" onClick={handleCloseEdit}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={processingPackage}>
+            <Button onClick={handleSaveEdit} disabled={processingPackage} className="bg-sticker-purple hover:bg-sticker-purple-light">
               {processingPackage ? "Processing..." : "Save changes"}
             </Button>
           </SheetFooter>
@@ -462,7 +480,7 @@ const StickerSidebar = ({
       </Sheet>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white border border-purple-100">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
