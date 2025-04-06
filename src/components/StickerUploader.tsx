@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Upload, PackageOpen, Image } from 'lucide-react';
+import { Plus, Upload, PackageOpen, Image, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { Sticker } from '@/types/stickers';
@@ -37,8 +36,17 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   const [widgetIconFile, setWidgetIconFile] = useState<File | null>(null);
   const [widgetIconPreview, setWidgetIconPreview] = useState<string | null>(null);
   const [processingPackage, setProcessingPackage] = useState(false);
+  const [isUrlInput, setIsUrlInput] = useState(false);
+  const [iconUrl, setIconUrl] = useState('');
 
   const { toast } = useToast();
+
+  const toggleInputMethod = () => {
+    setIsUrlInput(!isUrlInput);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setIconUrl('');
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,11 +111,55 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     setWidgetZipFile(file);
   };
 
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIconUrl(e.target.value);
+  };
+
+  const loadFromUrl = async () => {
+    if (!iconUrl) {
+      toast({
+        title: "URL required",
+        description: "Please enter a valid URL for your image or Lottie animation.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Check if it's a Lottie JSON URL
+      const isLottieJson = iconUrl.endsWith('.json') || iconUrl.includes('lottiefiles');
+      setIsLottie(isLottieJson);
+      
+      if (isLottieJson) {
+        // For Lottie animations, we need to fetch the actual JSON
+        const response = await fetch(iconUrl);
+        if (!response.ok) throw new Error('Failed to fetch Lottie animation');
+        const lottieData = await response.text();
+        setPreviewUrl(lottieData);
+      } else {
+        // For regular images, we can just use the URL directly
+        setPreviewUrl(iconUrl);
+      }
+      
+      toast({
+        title: "Resource loaded",
+        description: "The image or animation from URL has been loaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error loading from URL:", error);
+      toast({
+        title: "Error loading resource",
+        description: "Failed to load the image or animation from the provided URL.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmitSimpleSticker = () => {
-    if (!name.trim() || !selectedFile || !previewUrl) {
+    if (!name.trim() || (!selectedFile && !previewUrl)) {
       toast({
         title: "Missing information",
-        description: "Please provide a name and upload an image or Lottie file.",
+        description: "Please provide a name and upload an image or Lottie file, or enter a URL.",
         variant: "destructive",
       });
       return;
@@ -123,6 +175,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
         size: 60,
         rotation: 0,
         isCustom: true,
+        description: '',
       };
 
       if (isLottie) {
@@ -267,6 +320,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     setWidgetIconPreview(null);
     setActiveTab('simple');
     setProcessingPackage(false);
+    setIsUrlInput(false);
+    setIconUrl('');
   };
 
   return (
@@ -310,17 +365,45 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                   </div>
                   
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="file" className="text-right">File</Label>
+                    <Label htmlFor="file" className="text-right">Image</Label>
                     <div className="col-span-3">
-                      <Input
-                        id="file"
-                        type="file"
-                        onChange={handleFileChange}
-                        accept=".png,.jpg,.jpeg,.gif,.svg,.json"
-                        className="col-span-3"
-                      />
+                      <div className="flex justify-end mb-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={toggleInputMethod}
+                        >
+                          {isUrlInput ? <Upload size={14} className="mr-1" /> : <Link size={14} className="mr-1" />}
+                          {isUrlInput ? "File Upload" : "URL Upload"}
+                        </Button>
+                      </div>
+                      
+                      {isUrlInput ? (
+                        <div className="flex gap-2">
+                          <Input
+                            id="icon-url"
+                            type="url"
+                            value={iconUrl}
+                            onChange={handleUrlChange}
+                            placeholder="Enter image or Lottie URL"
+                            className="flex-1"
+                          />
+                          <Button size="sm" onClick={loadFromUrl}>Load</Button>
+                        </div>
+                      ) : (
+                        <Input
+                          id="file"
+                          type="file"
+                          onChange={handleFileChange}
+                          accept=".png,.jpg,.jpeg,.gif,.svg,.json"
+                          className="col-span-3"
+                        />
+                      )}
+                      
                       <p className="text-xs text-gray-500 mt-1">
-                        Supports: PNG, JPG, GIF, SVG, Lottie JSON
+                        {isUrlInput 
+                          ? "Enter a URL for an image or Lottie animation (.json)"
+                          : "Supports: PNG, JPG, GIF, SVG, Lottie JSON"}
                       </p>
                     </div>
                   </div>

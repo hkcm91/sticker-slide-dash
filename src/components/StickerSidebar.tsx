@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
-import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { processWidgetPackage } from '@/utils/widgetMaster';
+import { useToast } from '@/hooks/use-toast';
 
 interface StickerSidebarProps {
   stickers: StickerType[];
@@ -45,6 +46,10 @@ const StickerSidebar = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [processingPackage, setProcessingPackage] = useState(false);
   const [showCodeEditor, setShowCodeEditor] = useState(false);
+  const [iconUrl, setIconUrl] = useState('');
+  const [isUrlInputVisible, setIsUrlInputVisible] = useState(false);
+  
+  const { toast } = useToast();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -65,6 +70,8 @@ const StickerSidebar = ({
     setSelectedFile(null);
     setPreviewUrl(null);
     setWidgetZipFile(null);
+    setIconUrl('');
+    setIsUrlInputVisible(false);
   };
 
   // Handle file change for image upload
@@ -95,6 +102,56 @@ const StickerSidebar = ({
     }
     
     setWidgetZipFile(file);
+  };
+
+  // Handle URL input for icons/lotties
+  const handleIconUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIconUrl(e.target.value);
+  };
+
+  // Toggle URL input visibility
+  const toggleUrlInput = () => {
+    setIsUrlInputVisible(!isUrlInputVisible);
+  };
+
+  // Load image from URL
+  const loadImageFromUrl = async () => {
+    if (!iconUrl) {
+      toast({
+        title: "URL required",
+        description: "Please enter a valid URL for your image or Lottie animation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Determine if it's likely a Lottie JSON URL
+      const isLottieUrl = iconUrl.endsWith('.json') || iconUrl.includes('lottiefiles');
+      
+      if (isLottieUrl) {
+        // For Lottie JSON, we need to fetch the JSON data
+        const response = await fetch(iconUrl);
+        if (!response.ok) throw new Error('Failed to fetch Lottie animation');
+        const lottieData = await response.text();
+        setPreviewUrl(lottieData);
+      } else {
+        // For regular images, we can just use the URL directly
+        setPreviewUrl(iconUrl);
+      }
+      
+      toast({
+        title: "Image loaded",
+        description: "The image from URL has been loaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error loading image from URL:", error);
+      toast({
+        title: "Error loading image",
+        description: "Failed to load the image from the provided URL.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Save edited sticker changes
@@ -158,6 +215,7 @@ const StickerSidebar = ({
   // Handle deleting the current sticker
   const handleDeleteSticker = () => {
     if (currentlyEditing) {
+      console.log("Deleting sticker:", currentlyEditing);
       onStickerDelete(currentlyEditing);
       setIsDeleteDialogOpen(false);
       handleCloseEdit();
@@ -175,6 +233,8 @@ const StickerSidebar = ({
     setWidgetCode('');
     setWidgetZipFile(null);
     setShowCodeEditor(false);
+    setIconUrl('');
+    setIsUrlInputVisible(false);
   };
 
   return (
@@ -288,16 +348,45 @@ const StickerSidebar = ({
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="sticker-image">Image</Label>
-                <Input
-                  id="sticker-image"
-                  type="file"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="w-full"
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="sticker-image">Image</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={toggleUrlInput}
+                    className="flex items-center gap-1"
+                  >
+                    <Link size={14} />
+                    {isUrlInputVisible ? "Use File Upload" : "Use URL"}
+                  </Button>
+                </div>
+                
+                {isUrlInputVisible ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="icon-url"
+                      type="url"
+                      value={iconUrl}
+                      onChange={handleIconUrlChange}
+                      placeholder="Enter image or Lottie URL"
+                      className="flex-1"
+                    />
+                    <Button size="sm" onClick={loadImageFromUrl}>Load</Button>
+                  </div>
+                ) : (
+                  <Input
+                    id="sticker-image"
+                    type="file"
+                    onChange={handleFileChange}
+                    accept="image/*,.json"
+                    className="w-full"
+                  />
+                )}
+                
                 <p className="text-xs text-gray-500">
-                  Upload a new image (optional)
+                  {isUrlInputVisible 
+                    ? "Enter a URL for an image or Lottie animation (.json)" 
+                    : "Upload a new image or Lottie animation (optional)"}
                 </p>
               </div>
               
