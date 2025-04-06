@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
@@ -236,18 +235,14 @@ const StickerSidebar = ({
       {isCollapsed ? (
         <div className="flex-1 flex items-center justify-center">
           <button 
-            className="group h-32 w-10 focus:outline-none"
+            className="group p-2 focus:outline-none"
             onClick={toggleSidebar}
             aria-label="Open sticker tray"
           >
-            <div className="relative overflow-hidden h-full w-full">
-              <div className="absolute inset-0 bg-gradient-to-b from-sticker-purple to-sticker-blue rounded-r-xl shadow-md transform transition-transform duration-300 group-hover:scale-105">
-                <div className="h-full w-full flex items-center justify-center">
-                  <ChevronRight className="text-white animate-pulse" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center rotate-12 transform group-hover:rotate-6 transition-transform duration-300">
-                  <Sparkles size={14} className="text-sticker-purple" />
-                </div>
+            <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+              <ChevronRight size={16} className="text-sticker-purple" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-300 rounded-full flex items-center justify-center rotate-12 transform group-hover:rotate-6 transition-transform duration-300">
+                <Sparkles size={8} className="text-sticker-purple" />
               </div>
             </div>
           </button>

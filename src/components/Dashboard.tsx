@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -9,12 +8,11 @@ import BackgroundUploader from './BackgroundUploader';
 import { useToast } from '@/hooks/use-toast';
 import pomodoroSticker from '@/widgets/PomodoroSticker';
 import { toDoListSticker } from '@/widgets/ToDoListWidget';
-
-// Import cozy icons from lucide-react
+import { LightbulbIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Heart, Home, Coffee, Sun, Star, BookOpen } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
-// Create base64 encoded SVG strings for each icon
-// This method doesn't rely on the Lucide React component's render method
 const heartIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>');
 const homeIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>');
 const coffeeIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>');
@@ -53,6 +51,8 @@ const Dashboard = () => {
   const [background, setBackground] = useState<string | null>(null);
   const [openWidgets, setOpenWidgets] = useState<Map<string, { sticker: StickerType, isOpen: boolean }>>(new Map());
   const [isRepositioning, setIsRepositioning] = useState(false);
+  const [hasSeenHint, setHasSeenHint] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -66,6 +66,22 @@ const Dashboard = () => {
     const savedBackground = localStorage.getItem('background');
     if (savedBackground) {
       setBackground(savedBackground);
+    }
+
+    const hasSeenHintBefore = localStorage.getItem('hasSeenHint');
+    if (hasSeenHintBefore) {
+      setHasSeenHint(true);
+    } else {
+      const timer = setTimeout(() => {
+        setShowHint(true);
+        setTimeout(() => {
+          setShowHint(false);
+          setHasSeenHint(true);
+          localStorage.setItem('hasSeenHint', 'true');
+        }, 5000);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
   }, []);
   
@@ -238,13 +254,25 @@ const Dashboard = () => {
         } : {}}
       >
         <div className={`absolute inset-0 ${background ? 'bg-black/10' : 'bg-white'}`}>
+          {showHint && !hasSeenHint && (
+            <div className="absolute bottom-8 right-8 z-10 animate-fade-in">
+              <Alert className="w-72 bg-white/90 backdrop-blur-sm border-purple-200 shadow-lg">
+                <LightbulbIcon className="h-4 w-4 text-yellow-500 mr-2" />
+                <AlertDescription className="text-sm text-gray-700">
+                  Drag stickers from the sidebar and drop them here to create your custom dashboard
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
           <div className="p-6">
-            <h1 className="text-2xl font-bold mb-2">Sticker Dashboard</h1>
-            <p className="text-gray-600 mb-6">
-              {placedStickers.length === 0 
-                ? "Drag stickers from the sidebar and drop them here" 
-                : "Click on stickers to open widgets, drag to reposition, scroll to resize"}
-            </p>
+            {placedStickers.length === 0 && (
+              <div className="h-full flex items-center justify-center opacity-40">
+                <div className="text-center text-gray-400">
+                  <Sparkles className="h-12 w-12 mx-auto mb-2 animate-pulse" />
+                </div>
+              </div>
+            )}
             
             <div className="mt-6 h-full">
               {placedStickers.map(sticker => (
