@@ -144,6 +144,8 @@ const Sticker = ({
         'select-none cursor-pointer rounded-full flex items-center justify-center transition-all',
         isDragging ? 'opacity-50' : 'opacity-100',
         isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
+        className?.includes('sticker-in-tray') && !sticker.placed ? 
+          'border-4 border-white shadow-md hover:shadow-lg transition-all duration-200 bg-white' : '',
         className
       )}
       draggable={isDraggable || sticker.placed}  // Make placed stickers draggable too

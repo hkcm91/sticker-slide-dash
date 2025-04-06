@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
@@ -57,7 +58,7 @@ const StickerSidebar = ({
     setCurrentlyEditing(sticker);
     setEditName(sticker.name);
     setEditDescription(sticker.description || '');
-    setWidgetCode('');
+    setWidgetCode(sticker.widgetCode || '');
     setIsEditing(true);
     
     // Reset file states
@@ -224,7 +225,7 @@ const StickerSidebar = ({
                     onDragStart={onDragStart}
                     onClick={() => handleStickerClick(sticker)}
                     isDraggable={true}
-                    className="mx-auto"
+                    className="mx-auto sticker-in-tray" // Added sticker-in-tray class
                   />
                   <p className="text-xs text-center mt-1 truncate w-full">{sticker.name}</p>
                 </div>
