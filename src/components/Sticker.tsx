@@ -35,8 +35,9 @@ const Sticker = ({
   useEffect(() => {
     if (sticker.animation && sticker.animationType === 'lottie') {
       try {
-        const animationData = typeof sticker.animation === 'string' && sticker.animation.startsWith('{') 
-          ? JSON.parse(sticker.animation) 
+        // Handle both string JSON and object formats
+        const animationData = typeof sticker.animation === 'string' 
+          ? (sticker.animation.startsWith('{') ? JSON.parse(sticker.animation) : sticker.animation)
           : sticker.animation;
         setLottieData(animationData);
       } catch (e) {
@@ -153,7 +154,7 @@ const Sticker = ({
         isDragging ? 'opacity-50' : 'opacity-100',
         isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         className?.includes('sticker-in-tray') && !sticker.placed ? 
-          'border-4 border-white shadow-md hover:shadow-lg transition-all duration-200 bg-white' : '',
+          'border-4 border-white/80 shadow-md hover:shadow-lg transition-all duration-200 bg-white/90' : '',
         className
       )}
       draggable={isDraggable || sticker.placed}  // Make placed stickers draggable too
@@ -187,7 +188,7 @@ const Sticker = ({
             {/* Return to tray button (Previously Delete button) */}
             {onDelete && (
               <div 
-                className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20"
+                className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20 shadow-md"
                 onClick={handleDelete}
                 title="Return to tray"
               >
@@ -197,7 +198,7 @@ const Sticker = ({
             
             {/* Rotate button */}
             <div 
-              className="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20"
+              className="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20 shadow-md"
               onClick={handleRotate}
               title="Rotate sticker (or press R)"
             >

@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
-import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link, Sparkles, HardDrive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,8 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { processWidgetPackage } from '@/utils/widgetMaster';
 import { useToast } from '@/hooks/use-toast';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import BackupRestoreData from './BackupRestoreData';
 
-// Changed the type definition here to match ThemeContext
 interface StickerSidebarProps {
   stickers: StickerType[];
   onDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => void;
@@ -26,6 +25,7 @@ interface StickerSidebarProps {
   onStickerCreated: (sticker: StickerType) => void;
   onStickerDelete: (sticker: StickerType) => void;
   onStickerUpdate?: (sticker: StickerType) => void;
+  onImportStickers?: (stickers: StickerType[]) => void;
   sidebarStyle: 'default' | 'minimal' | 'colorful';
 }
 
@@ -36,6 +36,7 @@ const StickerSidebar = ({
   onStickerCreated,
   onStickerDelete,
   onStickerUpdate,
+  onImportStickers,
   sidebarStyle
 }: StickerSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -157,7 +158,19 @@ const StickerSidebar = ({
     };
     
     if (previewUrl) {
-      updatedSticker.icon = previewUrl;
+      if (isUrlInputVisible && iconUrl.endsWith('.json')) {
+        updatedSticker.icon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiPjwvY2lyY2xlPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PC9zdmc+';
+        updatedSticker.animation = previewUrl;
+        updatedSticker.animationType = 'lottie';
+      } else if (selectedFile?.type === 'application/json' || selectedFile?.name.endsWith('.json')) {
+        updatedSticker.icon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiPjwvY2lyY2xlPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PC9zdmc+';
+        updatedSticker.animation = previewUrl;
+        updatedSticker.animationType = 'lottie';
+      } else {
+        updatedSticker.icon = previewUrl;
+        updatedSticker.animation = undefined;
+        updatedSticker.animationType = undefined;
+      }
     }
 
     if (currentlyEditing.widgetType && widgetCode.trim()) {
@@ -230,11 +243,41 @@ const StickerSidebar = ({
     setIsUrlInputVisible(false);
   };
 
+  const handleImportStickers = (importedStickers: StickerType[]) => {
+    if (onImportStickers) {
+      onImportStickers(importedStickers);
+    }
+  };
+
+  const getSidebarClasses = () => {
+    switch (sidebarStyle) {
+      case 'minimal':
+        return 'bg-white/60 backdrop-blur-md border-r border-gray-200/50';
+      case 'colorful':
+        return 'bg-gradient-to-br from-purple-100/80 to-blue-100/80 backdrop-blur-md border-r border-purple-200/50';
+      case 'default':
+      default:
+        return 'bg-gradient-to-br from-purple-50/90 to-blue-50/90 backdrop-blur-md border-r border-purple-200/30';
+    }
+  };
+
+  const getHeaderClasses = () => {
+    switch (sidebarStyle) {
+      case 'minimal':
+        return 'border-b border-gray-200/50 bg-gradient-to-r from-gray-100/80 to-gray-50/80 shadow-sm';
+      case 'colorful':
+        return 'border-b border-purple-200/50 bg-gradient-to-r from-violet-400/80 to-purple-500/80 shadow-sm';
+      case 'default':
+      default:
+        return 'border-b border-purple-200/30 bg-gradient-to-r from-sticker-purple/90 to-sticker-blue/90 shadow-sm';
+    }
+  };
+
   return (
     <div 
-      className={`bg-gradient-to-br from-purple-50 to-blue-50 border-r border-purple-200 h-full transition-all duration-300 flex flex-col ${
+      className={`h-full transition-all duration-300 flex flex-col ${
         isCollapsed ? 'w-12' : 'w-72'
-      }`}
+      } ${getSidebarClasses()}`}
     >
       {isCollapsed ? (
         <div className="flex-1 flex items-center justify-center">
@@ -243,7 +286,7 @@ const StickerSidebar = ({
             onClick={toggleSidebar}
             aria-label="Open sticker tray"
           >
-            <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+            <div className="flex items-center justify-center w-8 h-8 bg-white/80 rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-105">
               <ChevronRight size={16} className="text-sticker-purple" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-300 rounded-full flex items-center justify-center rotate-12 transform group-hover:rotate-6 transition-transform duration-300">
                 <Sparkles size={8} className="text-sticker-purple" />
@@ -253,7 +296,7 @@ const StickerSidebar = ({
         </div>
       ) : (
         <>
-          <div className="p-4 border-b border-purple-200 bg-gradient-to-r from-sticker-purple to-sticker-blue shadow-sm flex items-center justify-between">
+          <div className={`p-4 flex items-center justify-between ${getHeaderClasses()}`}>
             <h2 className="font-bold text-sm text-white flex items-center">
               <Sparkles size={16} className="mr-2 animate-pulse" />
               <span className="tracking-wide">Stickers</span>
@@ -268,12 +311,22 @@ const StickerSidebar = ({
             </Button>
           </div>
 
-          <div className="p-2">
-            <StickerUploader onStickerCreated={onStickerCreated} />
+          <div className="p-2 flex flex-wrap gap-2">
+            <div className="w-full">
+              <StickerUploader onStickerCreated={onStickerCreated} />
+            </div>
+            <div className="w-full flex justify-end">
+              {onImportStickers && (
+                <BackupRestoreData 
+                  stickers={stickers} 
+                  onImportStickers={handleImportStickers} 
+                />
+              )}
+            </div>
           </div>
           
           <div className="flex-1 flex flex-col">
-            <div className="p-2 mb-2 bg-purple-100/50 backdrop-blur-sm">
+            <div className="p-2 mb-2 bg-purple-100/30 backdrop-blur-sm">
               <h3 className="text-sm font-medium px-2 py-1 text-sticker-purple">All Stickers</h3>
             </div>
             
@@ -307,7 +360,7 @@ const StickerSidebar = ({
       )}
 
       <Sheet open={isEditing} onOpenChange={setIsEditing}>
-        <SheetContent className="sm:max-w-md bg-gradient-to-br from-white to-purple-50 border-l border-purple-200">
+        <SheetContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-purple-50/95 backdrop-blur-md border-l border-purple-200/50 shadow-xl">
           <SheetHeader>
             <SheetTitle className="text-sticker-purple flex items-center gap-2">
               <Sparkles size={18} className="text-sticker-purple" /> Edit Sticker
@@ -479,7 +532,7 @@ const StickerSidebar = ({
       </Sheet>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="bg-white border border-purple-100">
+        <AlertDialogContent className="bg-white/95 backdrop-blur-md border border-purple-100 shadow-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -3,7 +3,7 @@ export interface Sticker {
   id: string;
   name: string;
   icon: string; // URL/data URL for static images
-  animation?: string; // Lottie animation JSON string or URL
+  animation?: string | object; // Lottie animation JSON string/object or URL
   animationType?: 'lottie' | 'gif'; // Type of animation
   position: { x: number; y: number };
   placed: boolean;

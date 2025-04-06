@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -379,23 +378,23 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     <>
       <Button 
         onClick={() => setIsOpen(true)} 
-        className="w-full mb-3 bg-sticker-purple text-white hover:bg-sticker-purple-light"
+        className="w-full mb-3 bg-sticker-purple text-white hover:bg-sticker-purple-light shadow-sm hover:shadow-md transition-all"
       >
         <Plus className="mr-2" size={16} />
         Create Sticker
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden p-0 sticker-uploader-dialog">
-          <DialogHeader className="px-6 pt-6 pb-4 dialog-header">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden p-0 sticker-uploader-dialog bg-white/95 backdrop-blur-md border border-purple-100 shadow-xl">
+          <DialogHeader className="px-6 pt-6 pb-4 dialog-header bg-gradient-to-r from-sticker-purple/90 to-sticker-blue/90 text-white">
             <DialogTitle className="text-xl">Create Custom Sticker or Widget</DialogTitle>
-            <DialogDescription className="text-base mt-1">
+            <DialogDescription className="text-base mt-1 text-white/80">
               Create a simple sticker, a widget with custom actions, or upload a widget package.
             </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="simple" value={activeTab} onValueChange={setActiveTab} className="w-full sticker-uploader-tabs">
-            <TabsList className="w-full grid grid-cols-3 p-1 bg-muted/20">
+            <TabsList className="w-full grid grid-cols-3 p-1 mb-2 bg-muted/20">
               <TabsTrigger value="simple" className="sticker-uploader-tab flex items-center gap-2">
                 <ImagePlus size={16} />
                 <span>Simple Sticker</span>
@@ -412,7 +411,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
             
             <ScrollArea className="h-[65vh] px-6">
               <TabsContent value="simple" className="sticker-uploader-content mt-6 space-y-6">
-                <Card>
+                <Card className="border border-purple-100/50 bg-white/70 backdrop-blur-sm shadow-sm">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Create a Simple Sticker</CardTitle>
                     <CardDescription>
@@ -461,7 +460,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                             </div>
                           ) : (
                             <div 
-                              className={`file-upload-area ${isDragActive ? 'active' : ''}`}
+                              className={`file-upload-area ${isDragActive ? 'active' : ''} border-2 border-dashed rounded-md border-purple-200 hover:border-purple-400 transition-colors`}
                               onDragEnter={handleDragEnter}
                               onDragOver={handleDragEnter}
                               onDragLeave={handleDragLeave}
@@ -476,17 +475,17 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                               />
                               <label htmlFor="file" className="cursor-pointer block">
                                 <div className="flex flex-col items-center justify-center py-4">
-                                  <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                                  <p className="text-sm font-medium">
+                                  <Upload className="h-10 w-10 text-purple-400 mb-2" />
+                                  <p className="text-sm font-medium text-purple-700">
                                     Drag and drop a file or click to browse
                                   </p>
-                                  <p className="text-xs text-muted-foreground mt-1">
+                                  <p className="text-xs text-purple-500 mt-1">
                                     Supports PNG, JPG, GIF, SVG, Lottie JSON
                                   </p>
                                 </div>
                               </label>
                               {selectedFile && (
-                                <div className="mt-2 text-sm text-center text-muted-foreground">
+                                <div className="mt-2 text-sm text-center text-purple-600">
                                   Selected: {selectedFile.name}
                                 </div>
                               )}
@@ -518,7 +517,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
               </TabsContent>
               
               <TabsContent value="widget" className="sticker-uploader-content mt-6 space-y-6">
-                <Card>
+                <Card className="border border-purple-100/50 bg-white/70 backdrop-blur-sm shadow-sm">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Create a Widget Sticker</CardTitle>
                     <CardDescription>
@@ -605,20 +604,26 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                             id="icon-file"
                             type="file"
                             onChange={handleFileChange}
-                            accept=".png,.jpg,.jpeg,.gif,.svg"
+                            accept="image/*,.json"
                             className="hidden"
                           />
                         </div>
                       </div>
                       
-                      {previewUrl && !isLottie && (
+                      {previewUrl && (
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label className="text-right">Preview</Label>
                           <div className="col-span-3 flex justify-center">
-                            <Avatar className="w-20 h-20 ring-2 ring-offset-2 ring-purple-200">
-                              <AvatarImage src={previewUrl} alt="Icon Preview" className="object-cover" />
-                              <AvatarFallback style={{backgroundColor: widgetColor}} className="text-white">{widgetEmoji || name.charAt(0)}</AvatarFallback>
-                            </Avatar>
+                            {isLottie ? (
+                              <div className="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center border-2 border-violet-200">
+                                <span className="text-violet-600 font-medium">Lottie</span>
+                              </div>
+                            ) : (
+                              <Avatar className="w-20 h-20 ring-2 ring-offset-2 ring-purple-200">
+                                <AvatarImage src={previewUrl} alt="Icon Preview" className="object-cover" />
+                                <AvatarFallback style={{backgroundColor: widgetColor}} className="text-white">{widgetEmoji || name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                            )}
                           </div>
                         </div>
                       )}
@@ -653,7 +658,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
               </TabsContent>
               
               <TabsContent value="package" className="sticker-uploader-content mt-6 space-y-6">
-                <Card>
+                <Card className="border border-purple-100/50 bg-white/70 backdrop-blur-sm shadow-sm">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Upload a Widget Package</CardTitle>
                     <CardDescription>
@@ -683,7 +688,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                         <Label htmlFor="widget-zip" className="text-right font-medium pt-2">Widget Package</Label>
                         <div className="col-span-3">
                           <div 
-                            className={`file-upload-area ${isDragActive ? 'active' : ''}`}
+                            className={`file-upload-area ${isDragActive ? 'active' : ''} border-2 border-dashed rounded-md border-purple-200 hover:border-purple-400 transition-colors`}
                             onDragEnter={handleDragEnter}
                             onDragOver={handleDragEnter}
                             onDragLeave={handleDragLeave}
@@ -698,17 +703,17 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                             />
                             <label htmlFor="widget-zip" className="cursor-pointer block">
                               <div className="flex flex-col items-center justify-center py-4">
-                                <PackageOpen className="h-10 w-10 text-muted-foreground mb-2" />
-                                <p className="text-sm font-medium">
+                                <PackageOpen className="h-10 w-10 text-purple-400 mb-2" />
+                                <p className="text-sm font-medium text-purple-700">
                                   Drag and drop a ZIP file or click to browse
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="text-xs text-purple-500 mt-1">
                                   Must contain manifest.json and other widget files
                                 </p>
                               </div>
                             </label>
                             {widgetZipFile && (
-                              <div className="mt-2 text-sm text-center text-muted-foreground">
+                              <div className="mt-2 text-sm text-center text-purple-600">
                                 Selected: {widgetZipFile.name}
                               </div>
                             )}
@@ -782,8 +787,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
               </TabsContent>
             </ScrollArea>
             
-            <DialogFooter className="px-6 py-4 sticker-uploader-footer">
-              <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
+            <DialogFooter className="px-6 py-4 sticker-uploader-footer border-t border-purple-100/50">
+              <Button onClick={() => setIsOpen(false)} variant="outline" className="border-purple-200 hover:border-purple-300 hover:bg-purple-50">Cancel</Button>
               {activeTab === 'simple' && (
                 <Button onClick={handleSubmitSimpleSticker} className="bg-sticker-purple hover:bg-sticker-purple-light">
                   Create Sticker
