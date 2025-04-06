@@ -6,7 +6,6 @@ import { ChevronRight, ChevronLeft, Trash, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import StickerUploader from './StickerUploader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
@@ -53,7 +52,7 @@ const StickerSidebar = ({
     onStickerDelete(sticker);
   };
 
-  // Handle sticker click to open edit mode
+  // Handle sticker click to open edit mode for custom stickers or pass to parent for default stickers
   const handleStickerClick = (sticker: StickerType) => {
     if (sticker.isCustom) {
       setCurrentlyEditing(sticker.id);
@@ -113,7 +112,7 @@ const StickerSidebar = ({
   return (
     <div 
       className={`bg-gray-50 border-r border-gray-200 h-full transition-all duration-300 flex flex-col ${
-        isCollapsed ? 'w-12' : 'w-60'
+        isCollapsed ? 'w-12' : 'w-72'
       }`}
     >
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -155,7 +154,7 @@ const StickerSidebar = ({
           {stickers.find(s => s.id === currentlyEditing) && (
             <div className="space-y-4">
               <div className="flex justify-center mb-4">
-                <Avatar className="w-16 h-16">
+                <Avatar className="w-20 h-20">
                   <AvatarImage 
                     src={previewUrl || stickers.find(s => s.id === currentlyEditing)?.icon} 
                     alt="Sticker preview" 
@@ -171,6 +170,7 @@ const StickerSidebar = ({
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full"
+                  placeholder="Enter sticker name"
                 />
               </div>
               
@@ -220,7 +220,7 @@ const StickerSidebar = ({
           
           <TabsContent value="default" className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="p-2 grid grid-cols-2 gap-3">
+              <div className="p-2 grid grid-cols-3 gap-3">
                 {defaultStickers.map((sticker) => (
                   <div key={sticker.id} className="relative group flex flex-col items-center">
                     <Sticker
@@ -233,7 +233,7 @@ const StickerSidebar = ({
                   </div>
                 ))}
                 {defaultStickers.length === 0 && (
-                  <div className="col-span-2 text-center text-gray-500 text-xs mt-4">
+                  <div className="col-span-3 text-center text-gray-500 text-xs mt-4">
                     No default stickers available
                   </div>
                 )}
@@ -243,7 +243,7 @@ const StickerSidebar = ({
           
           <TabsContent value="custom" className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="p-2 grid grid-cols-2 gap-3">
+              <div className="p-2 grid grid-cols-3 gap-3">
                 {customStickers.map((sticker) => (
                   <div key={sticker.id} className="relative group flex flex-col items-center">
                     <Sticker
@@ -265,7 +265,7 @@ const StickerSidebar = ({
                   </div>
                 ))}
                 {customStickers.length === 0 && (
-                  <div className="col-span-2 text-center text-gray-500 text-xs mt-4">
+                  <div className="col-span-3 text-center text-gray-500 text-xs mt-4">
                     No custom stickers yet.
                     <br />
                     Create one using the button above!
