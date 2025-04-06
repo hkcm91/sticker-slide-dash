@@ -1,73 +1,68 @@
-# Welcome to your Lovable project
 
-## Project info
+# Sticker Dashboard
 
-**URL**: https://lovable.dev/projects/2bdd2d06-6fe1-449c-a556-2edbebe3ccf5
+A customizable dashboard where you can place stickers that expand into interactive widgets. Personalize your workspace with drag-and-drop stickers, custom backgrounds, and expandable widget functionality.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Drag and Drop Interface**: Place stickers anywhere on your dashboard with intuitive drag and drop
+- **Customizable Stickers**: Upload your own images or use built-in stickers
+- **Widget Integration**: Each sticker can expand into a functional widget
+- **Custom Backgrounds**: Personalize your dashboard with custom background images
+- **Sticker Manipulation**: Resize, rotate, and delete stickers as needed
+- **Widget System**: Support for custom widget development and integration
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2bdd2d06-6fe1-449c-a556-2edbebe3ccf5) and start prompting.
+### Installation
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+1. Clone this repository:
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone <repository-url>
+cd sticker-dashboard
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
+```sh
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server:
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open your browser to the local development URL (typically http://localhost:5173)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Usage Guide
 
-**Use GitHub Codespaces**
+### Dashboard Basics
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- **Adding Stickers**: Drag stickers from the sidebar and drop them onto the dashboard
+- **Moving Stickers**: Click and drag any placed sticker to reposition it
+- **Resizing Stickers**: Use the mouse wheel/scroll while hovering over a sticker to resize it
+- **Rotating Stickers**: Press the 'R' key while hovering over a sticker to rotate it
+- **Removing Stickers**: Click the "×" button on a sticker to return it to the sidebar
+- **Opening Widgets**: Click on any placed sticker to open its associated widget
 
-## What technologies are used for this project?
+### Custom Stickers
 
-This project is built with:
+1. Click the "Create Sticker" button in the sidebar
+2. Enter a name for your sticker
+3. Upload an image (PNG, JPG, GIF, SVG) or a Lottie animation file (JSON)
+4. Click "Create Sticker"
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Custom Backgrounds
 
-## How can I deploy this project?
+1. Click the background icon in the bottom right of the dashboard
+2. Upload an image or provide a URL
+3. Click "Set Background" to apply
 
-Simply open [Lovable](https://lovable.dev/projects/2bdd2d06-6fe1-449c-a556-2edbebe3ccf5) and click on Share -> Publish.
+## Widget System
 
-## Can I connect a custom domain to my Lovable project?
+The Sticker Dashboard includes a powerful widget system that allows for extensible functionality. 
+See the [Widget Guide](./src/docs/WidgetGuide.md) for detailed information on creating and integrating widgets.
 
-Yes it is!
+## License
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+[MIT License](LICENSE)
