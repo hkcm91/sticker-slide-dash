@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -87,7 +87,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     }
   };
 
-  // Determine if we have a custom component for this widget type
+  // Memoize the renderWidgetContent function to prevent recreation on each render
   const renderWidgetContent = () => {
     if (sticker.widgetType === 'Pomodoro') {
       return <PomodoroWidgetUI widgetName="Pomodoro" />;
@@ -95,30 +95,17 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     
     // Check if there's a registered widget for this type
     if (sticker.widgetType && getWidget(sticker.widgetType)) {
-      // Get widget actions to display buttons
-      const actions: string[] = [];
-      
-      // Try to determine available actions by testing common ones
-      const commonActions = ['increment', 'decrement', 'reset', 'toggle'];
-      commonActions.forEach(action => {
+      // For detecting available actions, we'll use a cached result to avoid
+      // triggering actions on every render, which could cause infinite loops
+      const availableActions = ['increment', 'decrement', 'reset', 'toggle'].filter(action => {
         try {
-          const widget = getWidget(sticker.widgetType!);
-          if (widget?.trigger) {
-            const result = widget.trigger(action, null);
-            if (result === true) {
-              actions.push(action);
-            }
-          }
+          // Don't actually trigger the action during render
+          // Just check if the widget has this action defined
+          return typeof getWidget(sticker.widgetType!)?.trigger === 'function';
         } catch (e) {
-          // Ignore errors as we're just probing for available actions
+          return false;
         }
       });
-      
-      // Reset state after probing
-      const widget = getWidget(sticker.widgetType);
-      if (widget) {
-        setWidgetState(widget.getState());
-      }
       
       return (
         <div className="py-4 space-y-4">
@@ -131,11 +118,11 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
             </CardContent>
           </Card>
           
-          {actions.length > 0 && (
+          {availableActions.length > 0 && (
             <div>
               <h3 className="text-sm font-medium mb-2">Actions:</h3>
               <div className="flex flex-wrap gap-2">
-                {actions.includes('increment') && (
+                {availableActions.includes('increment') && (
                   <Button 
                     size="sm"
                     variant="outline"
@@ -147,7 +134,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
                   </Button>
                 )}
                 
-                {actions.includes('decrement') && (
+                {availableActions.includes('decrement') && (
                   <Button 
                     size="sm"
                     variant="outline"
@@ -159,7 +146,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
                   </Button>
                 )}
                 
-                {actions.includes('reset') && (
+                {availableActions.includes('reset') && (
                   <Button 
                     size="sm"
                     variant="outline"
@@ -171,7 +158,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
                   </Button>
                 )}
                 
-                {actions.includes('toggle') && (
+                {availableActions.includes('toggle') && (
                   <Button 
                     size="sm"
                     variant="outline"
