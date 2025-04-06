@@ -121,23 +121,35 @@ export const processWidgetPackage = async (zipFile: File, widgetName: string): P
     
     // Define common actions that most widgets use
     const actions = {
-      increment: (state: any) => ({ 
-        ...state, 
-        count: (state.count || 0) + 1 
-      }),
-      decrement: (state: any) => ({ 
-        ...state, 
-        count: Math.max(0, (state.count || 0) - 1) 
-      }),
-      reset: (state: any) => ({ 
-        ...state, 
-        count: 0, 
-        lastReset: new Date().toISOString() 
-      }),
-      toggle: (state: any) => ({ 
-        ...state, 
-        active: !state.active 
-      })
+      increment: (state: any) => {
+        console.log("Increment action triggered");
+        return { 
+          ...state, 
+          count: (state.count || 0) + 1 
+        };
+      },
+      decrement: (state: any) => {
+        console.log("Decrement action triggered");
+        return { 
+          ...state, 
+          count: Math.max(0, (state.count || 0) - 1) 
+        };
+      },
+      reset: (state: any) => {
+        console.log("Reset action triggered");
+        return { 
+          ...state, 
+          count: 0, 
+          lastReset: new Date().toISOString() 
+        };
+      },
+      toggle: (state: any) => {
+        console.log("Toggle action triggered");
+        return { 
+          ...state, 
+          active: !state.active 
+        };
+      }
     };
     
     // Create a widget icon - either using a placeholder or extracting from the ZIP

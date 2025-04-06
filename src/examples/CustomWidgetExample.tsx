@@ -1,74 +1,101 @@
 
-import React from 'react';
-import { addWidget, createIcon } from '@/utils/widgetHelpers';
-import { registerWidget, WidgetAPI } from '@/lib/widgetAPI';
+import { useState } from 'react';
+import { WidgetAPI } from '@/lib/widgetAPI';
 
-/**
- * This is an example file showing how to create your own custom widget
- * 
- * You can copy this pattern to create your own widgets!
- */
+// This is just an example component that demonstrates how to implement a custom widget
 
-// 1. Create a custom icon for your widget
-const weatherIcon = createIcon('W', '#2196F3'); // 'W' for Weather, with blue background
+// Custom widget state
+let customWidgetState = {
+  counter: 0,
+  isActive: true,
+  lastUpdated: new Date().toISOString()
+};
 
-// 2. Create your widget logic
-const weatherWidgetLogic: WidgetAPI = {
+// Example widget implementation
+const CustomWidget: WidgetAPI = {
   init() {
-    console.log('Weather widget initialized');
+    console.log('Custom widget initialized');
   },
   
   getState() {
-    return {
-      temperature: 72,
-      condition: 'Sunny',
-      lastUpdated: new Date().toLocaleTimeString()
-    };
+    return customWidgetState;
   },
   
   setState(newState) {
-    // In a real widget, you would update your state here
-    console.log('Setting new state:', newState);
+    customWidgetState = { ...customWidgetState, ...newState };
   },
   
-  trigger(action, payload) {
-    console.log(`Weather widget action: ${action}`, payload);
-    // In a real widget, you would handle actions here
-    // Now we return true to indicate the action was handled
-    return true;
+  trigger(action: string, payload: any): boolean {
+    console.log(`Custom widget action: ${action}`, payload);
+    
+    switch (action) {
+      case 'increment':
+        customWidgetState.counter += 1;
+        customWidgetState.lastUpdated = new Date().toISOString();
+        return true;
+        
+      case 'decrement':
+        customWidgetState.counter = Math.max(0, customWidgetState.counter - 1);
+        customWidgetState.lastUpdated = new Date().toISOString();
+        return true;
+        
+      case 'reset':
+        customWidgetState.counter = 0;
+        customWidgetState.lastUpdated = new Date().toISOString();
+        return true;
+        
+      case 'toggle':
+        customWidgetState.isActive = !customWidgetState.isActive;
+        customWidgetState.lastUpdated = new Date().toISOString();
+        return true;
+        
+      default:
+        console.warn(`Unknown action: ${action}`);
+        return false;
+    }
   }
 };
 
-// 3. Register your widget with the system
-registerWidget('Weather', weatherWidgetLogic);
-
-// 4. Add your widget to the dashboard
-// This makes it available in the dashboard's widget system
-addWidget('Weather', 'Weather Widget', 'Check the current weather in your area.');
-
-// 5. Create your custom widget component if you need more advanced functionality
-const WeatherWidget = () => {
-  const state = weatherWidgetLogic.getState();
+// Example React component for the widget UI
+const CustomWidgetUI = () => {
+  const [state, setState] = useState(CustomWidget.getState());
+  
+  // In a real implementation, you'd use useEffect to sync state with the widget
+  
+  const updateState = () => {
+    setState({ ...CustomWidget.getState() });
+  };
   
   return (
-    <div className="p-4 bg-blue-100 rounded-lg">
-      <h3 className="text-lg font-bold mb-2">Current Weather</h3>
-      <p>{state.condition}, {state.temperature}°F</p>
-      <p className="text-sm text-gray-600 mt-2">Last updated: {state.lastUpdated}</p>
+    <div className="p-4">
+      <h2 className="text-lg font-bold">Custom Widget Example</h2>
+      <p>Counter: {state.counter}</p>
+      <p>Active: {state.isActive ? 'Yes' : 'No'}</p>
+      <p>Last Updated: {new Date(state.lastUpdated).toLocaleTimeString()}</p>
+      
+      <div className="flex gap-2 mt-4">
+        <button 
+          className="px-3 py-1 bg-blue-500 text-white rounded"
+          onClick={() => {
+            CustomWidget.trigger('increment', null);
+            updateState();
+          }}
+        >
+          Increment
+        </button>
+        
+        <button 
+          className="px-3 py-1 bg-red-500 text-white rounded"
+          onClick={() => {
+            CustomWidget.trigger('reset', null);
+            updateState();
+          }}
+        >
+          Reset
+        </button>
+      </div>
     </div>
   );
 };
 
-export default WeatherWidget;
-
-/**
- * How to use:
- * 
- * 1. Create a file like this for your own widget
- * 2. Define your widget logic using the WidgetAPI interface
- * 3. Register your widget with the system
- * 4. Add your widget to the dashboard
- * 5. Create a UI component for your widget (optional)
- * 
- * The widget will automatically be available in the dashboard!
- */
+export { CustomWidget, CustomWidgetUI };

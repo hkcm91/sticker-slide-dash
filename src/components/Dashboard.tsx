@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -8,6 +7,7 @@ import WidgetModal from './WidgetModal';
 import BackgroundUploader from './BackgroundUploader';
 import { useToast } from '@/hooks/use-toast';
 import pomodoroSticker from '@/widgets/PomodoroSticker';
+import { toDoListSticker } from '@/widgets/ToDoListWidget';
 
 // Import cozy icons from lucide-react
 import { Heart, Home, Coffee, Sun, Star, BookOpen } from 'lucide-react';
@@ -29,6 +29,7 @@ const initialStickers: StickerType[] = [
   { id: '5', name: 'Star', icon: starIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
   { id: '6', name: 'Book', icon: bookIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },
   pomodoroSticker,
+  toDoListSticker,
 ];
 
 const widgetDataMap: Record<string, WidgetData> = {
@@ -39,6 +40,7 @@ const widgetDataMap: Record<string, WidgetData> = {
   'Star': { title: 'Star Widget', content: 'View your starred and favorite items.' },
   'Book': { title: 'Book Widget', content: 'Access your reading list and book notes.' },
   'Pomodoro': { title: 'Pomodoro Timer', content: 'A simple Pomodoro timer to help you stay focused.' },
+  'ToDoList': { title: 'To Do List', content: 'Keep track of your tasks and to-dos.' },
 };
 
 // Function to add a custom widget to the widget data map

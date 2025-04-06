@@ -1,11 +1,15 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from './widgets/PomodoroWidget';
 import { getWidget } from '@/lib/widgetAPI';
 import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Separator } from './ui/separator';
+import { clipboardCopy, Check, Clipboard, PlusCircle, MinusCircle, RefreshCcw, ToggleLeft } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface WidgetModalProps {
   isOpen: boolean;
@@ -15,6 +19,37 @@ interface WidgetModalProps {
 }
 
 const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps) => {
+  const [widgetState, setWidgetState] = useState<any>({});
+  const [actionHistory, setActionHistory] = useState<string[]>([]);
+  
+  // Update widget state periodically
+  useEffect(() => {
+    if (!sticker || !sticker.widgetType) return;
+    
+    const widget = getWidget(sticker.widgetType);
+    if (!widget) return;
+    
+    // Initial state fetch
+    try {
+      const state = widget.getState();
+      setWidgetState(state);
+    } catch (e) {
+      console.error(`Error getting widget state for ${sticker.widgetType}:`, e);
+    }
+    
+    // Set up interval to refresh state
+    const interval = setInterval(() => {
+      try {
+        const state = widget.getState();
+        setWidgetState(state);
+      } catch (e) {
+        console.error(`Error getting widget state for ${sticker.widgetType}:`, e);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [sticker]);
+
   if (!sticker || !widgetData) return null;
 
   // Initialize the widget if it hasn't been yet
@@ -29,6 +64,29 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     }
   }
 
+  // Function to handle widget actions
+  const handleWidgetAction = (action: string) => {
+    if (!sticker?.widgetType) return;
+    
+    const widget = getWidget(sticker.widgetType);
+    if (!widget) return;
+    
+    try {
+      const result = widget.trigger(action, null);
+      
+      // Add to action history
+      setActionHistory(prev => [
+        `${new Date().toLocaleTimeString()}: ${action} - ${result ? 'success' : 'failed'}`, 
+        ...prev.slice(0, 9)
+      ]);
+      
+      // Update state immediately
+      setWidgetState(widget.getState());
+    } catch (e) {
+      console.error(`Error triggering action ${action} on widget ${sticker.widgetType}:`, e);
+    }
+  };
+
   // Determine if we have a custom component for this widget type
   const renderWidgetContent = () => {
     if (sticker.widgetType === 'Pomodoro') {
@@ -37,10 +95,6 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     
     // Check if there's a registered widget for this type
     if (sticker.widgetType && getWidget(sticker.widgetType)) {
-      // This is a simple widget with API but no custom UI
-      const widget = getWidget(sticker.widgetType);
-      const state = widget?.getState() || {};
-      
       // Get widget actions to display buttons
       const actions: string[] = [];
       
@@ -48,9 +102,8 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
       const commonActions = ['increment', 'decrement', 'reset', 'toggle'];
       commonActions.forEach(action => {
         try {
-          // We'll need to check if the trigger method exists before trying to call it
+          const widget = getWidget(sticker.widgetType!);
           if (widget?.trigger) {
-            // Call the trigger method and check if result is true (action was handled)
             const result = widget.trigger(action, null);
             if (result === true) {
               actions.push(action);
@@ -61,35 +114,97 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
         }
       });
       
+      // Reset state after probing
+      const widget = getWidget(sticker.widgetType);
+      if (widget) {
+        setWidgetState(widget.getState());
+      }
+      
       return (
-        <div className="py-4">
-          <div className="bg-gray-100 p-4 rounded-md mb-4">
-            <h3 className="text-sm font-medium mb-2">Widget State:</h3>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify(state, null, 2)}
-            </pre>
-          </div>
+        <div className="py-4 space-y-4">
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-medium mb-2">Widget State:</h3>
+              <pre className="text-xs overflow-auto max-h-40 bg-gray-100 p-3 rounded-md">
+                {JSON.stringify(widgetState, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
           
           {actions.length > 0 && (
-            <div className="mb-4">
+            <div>
               <h3 className="text-sm font-medium mb-2">Actions:</h3>
               <div className="flex flex-wrap gap-2">
-                {actions.map(action => (
+                {actions.includes('increment') && (
                   <Button 
-                    key={action}
                     size="sm"
                     variant="outline"
-                    onClick={() => widget?.trigger(action, null)}
-                    className="capitalize"
+                    onClick={() => handleWidgetAction('increment')}
+                    className="flex items-center gap-1"
                   >
-                    {action}
+                    <PlusCircle size={16} />
+                    Increment
                   </Button>
+                )}
+                
+                {actions.includes('decrement') && (
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleWidgetAction('decrement')}
+                    className="flex items-center gap-1"
+                  >
+                    <MinusCircle size={16} />
+                    Decrement
+                  </Button>
+                )}
+                
+                {actions.includes('reset') && (
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleWidgetAction('reset')}
+                    className="flex items-center gap-1"
+                  >
+                    <RefreshCcw size={16} />
+                    Reset
+                  </Button>
+                )}
+                
+                {actions.includes('toggle') && (
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleWidgetAction('toggle')}
+                    className="flex items-center gap-1"
+                  >
+                    <ToggleLeft size={16} />
+                    Toggle
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {actionHistory.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-2">Recent Actions:</h3>
+              <div className="bg-gray-50 p-2 rounded-md max-h-32 overflow-y-auto">
+                {actionHistory.map((action, i) => (
+                  <div key={i} className="text-xs text-gray-600 mb-1">{action}</div>
                 ))}
               </div>
             </div>
           )}
           
-          <p className="text-sm text-gray-600">{widgetData.content}</p>
+          <Separator />
+          
+          <div>
+            <p className="text-sm text-gray-600">{widgetData.content}</p>
+            {sticker.packageUrl && (
+              <p className="text-xs text-gray-500 mt-1">Source: {sticker.packageUrl}</p>
+            )}
+          </div>
         </div>
       );
     }
@@ -100,7 +215,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="w-6 h-6 flex items-center justify-center">

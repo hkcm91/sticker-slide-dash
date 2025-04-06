@@ -1,25 +1,45 @@
 
-import { WidgetAPI, WidgetState, registerWidget } from '@/lib/widgetAPI';
+import { WidgetAPI } from '@/lib/widgetAPI';
 
-interface PomodoroState extends WidgetState {
+// Define our widget's state interface
+interface PomodoroState {
   timeLeft: number;
   isRunning: boolean;
+  sessionLength: number;
+  breakLength: number;
+  isBreak: boolean;
+  completedSessions: number;
+  lastUpdated: string;
 }
 
+// Initialize the state
 let state: PomodoroState = {
-  timeLeft: 1500, // 25 minutes in seconds
+  timeLeft: 25 * 60, // 25 minutes in seconds
   isRunning: false,
+  sessionLength: 25 * 60,
+  breakLength: 5 * 60,
+  isBreak: false,
+  completedSessions: 0,
+  lastUpdated: new Date().toISOString()
 };
 
-let interval: number | null = null;
+// Timer interval reference
+let timerInterval: number | null = null;
 
+// Pomodoro Widget implementation
 const PomodoroWidget: WidgetAPI = {
   init() {
     console.log('Pomodoro widget initialized');
-    // Clear any existing intervals to prevent memory leaks
-    if (interval) {
-      window.clearInterval(interval);
-      interval = null;
+    
+    // Clear any existing timer
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    
+    // Initialize a timer if the widget should be running
+    if (state.isRunning) {
+      this.startTimer();
     }
   },
   
@@ -27,50 +47,94 @@ const PomodoroWidget: WidgetAPI = {
     return { ...state };
   },
   
-  setState(newState: Partial<PomodoroState>) {
+  setState(newState) {
     state = { ...state, ...newState };
-    
-    // Handle timer logic when state changes
-    if (state.isRunning && !interval) {
-      interval = window.setInterval(() => {
-        if (state.timeLeft <= 0) {
-          state.isRunning = false;
-          if (interval) window.clearInterval(interval);
-          interval = null;
-        } else {
-          state.timeLeft -= 1;
-        }
-      }, 1000);
-    } else if (!state.isRunning && interval) {
-      window.clearInterval(interval);
-      interval = null;
-    }
   },
   
-  trigger(action: string, payload?: any): boolean {
-    switch(action) {
+  trigger(action, payload): boolean {
+    console.log(`Pomodoro action triggered: ${action}`);
+    
+    switch (action) {
       case 'start':
-        this.setState({ isRunning: true });
-        return true;
-      case 'pause':
-        this.setState({ isRunning: false });
-        return true;
-      case 'reset':
-        this.setState({ timeLeft: 1500, isRunning: false });
-        return true;
-      case 'set-time':
-        if (typeof payload === 'number') {
-          this.setState({ timeLeft: payload });
+        if (!state.isRunning) {
+          state = { ...state, isRunning: true, lastUpdated: new Date().toISOString() };
+          this.startTimer();
           return true;
         }
         return false;
+        
+      case 'pause':
+        if (state.isRunning) {
+          state = { ...state, isRunning: false, lastUpdated: new Date().toISOString() };
+          if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+          return true;
+        }
+        return false;
+        
+      case 'reset':
+        state = {
+          ...state,
+          timeLeft: state.isBreak ? state.breakLength : state.sessionLength,
+          isRunning: false,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        return true;
+        
+      case 'skip':
+        this.switchMode();
+        return true;
+        
       default:
+        console.warn(`Unknown action: ${action}`);
         return false;
     }
   },
+  
+  // Helper methods
+  startTimer() {
+    // Clear any existing interval
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    
+    // Start a new timer
+    timerInterval = window.setInterval(() => {
+      if (state.timeLeft > 0) {
+        // Decrement the timer
+        state = { ...state, timeLeft: state.timeLeft - 1, lastUpdated: new Date().toISOString() };
+      } else {
+        // Time's up! Switch modes
+        this.switchMode();
+      }
+    }, 1000);
+  },
+  
+  switchMode() {
+    const isBreak = !state.isBreak;
+    const completedSessions = isBreak ? state.completedSessions : state.completedSessions + 1;
+    
+    state = {
+      ...state,
+      isBreak,
+      timeLeft: isBreak ? state.breakLength : state.sessionLength,
+      completedSessions,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    // If we need to restart the timer
+    if (state.isRunning && timerInterval) {
+      clearInterval(timerInterval);
+      this.startTimer();
+    }
+  }
 };
-
-// Auto-register this widget
-registerWidget('Pomodoro', PomodoroWidget);
 
 export default PomodoroWidget;
