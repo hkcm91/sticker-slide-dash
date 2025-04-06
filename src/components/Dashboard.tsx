@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -203,7 +204,7 @@ const Dashboard = () => {
         onDragStart={handleDragStart} 
         onStickerClick={handleStickerClick}
         onStickerCreated={handleStickerCreated}
-        onStickerDelete={handleStickerDelete}
+        onStickerDelete={handleDeleteSticker}
         onStickerUpdate={handleUpdateSticker}
       />
       
