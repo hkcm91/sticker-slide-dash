@@ -50,10 +50,12 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
         try {
           // We'll need to check if the trigger method exists before trying to call it
           if (widget?.trigger) {
-            // Store the result of trigger in a variable first
-            const result = widget.trigger(action, null);
-            // Then check if the result is truthy
-            if (result) {
+            // Call the trigger method and store its boolean result
+            // We must not test the void result for truthiness
+            let actionWorks = false;
+            actionWorks = widget.trigger(action, null) === true;
+            
+            if (actionWorks) {
               actions.push(action);
             }
           }

@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createWidgetSticker } from '@/utils/createWidgetSticker';
 import { Sticker } from '@/types/stickers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createSimpleWidget, createSimpleIcon } from '@/utils/widgetMaster';
+import { createSimpleWidget, createSimpleIcon, processWidgetPackage } from '@/utils/widgetMaster';
 import { Textarea } from '@/components/ui/textarea';
 
 interface StickerUploaderProps {
