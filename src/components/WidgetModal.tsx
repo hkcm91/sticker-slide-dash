@@ -45,14 +45,13 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
       const actions: string[] = [];
       
       // Try to determine available actions by testing common ones
-      const commonActions = ['start', 'stop', 'reset', 'refresh', 'increment', 'decrement', 'toggle'];
+      const commonActions = ['increment', 'decrement', 'reset', 'toggle'];
       commonActions.forEach(action => {
         try {
           // We'll need to check if the trigger method exists before trying to call it
           if (widget?.trigger) {
-            // Call the trigger method and store the result
+            // Call the trigger method and check if result is true (action was handled)
             const result = widget.trigger(action, null);
-            // Check if the result is explicitly true
             if (result === true) {
               actions.push(action);
             }
@@ -80,7 +79,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
                     key={action}
                     size="sm"
                     variant="outline"
-                    onClick={() => widget?.trigger(action)}
+                    onClick={() => widget?.trigger(action, null)}
                     className="capitalize"
                   >
                     {action}

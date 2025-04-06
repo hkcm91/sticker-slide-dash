@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Upload } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Plus, Upload, PackageOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { createWidgetSticker } from '@/utils/createWidgetSticker';
@@ -11,6 +12,7 @@ import { Sticker } from '@/types/stickers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createSimpleWidget, createSimpleIcon, processWidgetPackage } from '@/utils/widgetMaster';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface StickerUploaderProps {
   onStickerCreated: (sticker: Sticker) => void;
@@ -30,6 +32,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   const [widgetEmoji, setWidgetEmoji] = useState('🔧');
   const [widgetCode, setWidgetCode] = useState('');
   const [widgetZipFile, setWidgetZipFile] = useState<File | null>(null);
+  const [processingPackage, setProcessingPackage] = useState(false);
 
   const { toast } = useToast();
 
@@ -186,7 +189,11 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     }
 
     try {
+      setProcessingPackage(true);
+      
       const newSticker = await processWidgetPackage(widgetZipFile, name);
+      
+      setProcessingPackage(false);
       
       if (!newSticker) {
         toast({
@@ -207,6 +214,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
       });
     } catch (error) {
       console.error("Error processing widget package:", error);
+      setProcessingPackage(false);
+      
       toast({
         title: "Error processing widget",
         description: "There was a problem processing your widget package.",
@@ -227,6 +236,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     setWidgetCode('');
     setWidgetZipFile(null);
     setActiveTab('simple');
+    setProcessingPackage(false);
   };
 
   return (
@@ -243,6 +253,9 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
         <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Custom Sticker or Widget</DialogTitle>
+            <DialogDescription>
+              Create a simple sticker, a widget with custom actions, or upload a widget package.
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="simple" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -415,6 +428,12 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
             
             <TabsContent value="package" className="space-y-4 mt-4">
               <div className="grid gap-4">
+                <Alert className="bg-blue-50 border-blue-200 mb-4">
+                  <AlertDescription className="text-blue-800">
+                    Upload a widget package (ZIP file) containing your widget files.
+                  </AlertDescription>
+                </Alert>
+                
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="package-name" className="text-right">Widget Name</Label>
                   <Input
@@ -422,7 +441,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="col-span-3"
-                    placeholder="UploadedWidget"
+                    placeholder="ToDoList"
                   />
                 </div>
                 
@@ -445,7 +464,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                 {widgetZipFile && (
                   <div className="grid grid-cols-4 items-center gap-4">
                     <div className="text-right">Selected Package</div>
-                    <div className="col-span-3 bg-gray-100 p-2 rounded text-sm">
+                    <div className="col-span-3 bg-gray-100 p-2 rounded text-sm flex items-center">
+                      <PackageOpen className="mr-2 h-4 w-4" />
                       {widgetZipFile.name} ({Math.round(widgetZipFile.size / 1024)} KB)
                     </div>
                   </div>
@@ -457,15 +477,20 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
                     Your ZIP file should contain:
                   </p>
                   <ul className="text-xs text-blue-700 list-disc pl-5 space-y-1">
-                    <li>index.js (or index.ts) - Main widget code</li>
                     <li>manifest.json - Widget definition</li>
-                    <li>icon.png/svg (optional) - Widget icon</li>
+                    <li>icon.png/svg - Widget icon</li>
+                    <li>index.html - Widget content (optional)</li>
                   </ul>
                 </div>
                 
                 <DialogFooter className="mt-4">
                   <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
-                  <Button onClick={handleSubmitWidgetZip}>Upload Widget</Button>
+                  <Button 
+                    onClick={handleSubmitWidgetZip} 
+                    disabled={processingPackage}
+                  >
+                    {processingPackage ? "Processing..." : "Upload Widget"}
+                  </Button>
                 </DialogFooter>
               </div>
             </TabsContent>
