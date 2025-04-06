@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
-import { Trash, RotateCw } from 'lucide-react';
+import { ArrowLeftCircle, RotateCw } from 'lucide-react';
 import Lottie from 'lottie-react';
 
 interface StickerProps {
@@ -176,14 +176,14 @@ const Sticker = ({
         {/* Controls - only shown when hovering over placed stickers */}
         {sticker.placed && isHovered && (
           <>
-            {/* Delete button */}
+            {/* Return to tray button (Previously Delete button) */}
             {onDelete && (
               <div 
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 cursor-pointer hover:bg-red-600 transition-colors z-20"
+                className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20"
                 onClick={handleDelete}
-                title="Delete sticker"
+                title="Return to tray"
               >
-                <Trash size={12} />
+                <ArrowLeftCircle size={12} />
               </div>
             )}
             

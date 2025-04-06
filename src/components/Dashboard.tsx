@@ -114,7 +114,7 @@ const Dashboard = () => {
     } else {
       toast({
         title: "Sticker placed!",
-        description: "Click on the sticker to open the widget. Scroll to resize, R key to rotate, or delete it.",
+        description: "Click on the sticker to open the widget. Scroll to resize, R key to rotate, or return it to tray.",
         duration: 3000,
       });
     }
@@ -148,26 +148,39 @@ const Dashboard = () => {
     setBackground(url);
   };
 
-  const handleDeleteSticker = (sticker: StickerType) => {
-    setStickers(prevStickers => {
-      return prevStickers.map(s => 
-        s.id === sticker.id 
-          ? { ...s, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 } 
-          : s
+  const handleStickerDelete = (sticker: StickerType) => {
+    if ((sticker as any).permanentDelete) {
+      setStickers(prevStickers => 
+        prevStickers.filter(s => s.id !== sticker.id)
       );
-    });
-    
-    setOpenWidgets(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(sticker.id);
-      return newMap;
-    });
-    
-    toast({
-      title: "Sticker returned to tray!",
-      description: "The sticker has been removed from the dashboard and returned to your tray.",
-      duration: 3000,
-    });
+      
+      toast({
+        title: "Sticker permanently deleted",
+        description: "The sticker has been completely removed from your collection.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } else {
+      setStickers(prevStickers => {
+        return prevStickers.map(s => 
+          s.id === sticker.id 
+            ? { ...s, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 } 
+            : s
+        );
+      });
+      
+      setOpenWidgets(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(sticker.id);
+        return newMap;
+      });
+      
+      toast({
+        title: "Sticker returned to tray!",
+        description: "The sticker has been returned to your tray and is available for reuse.",
+        duration: 3000,
+      });
+    }
   };
 
   const handleUpdateSticker = (updatedSticker: StickerType) => {
@@ -209,7 +222,7 @@ const Dashboard = () => {
         onDragStart={handleDragStart} 
         onStickerClick={handleStickerClick}
         onStickerCreated={handleStickerCreated}
-        onStickerDelete={handleDeleteSticker}
+        onStickerDelete={handleStickerDelete}
         onStickerUpdate={handleUpdateSticker}
       />
       

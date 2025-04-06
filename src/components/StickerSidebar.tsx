@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
@@ -55,10 +54,8 @@ const StickerSidebar = ({
     setIsCollapsed(!isCollapsed);
   };
 
-  // Filter all available stickers (not placed on the dashboard)
   const availableStickers = stickers.filter(sticker => !sticker.placed);
 
-  // Handle sticker click to open edit mode
   const handleStickerClick = (sticker: StickerType) => {
     setCurrentlyEditing(sticker);
     setEditName(sticker.name);
@@ -66,7 +63,6 @@ const StickerSidebar = ({
     setWidgetCode(sticker.widgetCode || '');
     setIsEditing(true);
     
-    // Reset file states
     setSelectedFile(null);
     setPreviewUrl(null);
     setWidgetZipFile(null);
@@ -74,7 +70,6 @@ const StickerSidebar = ({
     setIsUrlInputVisible(false);
   };
 
-  // Handle file change for image upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -91,7 +86,6 @@ const StickerSidebar = ({
     reader.readAsDataURL(file);
   };
 
-  // Handle widget ZIP file change
   const handleWidgetZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -104,17 +98,14 @@ const StickerSidebar = ({
     setWidgetZipFile(file);
   };
 
-  // Handle URL input for icons/lotties
   const handleIconUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIconUrl(e.target.value);
   };
 
-  // Toggle URL input visibility
   const toggleUrlInput = () => {
     setIsUrlInputVisible(!isUrlInputVisible);
   };
 
-  // Load image from URL
   const loadImageFromUrl = async () => {
     if (!iconUrl) {
       toast({
@@ -126,17 +117,14 @@ const StickerSidebar = ({
     }
 
     try {
-      // Determine if it's likely a Lottie JSON URL
       const isLottieUrl = iconUrl.endsWith('.json') || iconUrl.includes('lottiefiles');
       
       if (isLottieUrl) {
-        // For Lottie JSON, we need to fetch the JSON data
         const response = await fetch(iconUrl);
         if (!response.ok) throw new Error('Failed to fetch Lottie animation');
         const lottieData = await response.text();
         setPreviewUrl(lottieData);
       } else {
-        // For regular images, we can just use the URL directly
         setPreviewUrl(iconUrl);
       }
       
@@ -154,7 +142,6 @@ const StickerSidebar = ({
     }
   };
 
-  // Save edited sticker changes
   const handleSaveEdit = async () => {
     if (!currentlyEditing || !onStickerUpdate) return;
     
@@ -168,16 +155,13 @@ const StickerSidebar = ({
       updatedSticker.icon = previewUrl;
     }
 
-    // If it's a widget and has code updates
     if (currentlyEditing.widgetType && widgetCode.trim()) {
       try {
-        // Create actions from the code
         const createActions = new Function('state', `
           return ${widgetCode};
         `);
         const widgetActions = createActions({});
         
-        // Store the code as a string in the sticker metadata
         updatedSticker.widgetCode = widgetCode;
         updatedSticker.widgetActions = widgetActions;
       } catch (error) {
@@ -185,7 +169,6 @@ const StickerSidebar = ({
       }
     }
     
-    // If user uploaded a new widget package
     if (currentlyEditing.widgetType && widgetZipFile) {
       try {
         setProcessingPackage(true);
@@ -193,7 +176,6 @@ const StickerSidebar = ({
         setProcessingPackage(false);
         
         if (newWidgetSticker) {
-          // Preserve the ID and position of the original sticker
           updatedSticker = {
             ...newWidgetSticker,
             id: currentlyEditing.id,
@@ -212,17 +194,23 @@ const StickerSidebar = ({
     handleCloseEdit();
   };
 
-  // Handle deleting the current sticker
   const handleDeleteSticker = () => {
     if (currentlyEditing) {
-      console.log("Deleting sticker:", currentlyEditing);
-      onStickerDelete(currentlyEditing);
+      if (onStickerDelete) {
+        const stickerToDelete = { ...currentlyEditing, permanentDelete: true };
+        onStickerDelete(stickerToDelete);
+        
+        toast({
+          title: "Sticker permanently deleted",
+          description: "The sticker has been permanently removed from your collection.",
+          variant: "destructive",
+        });
+      }
       setIsDeleteDialogOpen(false);
       handleCloseEdit();
     }
   };
 
-  // Exit edit mode
   const handleCloseEdit = () => {
     setIsEditing(false);
     setCurrentlyEditing(null);
@@ -280,13 +268,15 @@ const StickerSidebar = ({
             <div className="p-2 grid grid-cols-3 gap-3">
               {availableStickers.map((sticker) => (
                 <div key={sticker.id} className="relative group flex flex-col items-center">
-                  <Sticker
-                    sticker={sticker}
-                    onDragStart={onDragStart}
-                    onClick={() => handleStickerClick(sticker)}
-                    isDraggable={true}
-                    className="mx-auto sticker-in-tray" // Added sticker-in-tray class
-                  />
+                  <div className="relative">
+                    <Sticker
+                      sticker={sticker}
+                      onDragStart={onDragStart}
+                      onClick={() => handleStickerClick(sticker)}
+                      isDraggable={true}
+                      className="mx-auto sticker-in-tray"
+                    />
+                  </div>
                   <p className="text-xs text-center mt-1 truncate w-full">{sticker.name}</p>
                 </div>
               ))}
@@ -302,7 +292,6 @@ const StickerSidebar = ({
         </div>
       )}
 
-      {/* Edit Sticker Sheet */}
       <Sheet open={isEditing} onOpenChange={setIsEditing}>
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
@@ -390,7 +379,6 @@ const StickerSidebar = ({
                 </p>
               </div>
               
-              {/* Widget-specific controls - only show for widgets */}
               {currentlyEditing.widgetType && (
                 <>
                   <Separator className="my-4" />
@@ -461,7 +449,7 @@ const StickerSidebar = ({
               className="w-full sm:w-auto"
             >
               <Trash className="mr-2 h-4 w-4" />
-              Delete Sticker
+              Delete Permanently
             </Button>
             <div className="flex-1"></div>
             <Button variant="outline" onClick={handleCloseEdit}>Cancel</Button>
@@ -472,7 +460,6 @@ const StickerSidebar = ({
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -485,7 +472,7 @@ const StickerSidebar = ({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteSticker} className="bg-red-600 hover:bg-red-700">
-              Delete
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

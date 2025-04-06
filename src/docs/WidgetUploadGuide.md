@@ -1,181 +1,182 @@
 
 # Widget Upload Guide
 
-This guide provides detailed instructions for uploading and creating custom widgets for the Sticker Dashboard.
+## Introduction
+Sticker Dashboard allows you to create and upload your own custom widgets. Widgets are powerful components that can provide various functionalities when opened from a sticker on your dashboard.
 
-## Table of Contents
-1. [Widget Types](#widget-types)
-2. [Creating Simple Widgets](#creating-simple-widgets)
-3. [Uploading Widget Packages](#uploading-widget-packages)
-4. [Widget Package Format](#widget-package-format)
-5. [Widget API](#widget-api)
-6. [Advanced Customization](#advanced-customization)
-7. [Troubleshooting](#troubleshooting)
+## Types of Widgets
 
-## Widget Types
+### 1. Simple Widgets
+Simple widgets display static content and basic interactivity. These are great for displaying information, links, or simple controls.
 
-The Sticker Dashboard supports several types of widgets:
+### 2. Custom Code Widgets
+You can write custom JavaScript code to create interactive widgets with state management. These widgets can maintain their own state and respond to user interactions.
 
-1. **Built-in Widgets**: Pre-configured widgets like Pomodoro Timer and To-Do List
-2. **Simple Custom Widgets**: Basic widgets created through the dashboard interface
-3. **Widget Packages**: Advanced widgets uploaded as ZIP packages with custom code 
-4. **Code Widgets**: Widgets defined through custom JavaScript functions
+### 3. Package Widgets
+The most powerful option! These are complete web applications packaged as ZIP files that run in their own iframe environment within the dashboard.
 
-## Creating Simple Widgets
+## Creating and Uploading Widgets
 
-To create a basic widget:
+### Simple Widget Creation
+1. Click "Create Sticker" in the sidebar
+2. Give your sticker a name
+3. Upload an image for the sticker
+4. Click "Create"
 
-1. Click the "Create Sticker" button in the sidebar
-2. Enter a name for your widget
-3. Upload an icon image
-4. Switch to the "Widget" tab in the dialog
-5. Enter widget details and any basic configuration
-6. Click "Create Widget"
+### Custom Code Widget
+1. Create a sticker as above
+2. Edit the sticker by clicking on it in the sidebar tray
+3. In the edit dialog, click "Edit Code"
+4. Write your widget code using JavaScript
 
-## Uploading Widget Packages
+Example of widget code:
+```javascript
+{
+  increment: (state) => ({ ...state, count: (state.count || 0) + 1 }),
+  decrement: (state) => ({ ...state, count: (state.count || 0) - 1 }),
+  reset: () => ({ count: 0 })
+}
+```
 
-For more advanced widgets:
+### Package Widget (ZIP)
+Package widgets give you the most flexibility and power. A widget package is a ZIP file with:
 
-1. Prepare a ZIP package following the [Widget Package Format](#widget-package-format)
-2. Click the "Create Sticker" button in the sidebar
-3. Enter a name for your widget
-4. Switch to the "Widget" tab
-5. Select "Upload Package" and choose your ZIP file
-6. Click "Create Widget"
+1. **Required Files:**
+   - `manifest.json` - Widget configuration file
+   - `index.html` - Entry point of your widget
+   - `icon.png` (or other image format) - Icon for your widget
 
-## Widget Package Format
-
-A valid widget package ZIP must contain:
-
-- `manifest.json`: Widget metadata and configuration
-- `index.html`: Main widget HTML file
-- Optional: CSS, JavaScript, and asset files
-
-### manifest.json Example
-
+2. **manifest.json Structure:**
 ```json
 {
+  "id": "unique-widget-id",
   "name": "My Custom Widget",
   "version": "1.0.0",
-  "description": "A custom widget for the Sticker Dashboard",
   "author": "Your Name",
-  "icon": "icon.png", 
+  "description": "Description of your widget",
+  "icon": "icon.png",
   "entry": "index.html",
   "size": {
-    "width": 300,
-    "height": 200,
-    "resizable": true
+    "width": 400,
+    "height": 300,
+    "resizable": true,
+    "minWidth": 300,
+    "minHeight": 200
   },
   "permissions": {
-    "storage": true,
-    "notifications": false
+    "storage": true
   }
 }
 ```
 
-### index.html Example
+## Technical Specifications
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>My Widget</title>
-  <style>
-    body { font-family: sans-serif; margin: 0; padding: 16px; }
-    .widget-container { background: white; border-radius: 8px; padding: 16px; }
-  </style>
-</head>
-<body>
-  <div class="widget-container">
-    <h3>My Custom Widget</h3>
-    <p>Current count: <span id="counter">0</span></p>
-    <div>
-      <button id="increment-button">Increment</button>
-      <button id="reset-button">Reset</button>
-    </div>
-    <div>
-      <pre id="widget-state-display"></pre>
-    </div>
-  </div>
-</body>
-</html>
-```
+### Package Widget Development
 
-## Widget API
+Package widgets run in a sandboxed iframe and have access to:
 
-Widgets communicate with the dashboard using a simple message-based API:
+1. **Local Storage** (if requested in permissions)
+2. **Widget API** for communication with the main dashboard
 
-1. The dashboard sends an `INIT_STATE` message when the widget is first opened
-2. The widget can send `UPDATE_STATE` messages to update its state
-3. The dashboard persists widget state between sessions
+### Widget API
 
-### Standard Action Buttons
-
-The dashboard recognizes these standard button IDs:
-
-- `increment-button`: Increment a counter
-- `decrement-button`: Decrement a counter
-- `reset-button`: Reset widget state
-- `toggle-button`: Toggle a boolean state
-
-### JavaScript API Example
+When developing a packaged widget, you can use the Widget API to communicate with the dashboard:
 
 ```javascript
-// Send message to parent dashboard
-window.parent.postMessage({ 
-  type: 'UPDATE_STATE', 
-  payload: { count: 5, active: true } 
-}, '*');
+// Initialize the API connection
+const api = window.WidgetAPI.init();
 
-// Listen for messages from dashboard
-window.addEventListener('message', function(event) {
-  const { type, payload } = event.data;
-  if (type === 'INIT_STATE' || type === 'CURRENT_STATE') {
-    // Update UI with state
-    document.getElementById('counter').textContent = payload.count || 0;
-  }
+// Save data to persistent storage
+api.storage.set('key', value);
+
+// Retrieve data from storage
+const value = await api.storage.get('key');
+
+// Listen for theme changes
+api.theme.onChange((theme) => {
+  console.log('Theme changed to:', theme);
 });
+
+// Get user preferences
+const preferences = await api.preferences.get();
+
+// Close the widget
+api.actions.close();
 ```
 
-## Advanced Customization
+### Limitations
 
-For advanced widgets, you can define custom actions:
+- Widgets run in a sandboxed environment for security
+- Access to external resources may be limited by browser security policies
+- Storage is limited to 5MB per widget
+- Widgets should be responsive and work in various sizes
+- External API calls may require CORS configuration
 
-1. Edit the widget in the sidebar
-2. Click "Edit Code"
-3. Define custom action handlers using JavaScript
+## Uploading a Widget Package
 
-Example code:
+1. Create a ZIP file containing your widget files
+2. Click "Create Sticker" or edit an existing sticker
+3. In the edit dialog, browse for your ZIP file in the "Replace Widget Package" section
+4. Click "Save Changes"
 
-```javascript
-{
-  customIncrement: (state) => ({ 
-    ...state, 
-    count: (state.count || 0) + 5 
-  }),
-  resetWithTimestamp: (state) => ({ 
-    ...state, 
-    count: 0, 
-    lastReset: new Date().toISOString() 
-  })
-}
-```
+## Best Practices
 
-## Limitations
+1. **Keep it Simple**: Focus on one main functionality per widget
+2. **Responsive Design**: Make your widgets responsive to different sizes
+3. **Error Handling**: Include proper error handling for a good user experience
+4. **Performance**: Optimize your code and asset sizes
+5. **Theme Support**: Support both light and dark themes if possible
+6. **Accessibility**: Follow accessibility best practices
 
-- Widget file size: Maximum 5MB per ZIP package
-- Frameworks: Vanilla JavaScript recommended, no external frameworks included by default
-- APIs: Widgets run in a sandboxed iframe with limited access to dashboard APIs
-- State: Only simple JSON-serializable state is supported
-- No server-side processing: Widgets are client-side only
+## Widget Examples
+
+The dashboard comes with several built-in widgets:
+
+1. **Pomodoro Timer**: A simple Pomodoro technique timer
+2. **To-Do List**: Task management widget
+3. **Calendar**: Schedule and event viewer
+
+Study these examples to understand the widget structure and capabilities.
 
 ## Troubleshooting
 
-If your widget isn't functioning correctly:
+If your widget doesn't work as expected:
 
-1. **Widget doesn't appear**: Check manifest.json format and ensure index.html exists
-2. **State doesn't update**: Verify you're using the correct message format
-3. **Actions don't work**: Make sure button IDs match the expected formats
-4. **Widget appears blank**: Check the browser console for errors in your HTML or JS
-5. **Package rejected**: Ensure your ZIP file is properly formatted and under 5MB
+1. Check browser console for errors
+2. Verify that your manifest.json is correctly formatted
+3. Ensure all required files are included in your ZIP package
+4. Test your widget in isolation before packaging
+
+## Advanced Topics
+
+### Communication Between Widgets
+
+Widgets can communicate with each other using the Widget API's event system:
+
+```javascript
+// Subscribe to an event
+api.events.subscribe('task-completed', (data) => {
+  console.log('Task completed:', data);
+});
+
+// Publish an event
+api.events.publish('task-completed', { taskId: '123', title: 'Learn about widgets' });
+```
+
+### Custom Themes
+
+Your widget can detect and adapt to the dashboard's theme:
+
+```javascript
+api.theme.getCurrent().then(theme => {
+  document.body.classList.add(theme);
+});
+```
+
+## Resources
+
+- [Widget API Documentation](https://your-dashboard-domain.com/docs/widget-api)
+- [Example Widgets Repository](https://github.com/your-dashboard/example-widgets)
+- [Widget Development Tools](https://your-dashboard-domain.com/tools)
+
+Happy widget creating! 🎉

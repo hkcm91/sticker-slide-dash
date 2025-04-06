@@ -15,6 +15,7 @@ export interface Sticker {
   description?: string; // Description of the sticker
   widgetCode?: string; // Code for widget functionality
   widgetActions?: Record<string, (state: any, payload?: any) => any>; // Actions for the widget
+  permanentDelete?: boolean; // Flag to indicate permanent deletion
 }
 
 export interface WidgetData {
