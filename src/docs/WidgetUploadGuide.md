@@ -20,7 +20,7 @@ The most powerful option! These are complete web applications packaged as ZIP fi
 ### Simple Widget Creation
 1. Click "Create Sticker" in the sidebar
 2. Give your sticker a name
-3. Upload an image for the sticker
+3. Upload an image for the sticker (supports regular images or Lottie animations)
 4. Click "Create"
 
 ### Custom Code Widget
@@ -68,6 +68,23 @@ Package widgets give you the most flexibility and power. A widget package is a Z
   }
 }
 ```
+
+## Adding Lottie Animations to Widgets
+
+Widgets can now use Lottie animations for dynamic content:
+
+1. When creating or editing a widget:
+   - Upload a Lottie JSON file in the "Widget Lottie Animation" section
+   - The animation will be displayed in the widget when opened
+   
+2. For package widgets:
+   - Include Lottie animations in your package
+   - Reference them in your HTML using the Lottie web player
+
+3. Lottie benefits:
+   - Smooth vector animations that scale beautifully
+   - Smaller file sizes than videos or GIFs
+   - Interactive animations that can respond to user input
 
 ## Technical Specifications
 

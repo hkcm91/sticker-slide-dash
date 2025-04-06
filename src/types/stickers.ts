@@ -59,4 +59,6 @@ export interface UploadedWidget {
     [path: string]: string | Blob;
   };
   icon?: string;
+  animation?: string | object; // Added Lottie animation support
+  animationType?: 'lottie' | 'gif'; // Type of animation
 }

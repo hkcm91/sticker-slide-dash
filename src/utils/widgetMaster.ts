@@ -182,7 +182,8 @@ const storeWidgetData = async (
 export const processWidgetPackage = async (
   zipFile: File, 
   widgetName: string,
-  customIconFile?: File | null
+  customIconFile?: File | null,
+  lottieFile?: File | null
 ): Promise<Sticker | null> => {
   try {
     console.log(`Processing widget package: ${zipFile.name}`);
@@ -223,6 +224,34 @@ export const processWidgetPackage = async (
     
     // Get HTML content
     files['index.html'] = await entryFile.async('string');
+    
+    // Process Lottie animation if provided
+    let widgetAnimation = null;
+    let animationType = null;
+    
+    if (lottieFile) {
+      try {
+        // Read and parse the Lottie JSON
+        const lottieContent = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsText(lottieFile);
+        });
+        
+        // Validate that it's a proper JSON
+        JSON.parse(lottieContent);
+        
+        // Store the Lottie animation
+        widgetAnimation = lottieContent;
+        animationType = 'lottie';
+        files['lottie-animation'] = lottieFile;
+        
+        console.log(`Lottie animation processed for widget: ${widgetName}`);
+      } catch (e) {
+        console.error('Failed to process Lottie file:', e);
+        // Continue without the animation if there's an error
+      }
+    }
     
     // Process the icon - either from custom upload, package, or create a placeholder
     let widgetIcon;
@@ -296,8 +325,12 @@ export const processWidgetPackage = async (
       actions
     });
     
-    // Add packageUrl to sticker for proper rendering
+    // Add packageUrl and animation data to sticker
     sticker.packageUrl = URL.createObjectURL(zipFile);
+    if (widgetAnimation && animationType) {
+      sticker.animation = widgetAnimation;
+      sticker.animationType = animationType;
+    }
 
     console.log(`Created widget sticker with widgetType: ${sticker.widgetType}`);
     

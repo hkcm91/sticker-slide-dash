@@ -38,8 +38,8 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   if (hasLottieAnimation) {
     let lottieData;
     try {
-      lottieData = typeof sticker.animation === 'string' && sticker.animation.startsWith('{') 
-        ? JSON.parse(sticker.animation) 
+      lottieData = typeof sticker.animation === 'string' 
+        ? (sticker.animation.startsWith('{') ? JSON.parse(sticker.animation) : sticker.animation)
         : sticker.animation;
     } catch (e) {
       console.error('Failed to parse Lottie animation:', e);

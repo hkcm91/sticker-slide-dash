@@ -53,6 +53,7 @@ const StickerSidebar = ({
   const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [iconUrl, setIconUrl] = useState('');
   const [isUrlInputVisible, setIsUrlInputVisible] = useState(false);
+  const [widgetLottieFile, setWidgetLottieFile] = useState<File | null>(null);
   
   const { toast } = useToast();
 
@@ -82,14 +83,29 @@ const StickerSidebar = ({
 
     setSelectedFile(file);
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setPreviewUrl(event.target.result as string);
-      }
-    };
-    
-    reader.readAsDataURL(file);
+    if (file.type === 'application/json' || file.name.endsWith('.json')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const content = event.target.result as string;
+          try {
+            JSON.parse(content);
+            setPreviewUrl(content);
+          } catch (e) {
+            setPreviewUrl(event.target.result as string);
+          }
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setPreviewUrl(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleWidgetZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,11 +113,52 @@ const StickerSidebar = ({
     if (!file) return;
     
     if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
-      console.error("Invalid file type. Please upload a ZIP file.");
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a ZIP file for the widget package.",
+        variant: "destructive",
+      });
       return;
     }
     
     setWidgetZipFile(file);
+  };
+
+  const handleWidgetLottieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JSON file for the Lottie animation.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        try {
+          const content = event.target.result as string;
+          JSON.parse(content);
+          setWidgetLottieFile(file);
+          toast({
+            title: "Lottie file loaded",
+            description: "Lottie animation file has been loaded successfully.",
+          });
+        } catch (e) {
+          toast({
+            title: "Invalid Lottie file",
+            description: "The JSON file is not a valid Lottie animation.",
+            variant: "destructive",
+          });
+          setWidgetLottieFile(null);
+        }
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleIconUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,13 +241,23 @@ const StickerSidebar = ({
         updatedSticker.widgetActions = widgetActions;
       } catch (error) {
         console.error("Error parsing widget code:", error);
+        toast({
+          title: "Widget code error",
+          description: "There was an error in your widget code. Please check the syntax.",
+          variant: "destructive",
+        });
       }
     }
     
     if (currentlyEditing.widgetType && widgetZipFile) {
       try {
         setProcessingPackage(true);
-        const newWidgetSticker = await processWidgetPackage(widgetZipFile, editName);
+        const newWidgetSticker = await processWidgetPackage(
+          widgetZipFile, 
+          editName, 
+          selectedFile, 
+          widgetLottieFile
+        );
         setProcessingPackage(false);
         
         if (newWidgetSticker) {
@@ -201,10 +268,20 @@ const StickerSidebar = ({
             placed: currentlyEditing.placed,
             description: editDescription,
           };
+          
+          toast({
+            title: "Widget updated",
+            description: "Your widget package has been processed successfully.",
+          });
         }
       } catch (error) {
         console.error("Error processing widget package:", error);
         setProcessingPackage(false);
+        toast({
+          title: "Widget processing error",
+          description: "There was an error processing your widget package.",
+          variant: "destructive",
+        });
       }
     }
     
@@ -505,6 +582,27 @@ const StickerSidebar = ({
                       </div>
                       <p className="text-xs text-gray-500">
                         Upload a new widget package to completely replace this widget (optional)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="widget-lottie">Widget Lottie Animation</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="widget-lottie"
+                          type="file"
+                          onChange={handleWidgetLottieChange}
+                          accept=".json"
+                          className="flex-1"
+                        />
+                        {widgetLottieFile && (
+                          <div className="text-xs text-green-600">
+                            ✓ {widgetLottieFile.name}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Upload a Lottie animation file for this widget (optional)
                       </p>
                     </div>
                   </div>
