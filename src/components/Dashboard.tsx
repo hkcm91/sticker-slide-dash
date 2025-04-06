@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -44,7 +43,6 @@ const widgetDataMap: Record<string, WidgetData> = {
   'ToDoList': { title: 'To Do List', content: 'Keep track of your tasks and to-dos.' },
 };
 
-// Function to add a custom widget to the widget data map
 export const addCustomWidget = (name: string, title: string, content: string) => {
   widgetDataMap[name] = { title, content };
 };
@@ -56,9 +54,7 @@ const Dashboard = () => {
   const [isRepositioning, setIsRepositioning] = useState(false);
   const { toast } = useToast();
   
-  // Load stickers and background from localStorage on component mount
   useEffect(() => {
-    // Load stickers
     const savedStickers = localStorage.getItem('stickers');
     if (savedStickers) {
       setStickers(JSON.parse(savedStickers));
@@ -66,21 +62,18 @@ const Dashboard = () => {
       setStickers(initialStickers);
     }
     
-    // Load background
     const savedBackground = localStorage.getItem('background');
     if (savedBackground) {
       setBackground(savedBackground);
     }
   }, []);
   
-  // Save stickers to localStorage whenever they change
   useEffect(() => {
     if (stickers.length > 0) {
       localStorage.setItem('stickers', JSON.stringify(stickers));
     }
   }, [stickers]);
   
-  // Save background to localStorage whenever it changes
   useEffect(() => {
     if (background) {
       localStorage.setItem('background', background);
@@ -91,7 +84,6 @@ const Dashboard = () => {
   
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
     e.dataTransfer.setData('stickerId', sticker.id);
-    // Record if we're repositioning an already placed sticker
     setIsRepositioning(sticker.placed);
   };
 
@@ -102,7 +94,6 @@ const Dashboard = () => {
     const offsetY = parseInt(e.dataTransfer.getData('offsetY') || '0', 10);
     
     const rect = e.currentTarget.getBoundingClientRect();
-    // Calculate position accounting for the offset
     const x = e.clientX - rect.left - offsetX;
     const y = e.clientY - rect.top - offsetY;
     
@@ -114,7 +105,6 @@ const Dashboard = () => {
       )
     );
     
-    // Show different toast messages based on whether we're placing or repositioning
     if (isRepositioning) {
       toast({
         title: "Sticker repositioned!",
@@ -138,7 +128,6 @@ const Dashboard = () => {
 
   const handleStickerClick = (sticker: StickerType) => {
     if (sticker.placed) {
-      // Add or update the sticker in the openWidgets Map
       setOpenWidgets(prev => {
         const newMap = new Map(prev);
         newMap.set(sticker.id, { sticker, isOpen: true });
@@ -160,16 +149,8 @@ const Dashboard = () => {
   };
 
   const handleDeleteSticker = (sticker: StickerType) => {
-    // Update the stickers array to mark the sticker as not placed
-    setStickers(prevStickers => 
-      prevStickers.map(s => 
-        s.id === sticker.id 
-          ? { ...s, placed: false, position: { x: 0, y: 0 } } 
-          : s
-      )
-    );
+    setStickers(prevStickers => prevStickers.filter(s => s.id !== sticker.id));
     
-    // Close the widget if it's open
     setOpenWidgets(prev => {
       const newMap = new Map(prev);
       newMap.delete(sticker.id);
@@ -177,12 +158,12 @@ const Dashboard = () => {
     });
     
     toast({
-      title: "Sticker removed!",
-      description: "The sticker has been sent back to the sidebar.",
+      title: "Sticker deleted!",
+      description: "The sticker has been permanently removed.",
       duration: 3000,
     });
   };
-  
+
   const handleUpdateSticker = (updatedSticker: StickerType) => {
     setStickers(prevStickers => 
       prevStickers.map(s => 
@@ -190,7 +171,6 @@ const Dashboard = () => {
       )
     );
     
-    // Update the sticker in openWidgets if it's there
     setOpenWidgets(prev => {
       if (!prev.has(updatedSticker.id)) return prev;
       
@@ -203,11 +183,9 @@ const Dashboard = () => {
     });
   };
 
-  // Handle the creation of a new custom sticker
   const handleStickerCreated = (newSticker: StickerType) => {
     setStickers(prevStickers => [...prevStickers, newSticker]);
     
-    // Add a placeholder widget data for the custom sticker
     if (!widgetDataMap[newSticker.name]) {
       widgetDataMap[newSticker.name] = {
         title: `${newSticker.name}`,
@@ -216,44 +194,6 @@ const Dashboard = () => {
     }
   };
 
-  // Handle permanently deleting a sticker
-  const handleStickerDelete = (sticker: StickerType) => {
-    // Only custom stickers can be permanently deleted
-    if (sticker.isCustom) {
-      // This is the fix - we now correctly filter out the sticker with the matching ID
-      setStickers(prevStickers => prevStickers.filter(s => s.id !== sticker.id));
-      
-      // Close the widget if it's open
-      setOpenWidgets(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(sticker.id);
-        return newMap;
-      });
-      
-      toast({
-        title: "Sticker deleted!",
-        description: "The custom sticker has been permanently removed.",
-        duration: 3000,
-      });
-    } else {
-      // For built-in stickers, we just return them to the tray
-      setStickers(prevStickers => 
-        prevStickers.map(s => 
-          s.id === sticker.id 
-            ? { ...s, placed: false, position: { x: 0, y: 0 } } 
-            : s
-        )
-      );
-      
-      toast({
-        title: "Sticker returned to tray",
-        description: "Built-in stickers cannot be deleted, but this one has been returned to the tray.",
-        duration: 3000,
-      });
-    }
-  };
-
-  // Filter stickers that have been placed
   const placedStickers = stickers.filter(sticker => sticker.placed);
 
   return (
@@ -308,7 +248,6 @@ const Dashboard = () => {
         />
       </div>
       
-      {/* Render multiple widget modals */}
       {Array.from(openWidgets.entries()).map(([id, { sticker, isOpen }]) => {
         const widgetData = widgetDataMap[sticker.name];
         if (!widgetData) return null;
