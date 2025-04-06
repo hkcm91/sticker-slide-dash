@@ -149,8 +149,22 @@ const Dashboard = () => {
     setBackground(url);
   };
 
+  // Modified to return built-in stickers to the tray instead of permanently deleting them
   const handleDeleteSticker = (sticker: StickerType) => {
-    setStickers(prevStickers => prevStickers.filter(s => s.id !== sticker.id));
+    // For built-in stickers, just reset their position and 'placed' property
+    const isBuiltIn = initialStickers.some(s => s.id === sticker.id);
+    
+    setStickers(prevStickers => {
+      if (isBuiltIn) {
+        return prevStickers.map(s => 
+          s.id === sticker.id 
+            ? { ...s, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 } 
+            : s
+        );
+      } else {
+        return prevStickers.filter(s => s.id !== sticker.id);
+      }
+    });
     
     setOpenWidgets(prev => {
       const newMap = new Map(prev);
@@ -159,8 +173,10 @@ const Dashboard = () => {
     });
     
     toast({
-      title: "Sticker deleted!",
-      description: "The sticker has been permanently removed.",
+      title: isBuiltIn ? "Sticker returned to tray!" : "Sticker deleted!",
+      description: isBuiltIn 
+        ? "The sticker has been removed from the dashboard and returned to your tray."
+        : "The sticker has been permanently removed.",
       duration: 3000,
     });
   };

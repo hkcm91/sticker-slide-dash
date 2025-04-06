@@ -118,3 +118,68 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Subtle delete button styling */
+.sticker-delete-btn {
+  opacity: 0.6;
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.sticker-delete-btn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Sticker uploader styling improvements */
+.sticker-uploader-dialog .dialog-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sticker-uploader-tabs {
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.sticker-uploader-tab {
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.sticker-uploader-tab[data-state="active"] {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sticker-uploader-content {
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.sticker-uploader-footer {
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+/* File upload styling */
+.file-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.file-upload-area:hover {
+  border-color: #9b87f5;
+  background-color: rgba(155, 135, 245, 0.05);
+}
+
+.file-upload-area.active {
+  border-color: #6E59A5;
+  background-color: rgba(155, 135, 245, 0.1);
+}
