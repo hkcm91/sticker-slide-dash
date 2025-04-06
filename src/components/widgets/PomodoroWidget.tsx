@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { getWidget } from '@/lib/widgetAPI';
 import { Timer, RotateCcw, Play, Pause } from 'lucide-react';
@@ -25,6 +24,7 @@ interface PomodoroWidgetState {
 const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
   const [state, setState] = useState<PomodoroWidgetState>({ timeLeft: 1500, isRunning: false });
   const widget = getWidget(widgetName);
+  const previousStateRef = useRef<PomodoroWidgetState>({ timeLeft: 1500, isRunning: false });
 
   useEffect(() => {
     // Initialize the widget if it exists
@@ -38,13 +38,33 @@ const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
         isRunning: initialState.isRunning ?? false
       });
       
+      // Keep a reference to the current state to avoid unnecessary updates
+      previousStateRef.current = {
+        timeLeft: initialState.timeLeft ?? 1500,
+        isRunning: initialState.isRunning ?? false
+      };
+      
       // Setup an interval to poll for state changes
       const stateInterval = setInterval(() => {
         const currentState = widget.getState();
-        setState({
-          timeLeft: currentState.timeLeft ?? state.timeLeft,
-          isRunning: currentState.isRunning ?? state.isRunning
-        });
+        const newTimeLeft = currentState.timeLeft ?? previousStateRef.current.timeLeft;
+        const newIsRunning = currentState.isRunning ?? previousStateRef.current.isRunning;
+        
+        // Only update state if there's an actual change
+        if (newTimeLeft !== previousStateRef.current.timeLeft || 
+            newIsRunning !== previousStateRef.current.isRunning) {
+          
+          setState({
+            timeLeft: newTimeLeft,
+            isRunning: newIsRunning
+          });
+          
+          // Update the ref with new state
+          previousStateRef.current = {
+            timeLeft: newTimeLeft,
+            isRunning: newIsRunning
+          };
+        }
       }, 500);
       
       return () => clearInterval(stateInterval);
