@@ -4,15 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Upload, PackageOpen } from 'lucide-react';
+import { Plus, Upload, PackageOpen, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-import { createWidgetSticker } from '@/utils/createWidgetSticker';
 import { Sticker } from '@/types/stickers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createSimpleWidget, createSimpleIcon, processWidgetPackage } from '@/utils/widgetMaster';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface StickerUploaderProps {
   onStickerCreated: (sticker: Sticker) => void;
@@ -32,6 +34,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   const [widgetEmoji, setWidgetEmoji] = useState('🔧');
   const [widgetCode, setWidgetCode] = useState('');
   const [widgetZipFile, setWidgetZipFile] = useState<File | null>(null);
+  const [widgetIconFile, setWidgetIconFile] = useState<File | null>(null);
+  const [widgetIconPreview, setWidgetIconPreview] = useState<string | null>(null);
   const [processingPackage, setProcessingPackage] = useState(false);
 
   const { toast } = useToast();
@@ -57,6 +61,30 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     } else {
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleWidgetIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file for the widget icon.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setWidgetIconFile(file);
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setWidgetIconPreview(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleWidgetZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,7 +219,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     try {
       setProcessingPackage(true);
       
-      const newSticker = await processWidgetPackage(widgetZipFile, name);
+      const newSticker = await processWidgetPackage(widgetZipFile, name, widgetIconFile);
       
       setProcessingPackage(false);
       
@@ -235,6 +263,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     setWidgetEmoji('🔧');
     setWidgetCode('');
     setWidgetZipFile(null);
+    setWidgetIconFile(null);
+    setWidgetIconPreview(null);
     setActiveTab('simple');
     setProcessingPackage(false);
   };
@@ -250,8 +280,8 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-hidden p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>Create Custom Sticker or Widget</DialogTitle>
             <DialogDescription>
               Create a simple sticker, a widget with custom actions, or upload a widget package.
@@ -259,241 +289,285 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
           </DialogHeader>
 
           <Tabs defaultValue="simple" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 px-6">
               <TabsTrigger value="simple">Simple Sticker</TabsTrigger>
               <TabsTrigger value="widget">Widget Sticker</TabsTrigger>
               <TabsTrigger value="package">Upload Package</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="simple" className="space-y-4 mt-4">
-              <div className="grid gap-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">Name</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="col-span-3"
-                    placeholder="My Custom Sticker"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="file" className="text-right">File</Label>
-                  <div className="col-span-3">
-                    <Input
-                      id="file"
-                      type="file"
-                      onChange={handleFileChange}
-                      accept=".png,.jpg,.jpeg,.gif,.svg,.json"
-                      className="col-span-3"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Supports: PNG, JPG, GIF, SVG, Lottie JSON
-                    </p>
-                  </div>
-                </div>
-                
-                {previewUrl && (
+            <ScrollArea className="h-[65vh] px-6">
+              <TabsContent value="simple" className="space-y-4 mt-4 pb-4">
+                <div className="grid gap-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">Preview</Label>
-                    <div className="col-span-3 flex justify-center">
-                      {isLottie ? (
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs">Lottie</span>
-                        </div>
-                      ) : (
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="w-16 h-16 object-contain rounded-full"
-                        />
-                      )}
+                    <Label htmlFor="name" className="text-right">Name</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="col-span-3"
+                      placeholder="My Custom Sticker"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="file" className="text-right">File</Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="file"
+                        type="file"
+                        onChange={handleFileChange}
+                        accept=".png,.jpg,.jpeg,.gif,.svg,.json"
+                        className="col-span-3"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Supports: PNG, JPG, GIF, SVG, Lottie JSON
+                      </p>
                     </div>
                   </div>
-                )}
-                
-                <DialogFooter className="mt-4">
-                  <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
-                  <Button onClick={handleSubmitSimpleSticker}>Create Sticker</Button>
-                </DialogFooter>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="widget" className="space-y-4 mt-4">
-              <div className="grid gap-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="widget-name" className="text-right">Widget Name</Label>
-                  <Input
-                    id="widget-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="col-span-3"
-                    placeholder="MyWidget"
-                  />
+                  
+                  {previewUrl && (
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">Preview</Label>
+                      <div className="col-span-3 flex justify-center">
+                        {isLottie ? (
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs">Lottie</span>
+                          </div>
+                        ) : (
+                          <Avatar className="w-16 h-16">
+                            <AvatarImage src={previewUrl} alt="Preview" />
+                            <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="widget-title" className="text-right">Title</Label>
-                  <Input
-                    id="widget-title"
-                    value={widgetTitle}
-                    onChange={(e) => setWidgetTitle(e.target.value)}
-                    className="col-span-3"
-                    placeholder="My Awesome Widget"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="widget-description" className="text-right pt-2">Description</Label>
-                  <Textarea
-                    id="widget-description"
-                    value={widgetDescription}
-                    onChange={(e) => setWidgetDescription(e.target.value)}
-                    className="col-span-3"
-                    placeholder="Describe what your widget does..."
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="widget-color" className="text-right">Color</Label>
-                  <div className="col-span-3 flex gap-2">
+              </TabsContent>
+              
+              <TabsContent value="widget" className="space-y-4 mt-4 pb-4">
+                <div className="grid gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="widget-name" className="text-right">Widget Name</Label>
                     <Input
-                      id="widget-color"
-                      type="color"
-                      value={widgetColor}
-                      onChange={(e) => setWidgetColor(e.target.value)}
-                      className="w-12 h-8 p-0.5"
-                    />
-                    <Input
-                      value={widgetColor}
-                      onChange={(e) => setWidgetColor(e.target.value)}
-                      className="flex-1"
-                      placeholder="#4CAF50"
+                      id="widget-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="col-span-3"
+                      placeholder="MyWidget"
                     />
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="widget-emoji" className="text-right">Icon/Emoji</Label>
-                  <div className="col-span-3 flex gap-2">
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="widget-title" className="text-right">Title</Label>
                     <Input
-                      id="widget-emoji"
-                      value={widgetEmoji}
-                      onChange={(e) => setWidgetEmoji(e.target.value)}
-                      className="flex-1"
-                      placeholder="🔧 or a letter"
-                      maxLength={2}
-                    />
-                    <span className="text-sm text-gray-500 flex items-center">or</span>
-                    <Input
-                      type="file"
-                      onChange={handleFileChange}
-                      accept=".png,.jpg,.jpeg,.gif,.svg"
-                      className="flex-1"
+                      id="widget-title"
+                      value={widgetTitle}
+                      onChange={(e) => setWidgetTitle(e.target.value)}
+                      className="col-span-3"
+                      placeholder="My Awesome Widget"
                     />
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="widget-code" className="text-right pt-2">Widget Code</Label>
-                  <div className="col-span-3">
+                  
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="widget-description" className="text-right pt-2">Description</Label>
                     <Textarea
-                      id="widget-code"
-                      value={widgetCode}
-                      onChange={(e) => setWidgetCode(e.target.value)}
-                      className="font-mono text-xs"
-                      placeholder={`// Define your widget actions (optional)
+                      id="widget-description"
+                      value={widgetDescription}
+                      onChange={(e) => setWidgetDescription(e.target.value)}
+                      className="col-span-3"
+                      placeholder="Describe what your widget does..."
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="widget-color" className="text-right">Color</Label>
+                    <div className="col-span-3 flex gap-2">
+                      <Input
+                        id="widget-color"
+                        type="color"
+                        value={widgetColor}
+                        onChange={(e) => setWidgetColor(e.target.value)}
+                        className="w-12 h-8 p-0.5"
+                      />
+                      <Input
+                        value={widgetColor}
+                        onChange={(e) => setWidgetColor(e.target.value)}
+                        className="flex-1"
+                        placeholder="#4CAF50"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="widget-emoji" className="text-right">Icon/Emoji</Label>
+                    <div className="col-span-3 flex gap-2">
+                      <Input
+                        id="widget-emoji"
+                        value={widgetEmoji}
+                        onChange={(e) => setWidgetEmoji(e.target.value)}
+                        className="flex-1"
+                        placeholder="🔧 or a letter"
+                        maxLength={2}
+                      />
+                      <span className="text-sm text-gray-500 flex items-center">or</span>
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept=".png,.jpg,.jpeg,.gif,.svg"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                  
+                  {previewUrl && !isLottie && (
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">Preview</Label>
+                      <div className="col-span-3 flex justify-center">
+                        <Avatar className="w-16 h-16">
+                          <AvatarImage src={previewUrl} alt="Icon Preview" />
+                          <AvatarFallback>{widgetEmoji || name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="widget-code" className="text-right pt-2">Widget Code</Label>
+                    <div className="col-span-3">
+                      <Textarea
+                        id="widget-code"
+                        value={widgetCode}
+                        onChange={(e) => setWidgetCode(e.target.value)}
+                        className="font-mono text-xs"
+                        placeholder={`// Define your widget actions (optional)
 {
   // Example:
   increment: (state) => ({ ...state, count: (state.count || 0) + 1 }),
   decrement: (state) => ({ ...state, count: (state.count || 0) - 1 }),
   reset: (state) => ({ ...state, count: 0 })
 }`}
-                      rows={8}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Optional: Define actions for your widget. This creates a simple widget API.
-                    </p>
-                  </div>
-                </div>
-                
-                <DialogFooter className="mt-4">
-                  <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
-                  <Button onClick={handleSubmitWidgetSticker}>Create Widget</Button>
-                </DialogFooter>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="package" className="space-y-4 mt-4">
-              <div className="grid gap-4">
-                <Alert className="bg-blue-50 border-blue-200 mb-4">
-                  <AlertDescription className="text-blue-800">
-                    Upload a widget package (ZIP file) containing your widget files.
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="package-name" className="text-right">Widget Name</Label>
-                  <Input
-                    id="package-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="col-span-3"
-                    placeholder="ToDoList"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="widget-zip" className="text-right">Widget Package</Label>
-                  <div className="col-span-3">
-                    <Input
-                      id="widget-zip"
-                      type="file"
-                      onChange={handleWidgetZipChange}
-                      accept=".zip"
-                      className="col-span-3"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Upload a ZIP file containing your widget package
-                    </p>
-                  </div>
-                </div>
-                
-                {widgetZipFile && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <div className="text-right">Selected Package</div>
-                    <div className="col-span-3 bg-gray-100 p-2 rounded text-sm flex items-center">
-                      <PackageOpen className="mr-2 h-4 w-4" />
-                      {widgetZipFile.name} ({Math.round(widgetZipFile.size / 1024)} KB)
+                        rows={8}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Optional: Define actions for your widget. This creates a simple widget API.
+                      </p>
                     </div>
                   </div>
-                )}
-                
-                <div className="col-span-4 bg-blue-50 p-4 rounded-md mt-2">
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">Widget Package Structure</h4>
-                  <p className="text-xs text-blue-700 mb-2">
-                    Your ZIP file should contain:
-                  </p>
-                  <ul className="text-xs text-blue-700 list-disc pl-5 space-y-1">
-                    <li>manifest.json - Widget definition</li>
-                    <li>icon.png/svg - Widget icon</li>
-                    <li>index.html - Widget content (optional)</li>
-                  </ul>
                 </div>
-                
-                <DialogFooter className="mt-4">
-                  <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
-                  <Button 
-                    onClick={handleSubmitWidgetZip} 
-                    disabled={processingPackage}
-                  >
-                    {processingPackage ? "Processing..." : "Upload Widget"}
-                  </Button>
-                </DialogFooter>
-              </div>
-            </TabsContent>
+              </TabsContent>
+              
+              <TabsContent value="package" className="space-y-4 mt-4 pb-4">
+                <div className="grid gap-4">
+                  <Alert className="bg-blue-50 border-blue-200 mb-4">
+                    <AlertDescription className="text-blue-800">
+                      Upload a widget package (ZIP file) containing your widget files.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="package-name" className="text-right">Widget Name</Label>
+                    <Input
+                      id="package-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="col-span-3"
+                      placeholder="ToDoList"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="widget-zip" className="text-right">Widget Package</Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="widget-zip"
+                        type="file"
+                        onChange={handleWidgetZipChange}
+                        accept=".zip"
+                        className="col-span-3"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Upload a ZIP file containing your widget package
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="widget-icon" className="text-right">Custom Icon</Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="widget-icon"
+                        type="file"
+                        onChange={handleWidgetIconChange}
+                        accept="image/*"
+                        className="col-span-3"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Optional: Upload a custom icon for your widget
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    {widgetZipFile && (
+                      <div className="text-right">Package</div>
+                    )}
+                    <div className="col-span-3">
+                      {widgetZipFile && (
+                        <div className="bg-gray-100 p-2 rounded text-sm flex items-center mb-2">
+                          <PackageOpen className="mr-2 h-4 w-4" />
+                          {widgetZipFile.name} ({Math.round(widgetZipFile.size / 1024)} KB)
+                        </div>
+                      )}
+                      
+                      {widgetIconPreview && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Avatar className="w-12 h-12">
+                            <AvatarImage src={widgetIconPreview} alt="Icon Preview" />
+                            <AvatarFallback><Image size={16} /></AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm text-gray-600">Custom icon will be used</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-4 bg-blue-50 p-4 rounded-md mt-2">
+                    <h4 className="text-sm font-medium text-blue-800 mb-2">Widget Package Structure</h4>
+                    <p className="text-xs text-blue-700 mb-2">
+                      Your ZIP file should contain:
+                    </p>
+                    <ul className="text-xs text-blue-700 list-disc pl-5 space-y-1">
+                      <li>manifest.json - Widget definition</li>
+                      <li>icon.png/svg - Widget icon (optional)</li>
+                      <li>index.html - Widget content</li>
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+            </ScrollArea>
+            
+            <DialogFooter className="px-6 py-4 border-t">
+              <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
+              {activeTab === 'simple' && (
+                <Button onClick={handleSubmitSimpleSticker}>Create Sticker</Button>
+              )}
+              {activeTab === 'widget' && (
+                <Button onClick={handleSubmitWidgetSticker}>Create Widget</Button>
+              )}
+              {activeTab === 'package' && (
+                <Button 
+                  onClick={handleSubmitWidgetZip} 
+                  disabled={processingPackage}
+                  className="flex items-center gap-2"
+                >
+                  {processingPackage ? "Processing..." : "Upload Widget"}
+                </Button>
+              )}
+            </DialogFooter>
           </Tabs>
         </DialogContent>
       </Dialog>

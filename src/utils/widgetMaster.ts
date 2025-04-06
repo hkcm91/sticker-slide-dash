@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Sticker } from '@/types/stickers';
 import { WidgetAPI, registerWidget } from '@/lib/widgetAPI';
@@ -178,7 +179,11 @@ const storeWidgetData = async (
 /**
  * Processes a widget package ZIP file and creates a proper widget
  */
-export const processWidgetPackage = async (zipFile: File, widgetName: string): Promise<Sticker | null> => {
+export const processWidgetPackage = async (
+  zipFile: File, 
+  widgetName: string,
+  customIconFile?: File | null
+): Promise<Sticker | null> => {
   try {
     console.log(`Processing widget package: ${zipFile.name}`);
     
@@ -219,11 +224,25 @@ export const processWidgetPackage = async (zipFile: File, widgetName: string): P
     // Get HTML content
     files['index.html'] = await entryFile.async('string');
     
-    // Store icon if available
-    const iconFile = manifest.icon ? zip.file(manifest.icon) : zip.file('icon.png') || zip.file('icon.svg');
-    if (iconFile) {
-      const iconBlob = await iconFile.async('blob');
-      files[manifest.icon || 'icon'] = iconBlob;
+    // Process the icon - either from custom upload, package, or create a placeholder
+    let widgetIcon;
+    
+    if (customIconFile) {
+      // Use the custom uploaded icon
+      const iconBlob = customIconFile;
+      files['custom-icon'] = iconBlob;
+      widgetIcon = URL.createObjectURL(iconBlob);
+    } else {
+      // Look for icon in the package
+      const iconFile = manifest.icon ? zip.file(manifest.icon) : zip.file('icon.png') || zip.file('icon.svg');
+      if (iconFile) {
+        const iconBlob = await iconFile.async('blob');
+        files[manifest.icon || 'icon'] = iconBlob;
+        widgetIcon = URL.createObjectURL(iconBlob);
+      } else {
+        // Create a placeholder icon
+        widgetIcon = createSimpleIcon('📋', '#6200EA');
+      }
     }
     
     // Store the data in IndexedDB
@@ -261,17 +280,6 @@ export const processWidgetPackage = async (zipFile: File, widgetName: string): P
         };
       }
     };
-    
-    // Create a widget icon - either using the extracted one or a placeholder
-    let widgetIcon;
-    if (iconFile) {
-      // Create a URL for the icon blob
-      const iconBlob = files[manifest.icon || 'icon'] as Blob;
-      widgetIcon = URL.createObjectURL(iconBlob);
-    } else {
-      // Create a placeholder icon
-      widgetIcon = createSimpleIcon('📋', '#6200EA');
-    }
     
     // Create a widget sticker
     const sticker = createSimpleWidget({
