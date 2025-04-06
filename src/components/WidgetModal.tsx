@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -10,6 +10,7 @@ import { Card, CardContent } from './ui/card';
 import { Separator } from './ui/separator';
 import { ClipboardCopy, Check, Clipboard, PlusCircle, MinusCircle, RefreshCcw, ToggleLeft } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import useWidgetIframe from '@/hooks/useWidgetIframe';
 
 interface WidgetModalProps {
   isOpen: boolean;
@@ -21,51 +22,82 @@ interface WidgetModalProps {
 const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps) => {
   const [widgetState, setWidgetState] = useState<any>({});
   const [actionHistory, setActionHistory] = useState<string[]>([]);
+  const [availableActions, setAvailableActions] = useState<string[]>([]);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   
-  // Update widget state periodically
+  // Use our custom hook for iframe widgets
+  const { 
+    isLoaded: iframeLoaded, 
+    widgetState: iframeWidgetState 
+  } = useWidgetIframe({
+    widgetId: sticker?.widgetType,
+    iframeRef
+  });
+  
+  // Initialize the widget when it's opened
   useEffect(() => {
-    if (!sticker || !sticker.widgetType) return;
+    if (!sticker || !sticker.widgetType || !isOpen) return;
+    
+    // Skip initialization for ZIP-based widgets as they're handled by the iframe
+    if (sticker.packageUrl) return;
     
     const widget = getWidget(sticker.widgetType);
     if (!widget) return;
     
-    // Initial state fetch
     try {
+      // Initialize the widget
+      widget.init();
+      
+      // Initial state fetch
       const state = widget.getState();
       setWidgetState(state);
+      
+      // Detect available actions without triggering them
+      const actions = ['increment', 'decrement', 'reset', 'toggle'].filter(action => {
+        try {
+          return typeof widget.trigger === 'function';
+        } catch (e) {
+          return false;
+        }
+      });
+      
+      setAvailableActions(actions);
     } catch (e) {
-      console.error(`Error getting widget state for ${sticker.widgetType}:`, e);
+      console.error(`Error initializing widget ${sticker.widgetType}:`, e);
     }
     
     // Set up interval to refresh state
     const interval = setInterval(() => {
       try {
+        if (!sticker || !sticker.widgetType) return;
+        
+        // Skip for ZIP-based widgets
+        if (sticker.packageUrl) return;
+        
+        const widget = getWidget(sticker.widgetType);
+        if (!widget) return;
+        
         const state = widget.getState();
         setWidgetState(state);
       } catch (e) {
-        console.error(`Error getting widget state for ${sticker.widgetType}:`, e);
+        console.error(`Error getting widget state:`, e);
       }
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [sticker]);
+  }, [sticker, isOpen]);
+
+  // Update state from iframe if available
+  useEffect(() => {
+    if (sticker?.packageUrl && Object.keys(iframeWidgetState).length > 0) {
+      setWidgetState(iframeWidgetState);
+    }
+  }, [sticker, iframeWidgetState]);
 
   if (!sticker || !widgetData) return null;
 
-  // Initialize the widget if it hasn't been yet
-  if (sticker.widgetType) {
-    const widget = getWidget(sticker.widgetType);
-    if (widget) {
-      try {
-        widget.init();
-      } catch (e) {
-        console.error(`Error initializing widget ${sticker.widgetType}:`, e);
-      }
-    }
-  }
-
   // Function to handle widget actions
-  const handleWidgetAction = (action: string) => {
+  const handleWidgetAction = useCallback((action: string) => {
     if (!sticker?.widgetType) return;
     
     const widget = getWidget(sticker.widgetType);
@@ -85,28 +117,53 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     } catch (e) {
       console.error(`Error triggering action ${action} on widget ${sticker.widgetType}:`, e);
     }
-  };
+  }, [sticker]);
 
   // Memoize the renderWidgetContent function to prevent recreation on each render
-  const renderWidgetContent = () => {
+  const renderWidgetContent = useCallback(() => {
+    if (!sticker) return null;
+    
     if (sticker.widgetType === 'Pomodoro') {
       return <PomodoroWidgetUI widgetName="Pomodoro" />;
     }
     
-    // Check if there's a registered widget for this type
+    // If this is a ZIP-based widget, show the iframe
+    if (sticker.packageUrl) {
+      return (
+        <div className="py-4 space-y-4">
+          <div className="bg-gray-50 rounded-md overflow-hidden" style={{ height: '300px' }}>
+            <iframe 
+              ref={iframeRef}
+              sandbox="allow-scripts allow-same-origin"
+              className="w-full h-full border-0"
+              title={`${sticker.name} Widget`}
+            />
+          </div>
+          
+          {/* Widget state display */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-medium mb-2">Widget State:</h3>
+              <pre className="text-xs overflow-auto max-h-40 bg-gray-100 p-3 rounded-md">
+                {JSON.stringify(widgetState, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+          
+          <Separator />
+          
+          <div>
+            <p className="text-sm text-gray-600">{widgetData.content}</p>
+            {sticker.packageUrl && (
+              <p className="text-xs text-gray-500 mt-1">Source: {sticker.packageUrl}</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    // For traditional widgets with actions
     if (sticker.widgetType && getWidget(sticker.widgetType)) {
-      // For detecting available actions, we'll use a cached result to avoid
-      // triggering actions on every render, which could cause infinite loops
-      const availableActions = ['increment', 'decrement', 'reset', 'toggle'].filter(action => {
-        try {
-          // Don't actually trigger the action during render
-          // Just check if the widget has this action defined
-          return typeof getWidget(sticker.widgetType!)?.trigger === 'function';
-        } catch (e) {
-          return false;
-        }
-      });
-      
       return (
         <div className="py-4 space-y-4">
           <Card>
@@ -198,7 +255,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
     
     // Default content if no special widget is available
     return <div className="py-4">{widgetData.content}</div>;
-  };
+  }, [sticker, widgetData, widgetState, availableActions, actionHistory, handleWidgetAction]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
