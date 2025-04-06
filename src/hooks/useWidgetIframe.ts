@@ -9,143 +9,150 @@ interface UseWidgetIframeProps {
 
 export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isWidgetReady, setIsWidgetReady] = useState(false);
   const [widgetState, setWidgetState] = useState<any>({});
   const messageHandlerRef = useRef<any>(null);
   
-  // Initialize the iframe with the widget's HTML content
+  // Load the HTML content into the iframe
   useEffect(() => {
+    setIsLoaded(false);
+    setIsWidgetReady(false);
+    
     if (!widgetId || !iframeRef.current) return;
     
     const loadWidgetContent = async () => {
       try {
-        console.log(`Loading HTML content for widget ${widgetId}`);
+        console.log(`[Parent] Loading HTML content for widget ${widgetId}`);
         
         // Get the HTML content from storage
         const html = await getWidgetHtml(widgetId);
         
         if (!html || !iframeRef.current) {
-          console.error('Failed to load widget content or iframe is not available', { 
+          console.error('[Parent] Failed to load widget content or iframe is not available', { 
             htmlExists: !!html, 
             iframeExists: !!iframeRef.current 
           });
           return;
         }
         
-        console.log(`Setting HTML content to iframe for widget ${widgetId}`);
-        console.log(`HTML length: ${html.length} characters`);
-        
-        // Debug the HTML content first few characters
-        console.log(`HTML content preview: ${html.substring(0, 100)}...`);
+        console.log(`[Parent] HTML content for widget ${widgetId} retrieved (${html.length} bytes)`);
+        console.log(`[Parent] HTML content preview: ${html.substring(0, 200)}...`);
         
         // Set the content into the iframe
         iframeRef.current.srcdoc = html;
         setIsLoaded(true);
+        console.log(`[Parent] Set srcdoc for iframe widget ${widgetId}. Waiting for WIDGET_READY signal.`);
       } catch (error) {
-        console.error('Error loading widget iframe content:', error);
+        console.error('[Parent] Error loading widget iframe content:', error);
       }
     };
     
     loadWidgetContent();
-    
-    return () => {
-      setIsLoaded(false);
-    };
   }, [widgetId, iframeRef]);
   
-  // Set up the message passing between the main app and the iframe
+  // Set up the message communication between parent app and iframe
   useEffect(() => {
-    if (!widgetId || !iframeRef.current || !isLoaded) return;
+    if (!widgetId || !iframeRef.current || !isLoaded) {
+      console.log(`[Parent] Message listener setup skipped for ${widgetId}`, { 
+        widgetId, 
+        iframeExists: !!iframeRef.current, 
+        isLoaded 
+      });
+      return;
+    }
     
-    const sendInitialState = async () => {
-      try {
-        console.log(`Sending initial state to iframe for widget ${widgetId}`);
-        
-        // Get the current state from storage
-        const state = await getWidgetState(widgetId);
-        setWidgetState(state);
-        
-        console.log(`Initial state for iframe widget ${widgetId}:`, state);
-        
-        // Wait for iframe to be fully loaded
-        if (iframeRef.current?.contentWindow) {
-          console.log('Iframe contentWindow is available, sending INIT_STATE message');
-          
-          // Send the initial state to the iframe
-          iframeRef.current.contentWindow.postMessage({
-            type: 'INIT_STATE',
-            payload: state
-          }, '*');
-        } else {
-          console.error('Iframe contentWindow is not available, cannot send initial state');
-        }
-      } catch (error) {
-        console.error('Error sending initial state to iframe:', error);
-      }
-    };
+    const currentIframe = iframeRef.current;
     
-    // Set up message event listener for communication from the iframe
     const handleMessage = async (event: MessageEvent) => {
       try {
         // Make sure the message is from our iframe
-        if (event.source !== iframeRef.current?.contentWindow) return;
+        if (!currentIframe || event.source !== currentIframe.contentWindow) {
+          return;
+        }
         
-        console.log(`Received message from iframe for widget ${widgetId}:`, event.data);
+        console.log(`[Parent] Received message from iframe for widget ${widgetId}:`, event.data);
         
         const { type, payload } = event.data;
         
-        if (type === 'UPDATE_STATE') {
-          console.log(`Updating state for widget ${widgetId} from iframe:`, payload);
+        // Handle the WIDGET_READY message (handshake step 1)
+        if (type === 'WIDGET_READY') {
+          console.log(`[Parent] Received WIDGET_READY from widget ${widgetId}. Sending initial state.`);
+          setIsWidgetReady(true);
+          
+          try {
+            // Get the current state from storage
+            const state = await getWidgetState(widgetId);
+            console.log(`[Parent] Initial state fetched for widget ${widgetId}:`, state);
+            
+            setWidgetState(state || {});
+            
+            // Send the initial state to the iframe
+            if (currentIframe.contentWindow) {
+              currentIframe.contentWindow.postMessage({
+                type: 'INIT_STATE',
+                payload: state || {}
+              }, '*');
+              console.log(`[Parent] Sent INIT_STATE to widget ${widgetId}`);
+            } else {
+              console.error(`[Parent] Iframe contentWindow lost before sending INIT_STATE to ${widgetId}`);
+            }
+          } catch (error) {
+            console.error(`[Parent] Error fetching/sending initial state for ${widgetId}:`, error);
+            setWidgetState({});
+          }
+        }
+        else if (type === 'UPDATE_STATE') {
+          console.log(`[Parent] Updating state for widget ${widgetId} from iframe:`, payload);
           
           // Save the new state
           await updateWidgetState(widgetId, payload);
           
           // Update our local state
-          setWidgetState(payload);
-        } else if (type === 'GET_STATE') {
-          console.log(`Iframe requested current state for widget ${widgetId}`);
+          setWidgetState(payload || {});
+        } 
+        else if (type === 'GET_STATE') {
+          console.log(`[Parent] Iframe requested current state for widget ${widgetId}`);
           
           const currentState = await getWidgetState(widgetId);
+          setWidgetState(currentState || {});
           
-          if (iframeRef.current?.contentWindow) {
-            console.log(`Sending current state to iframe for widget ${widgetId}:`, currentState);
+          if (currentIframe.contentWindow) {
+            console.log(`[Parent] Sending current state to iframe for widget ${widgetId}:`, currentState);
             
-            iframeRef.current.contentWindow.postMessage({
+            currentIframe.contentWindow.postMessage({
               type: 'CURRENT_STATE',
-              payload: currentState
+              payload: currentState || {}
             }, '*');
           } else {
-            console.error('Iframe contentWindow is not available, cannot send current state');
+            console.error(`[Parent] Iframe contentWindow lost before sending CURRENT_STATE to ${widgetId}`);
           }
         }
       } catch (error) {
-        console.error('Error handling iframe message:', error);
+        console.error('[Parent] Error handling iframe message:', error);
       }
     };
     
-    console.log(`Setting up message listener for iframe widget ${widgetId}`);
+    console.log(`[Parent] Setting up message listener for iframe widget ${widgetId}`);
     
     // Save the handler so we can remove it later
     messageHandlerRef.current = handleMessage;
     window.addEventListener('message', handleMessage);
     
-    // Send initial state once iframe is loaded
-    iframeRef.current.onload = () => {
-      console.log(`Iframe for widget ${widgetId} is now loaded, sending initial state`);
-      sendInitialState();
-    };
-    
     return () => {
-      console.log(`Cleaning up message listener for iframe widget ${widgetId}`);
+      console.log(`[Parent] Cleaning up message listener for iframe widget ${widgetId}`);
       
       // Clean up the event listener
       if (messageHandlerRef.current) {
         window.removeEventListener('message', messageHandlerRef.current);
+        messageHandlerRef.current = null;
       }
+      
+      setIsWidgetReady(false);
     };
   }, [widgetId, iframeRef, isLoaded]);
   
   return {
-    isLoaded,
+    isLoaded: isLoaded && isWidgetReady,
     widgetState
   };
 };

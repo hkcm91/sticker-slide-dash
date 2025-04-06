@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Sticker } from '@/types/stickers';
 import { WidgetAPI, registerWidget } from '@/lib/widgetAPI';
@@ -316,8 +315,122 @@ export const getWidgetHtml = async (widgetId: string): Promise<string | null> =>
       
       request.onsuccess = () => {
         if (request.result && request.result.files && request.result.files['index.html']) {
-          resolve(request.result.files['index.html'] as string);
+          let html = request.result.files['index.html'] as string;
+          
+          // Inject the handshake script right before </body>
+          const handshakeScript = `
+<script>
+// Widget handshake script
+(function() {
+  console.log('[Widget] Initializing widget and handshake');
+  let internalState = {};
+  let hasSignaledReady = false;
+  
+  function updateUI(state) {
+    console.log('[Widget] Updating UI with state:', state);
+    internalState = state || {};
+    
+    // Try to find a display element to show the state
+    const stateDisplay = document.getElementById('widget-state-display');
+    if(stateDisplay) {
+      stateDisplay.textContent = JSON.stringify(state, null, 2);
+    }
+    
+    // You can add more UI update logic here
+  }
+  
+  function handleIncrement() {
+    console.log('[Widget] Increment action called');
+    const newState = { ...internalState, count: (internalState.count || 0) + 1 };
+    window.parent.postMessage({ type: 'UPDATE_STATE', payload: newState }, '*');
+  }
+  
+  function handleDecrement() {
+    console.log('[Widget] Decrement action called');
+    const newState = { ...internalState, count: Math.max(0, (internalState.count || 0) - 1) };
+    window.parent.postMessage({ type: 'UPDATE_STATE', payload: newState }, '*');
+  }
+  
+  function handleReset() {
+    console.log('[Widget] Reset action called');
+    const newState = { ...internalState, count: 0 };
+    window.parent.postMessage({ type: 'UPDATE_STATE', payload: newState }, '*');
+  }
+  
+  function handleToggle() {
+    console.log('[Widget] Toggle action called');
+    const newState = { ...internalState, active: !(internalState.active || false) };
+    window.parent.postMessage({ type: 'UPDATE_STATE', payload: newState }, '*');
+  }
+  
+  function signalReady() {
+    if (!hasSignaledReady) {
+      console.log('[Widget] Sending WIDGET_READY signal to parent');
+      window.parent.postMessage({ type: 'WIDGET_READY' }, '*');
+      hasSignaledReady = true;
+    }
+  }
+  
+  // Listen for messages from parent
+  window.addEventListener('message', function(event) {
+    console.log('[Widget] Received message from parent:', event.data);
+    const { type, payload } = event.data;
+    
+    if (type === 'INIT_STATE' || type === 'CURRENT_STATE') {
+      updateUI(payload);
+    }
+  });
+  
+  // Connect any action buttons that might exist in the widget
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Widget] DOM loaded, connecting action buttons if they exist');
+    
+    // Try to find and connect action buttons
+    const incButton = document.getElementById('increment-button');
+    if (incButton) incButton.addEventListener('click', handleIncrement);
+    
+    const decButton = document.getElementById('decrement-button');
+    if (decButton) decButton.addEventListener('click', handleDecrement);
+    
+    const resetButton = document.getElementById('reset-button');
+    if (resetButton) resetButton.addEventListener('click', handleReset);
+    
+    const toggleButton = document.getElementById('toggle-button');
+    if (toggleButton) toggleButton.addEventListener('click', handleToggle);
+    
+    // Add a fallback state display if none exists
+    if (!document.getElementById('widget-state-display')) {
+      const stateDisplay = document.createElement('pre');
+      stateDisplay.id = 'widget-state-display';
+      stateDisplay.style.margin = '10px';
+      stateDisplay.style.padding = '10px';
+      stateDisplay.style.background = '#f5f5f5';
+      stateDisplay.style.border = '1px solid #ddd';
+      stateDisplay.style.borderRadius = '4px';
+      stateDisplay.style.overflow = 'auto';
+      stateDisplay.textContent = 'Waiting for state...';
+      document.body.appendChild(stateDisplay);
+    }
+    
+    // Signal we're ready to receive state
+    signalReady();
+  });
+})();
+</script>
+`;
+          
+          if (html.includes('</body>')) {
+            // Insert the script right before </body>
+            html = html.replace('</body>', handshakeScript + '\n</body>');
+          } else {
+            // If no </body> tag, append to the end
+            html += handshakeScript;
+          }
+          
+          console.log(`[Parent] Widget HTML enhanced with handshake script for ${widgetId}`);
+          resolve(html);
         } else {
+          console.error(`[Parent] No HTML file found for widget ${widgetId}`);
           resolve(null);
         }
       };
@@ -325,7 +438,7 @@ export const getWidgetHtml = async (widgetId: string): Promise<string | null> =>
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('Error getting widget HTML:', error);
+    console.error('[Parent] Error getting widget HTML:', error);
     return null;
   }
 };
