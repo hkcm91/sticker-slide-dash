@@ -23,6 +23,13 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   const [isLottie, setIsLottie] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('simple');
+  
+  const [widgetTitle, setWidgetTitle] = useState('');
+  const [widgetDescription, setWidgetDescription] = useState('');
+  const [widgetColor, setWidgetColor] = useState('#4CAF50');
+  const [widgetEmoji, setWidgetEmoji] = useState('🔧');
+  const [widgetCode, setWidgetCode] = useState('');
+  const [widgetZipFile, setWidgetZipFile] = useState<File | null>(null);
 
   const { toast } = useToast();
 

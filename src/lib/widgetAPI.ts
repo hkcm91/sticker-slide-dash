@@ -6,7 +6,7 @@ export interface WidgetAPI {
   init(): void;
   getState(): WidgetState;
   setState(state: Partial<WidgetState>): void;
-  trigger(action: string, payload?: any): void;
+  trigger(action: string, payload?: any): boolean;
 }
 
 // Registry to keep track of all available widgets

@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Sticker } from '@/types/stickers';
 import { WidgetAPI, registerWidget } from '@/lib/widgetAPI';
