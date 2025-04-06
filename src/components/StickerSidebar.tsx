@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
@@ -142,6 +141,7 @@ const StickerSidebar = ({
             id: currentlyEditing.id,
             position: currentlyEditing.position,
             placed: currentlyEditing.placed,
+            description: editDescription,
           };
         }
       } catch (error) {

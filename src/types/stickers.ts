@@ -12,6 +12,9 @@ export interface Sticker {
   widgetType?: string; // Maps to a registered widget name
   isCustom?: boolean; // Flag for user-uploaded stickers
   packageUrl?: string; // URL to widget package (for remote widgets)
+  description?: string; // Description of the sticker
+  widgetCode?: string; // Code for widget functionality
+  widgetActions?: Record<string, (state: any, payload?: any) => any>; // Actions for the widget
 }
 
 export interface WidgetData {
