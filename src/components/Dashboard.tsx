@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -219,6 +220,7 @@ const Dashboard = () => {
   const handleStickerDelete = (sticker: StickerType) => {
     // Only custom stickers can be permanently deleted
     if (sticker.isCustom) {
+      // This is the fix - we now correctly filter out the sticker with the matching ID
       setStickers(prevStickers => prevStickers.filter(s => s.id !== sticker.id));
       
       // Close the widget if it's open
@@ -231,6 +233,21 @@ const Dashboard = () => {
       toast({
         title: "Sticker deleted!",
         description: "The custom sticker has been permanently removed.",
+        duration: 3000,
+      });
+    } else {
+      // For built-in stickers, we just return them to the tray
+      setStickers(prevStickers => 
+        prevStickers.map(s => 
+          s.id === sticker.id 
+            ? { ...s, placed: false, position: { x: 0, y: 0 } } 
+            : s
+        )
+      );
+      
+      toast({
+        title: "Sticker returned to tray",
+        description: "Built-in stickers cannot be deleted, but this one has been returned to the tray.",
         duration: 3000,
       });
     }
