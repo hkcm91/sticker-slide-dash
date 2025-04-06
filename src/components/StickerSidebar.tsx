@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
@@ -449,7 +450,7 @@ const StickerSidebar = ({
               className="w-full sm:w-auto"
             >
               <Trash className="mr-2 h-4 w-4" />
-              Delete Permanently
+              Delete
             </Button>
             <div className="flex-1"></div>
             <Button variant="outline" onClick={handleCloseEdit}>Cancel</Button>
@@ -472,7 +473,7 @@ const StickerSidebar = ({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteSticker} className="bg-red-600 hover:bg-red-700">
-              Delete Permanently
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
