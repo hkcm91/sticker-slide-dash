@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
@@ -17,6 +18,7 @@ import { processWidgetPackage } from '@/utils/widgetMaster';
 import { useToast } from '@/hooks/use-toast';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 
+// Changed the type definition here to match ThemeContext
 interface StickerSidebarProps {
   stickers: StickerType[];
   onDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => void;
@@ -24,7 +26,7 @@ interface StickerSidebarProps {
   onStickerCreated: (sticker: StickerType) => void;
   onStickerDelete: (sticker: StickerType) => void;
   onStickerUpdate?: (sticker: StickerType) => void;
-  sidebarStyle: 'default' | 'compact';
+  sidebarStyle: 'default' | 'minimal' | 'colorful';
 }
 
 const StickerSidebar = ({ 
