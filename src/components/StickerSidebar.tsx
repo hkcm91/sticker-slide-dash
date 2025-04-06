@@ -2,13 +2,16 @@
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
-import { ChevronRight, ChevronLeft, Trash, Edit, Pencil, RotateCw, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import StickerUploader from './StickerUploader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface StickerSidebarProps {
   stickers: StickerType[];
@@ -30,7 +33,9 @@ const StickerSidebar = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentlyEditing, setCurrentlyEditing] = useState<string | null>(null);
-  const [currentRotation, setCurrentRotation] = useState(0);
+  const [editName, setEditName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -48,49 +53,67 @@ const StickerSidebar = ({
     onStickerDelete(sticker);
   };
 
-  // Handle entering edit mode for a sticker
-  const handleEditSticker = (sticker: StickerType, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setCurrentlyEditing(sticker.id);
-    setCurrentRotation(sticker.rotation || 0);
-    setEditMode(true);
+  // Handle sticker click to open edit mode
+  const handleStickerClick = (sticker: StickerType) => {
+    if (sticker.isCustom) {
+      setCurrentlyEditing(sticker.id);
+      setEditName(sticker.name);
+      setEditMode(true);
+    } else {
+      onStickerClick(sticker);
+    }
   };
 
-  // Handle rotating a sticker in the tray
-  const handleRotateSticker = (sticker: StickerType, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  // Handle file change for image upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
     
-    if (onStickerUpdate) {
-      const newRotation = ((sticker.rotation || 0) + 15) % 360;
-      onStickerUpdate({
-        ...sticker,
-        rotation: newRotation
-      });
-    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setPreviewUrl(event.target.result as string);
+      }
+    };
+    
+    reader.readAsDataURL(file);
   };
 
-  // Handle updating sticker size
-  const handleSizeChange = (values: number[], sticker: StickerType) => {
-    if (onStickerUpdate) {
-      onStickerUpdate({
-        ...sticker,
-        size: values[0]
-      });
+  // Save edited sticker changes
+  const handleSaveEdit = () => {
+    if (!currentlyEditing || !onStickerUpdate) return;
+    
+    const sticker = stickers.find(s => s.id === currentlyEditing);
+    if (!sticker) return;
+    
+    const updatedSticker = {
+      ...sticker,
+      name: editName,
+    };
+    
+    if (previewUrl) {
+      updatedSticker.icon = previewUrl;
     }
+    
+    onStickerUpdate(updatedSticker);
+    handleCloseEdit();
   };
 
   // Exit edit mode
   const handleCloseEdit = () => {
     setEditMode(false);
     setCurrentlyEditing(null);
+    setEditName('');
+    setSelectedFile(null);
+    setPreviewUrl(null);
   };
 
   return (
     <div 
       className={`bg-gray-50 border-r border-gray-200 h-full transition-all duration-300 flex flex-col ${
-        isCollapsed ? 'w-12' : 'w-44'
+        isCollapsed ? 'w-12' : 'w-60'
       }`}
     >
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -132,47 +155,59 @@ const StickerSidebar = ({
           {stickers.find(s => s.id === currentlyEditing) && (
             <div className="space-y-4">
               <div className="flex justify-center mb-4">
-                <Sticker
-                  sticker={stickers.find(s => s.id === currentlyEditing)!}
-                  onDragStart={() => {}}
-                  onClick={() => {}}
-                  isDraggable={false}
-                  className="mx-auto"
+                <Avatar className="w-16 h-16">
+                  <AvatarImage 
+                    src={previewUrl || stickers.find(s => s.id === currentlyEditing)?.icon} 
+                    alt="Sticker preview" 
+                  />
+                  <AvatarFallback>{editName.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="sticker-name">Name</Label>
+                <Input
+                  id="sticker-name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full"
                 />
               </div>
               
-              <div>
-                <p className="text-xs text-muted-foreground mb-2">Size</p>
-                <Slider
-                  defaultValue={[stickers.find(s => s.id === currentlyEditing)?.size || 60]}
-                  max={120}
-                  min={30}
-                  step={5}
-                  onValueChange={(values) => handleSizeChange(values, stickers.find(s => s.id === currentlyEditing)!)}
+              <div className="space-y-2">
+                <Label htmlFor="sticker-image">Image</Label>
+                <Input
+                  id="sticker-image"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".png,.jpg,.jpeg,.gif,.svg"
+                  className="w-full"
                 />
+                <p className="text-xs text-gray-500">
+                  Upload a new image (optional)
+                </p>
               </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button variant="outline" size="sm" onClick={handleCloseEdit}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+              </div>
+              
+              <Separator className="my-2" />
               
               <Button 
                 className="w-full" 
-                variant="outline" 
+                variant="destructive" 
                 size="sm"
-                onClick={(e) => handleRotateSticker(stickers.find(s => s.id === currentlyEditing)!, e)}
+                onClick={(e) => handleDeleteFromSidebar(stickers.find(s => s.id === currentlyEditing)!, e)}
               >
-                <RotateCw size={14} className="mr-2" />
-                Rotate
+                <Trash size={14} className="mr-2" />
+                Delete Sticker
               </Button>
-              
-              {stickers.find(s => s.id === currentlyEditing)?.isCustom && (
-                <Button 
-                  className="w-full" 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={(e) => handleDeleteFromSidebar(stickers.find(s => s.id === currentlyEditing)!, e)}
-                >
-                  <Trash size={14} className="mr-2" />
-                  Delete
-                </Button>
-              )}
             </div>
           )}
         </div>
@@ -191,21 +226,10 @@ const StickerSidebar = ({
                     <Sticker
                       sticker={sticker}
                       onDragStart={onDragStart}
-                      onClick={onStickerClick}
+                      onClick={() => onStickerClick(sticker)}
                       isDraggable={true}
                       className="mx-auto"
                     />
-                    <div className="mt-1 flex justify-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 opacity-70 hover:opacity-100"
-                        onClick={(e) => handleEditSticker(sticker, e)}
-                        title="Edit sticker"
-                      >
-                        <Pencil size={12} />
-                      </Button>
-                    </div>
                   </div>
                 ))}
                 {defaultStickers.length === 0 && (
@@ -225,30 +249,19 @@ const StickerSidebar = ({
                     <Sticker
                       sticker={sticker}
                       onDragStart={onDragStart}
-                      onClick={onStickerClick}
+                      onClick={() => handleStickerClick(sticker)}
                       isDraggable={true}
                       className="mx-auto"
                     />
-                    <div className="mt-1 flex justify-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 opacity-70 hover:opacity-100"
-                        onClick={(e) => handleEditSticker(sticker, e)}
-                        title="Edit sticker"
-                      >
-                        <Pencil size={12} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 text-red-500 opacity-70 hover:opacity-100"
-                        onClick={(e) => handleDeleteFromSidebar(sticker, e)}
-                        title="Delete sticker"
-                      >
-                        <Trash size={12} />
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 text-red-500 opacity-70 hover:opacity-100 mt-1"
+                      onClick={(e) => handleDeleteFromSidebar(sticker, e)}
+                      title="Delete sticker"
+                    >
+                      <Trash size={12} />
+                    </Button>
                   </div>
                 ))}
                 {customStickers.length === 0 && (
