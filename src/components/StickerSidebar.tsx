@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
-import { ChevronRight, ChevronLeft, Trash, Edit, Pencil, RotateCw } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash, Edit, Pencil, RotateCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import StickerUploader from './StickerUploader';
