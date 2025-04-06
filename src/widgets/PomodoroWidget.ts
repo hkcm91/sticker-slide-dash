@@ -47,22 +47,25 @@ const PomodoroWidget: WidgetAPI = {
     }
   },
   
-  trigger(action: string, payload?: any) {
+  trigger(action: string, payload?: any): boolean {
     switch(action) {
       case 'start':
         this.setState({ isRunning: true });
-        break;
+        return true;
       case 'pause':
         this.setState({ isRunning: false });
-        break;
+        return true;
       case 'reset':
         this.setState({ timeLeft: 1500, isRunning: false });
-        break;
+        return true;
       case 'set-time':
         if (typeof payload === 'number') {
           this.setState({ timeLeft: payload });
+          return true;
         }
-        break;
+        return false;
+      default:
+        return false;
     }
   },
 };

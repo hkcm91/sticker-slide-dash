@@ -34,6 +34,8 @@ const weatherWidgetLogic: WidgetAPI = {
   trigger(action, payload) {
     console.log(`Weather widget action: ${action}`, payload);
     // In a real widget, you would handle actions here
+    // Now we return true to indicate the action was handled
+    return true;
   }
 };
 
