@@ -121,7 +121,7 @@ export const processWidgetPackage = async (zipFile: File, widgetName: string): P
     // In a real implementation, we would extract the ZIP file and load the contents
     
     // Create a widget with basic functionality
-    const widgetId = widgetName.replace(/\s+/g, '');
+    const widgetId = widgetName.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
     
     // Create actions for the widget
     const actions = {
@@ -144,7 +144,7 @@ export const processWidgetPackage = async (zipFile: File, widgetName: string): P
     };
     
     // Create a widget sticker
-    return createSimpleWidget({
+    const sticker = createSimpleWidget({
       name: widgetId,
       title: `${widgetName} Widget`,
       description: `This widget was loaded from the ${zipFile.name} package.`,
@@ -157,6 +157,10 @@ export const processWidgetPackage = async (zipFile: File, widgetName: string): P
       },
       actions
     });
+
+    console.log(`Created widget sticker with widgetType: ${sticker.widgetType}`);
+    
+    return sticker;
   } catch (error) {
     console.error("Error processing widget package:", error);
     return null;

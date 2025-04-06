@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,18 +24,6 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('simple');
 
-  // Widget connection options
-  const [widgetTitle, setWidgetTitle] = useState('');
-  const [widgetDescription, setWidgetDescription] = useState('');
-  const [widgetColor, setWidgetColor] = useState('#4CAF50');
-  const [widgetEmoji, setWidgetEmoji] = useState('🔧');
-  
-  // Widget code option
-  const [widgetCode, setWidgetCode] = useState('');
-  
-  // ZIP upload
-  const [widgetZipFile, setWidgetZipFile] = useState<File | null>(null);
-  
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,11 +32,9 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
 
     setSelectedFile(file);
     
-    // Check if it's a Lottie JSON file
     const isLottieFile = file.type === 'application/json' || file.name.endsWith('.json');
     setIsLottie(isLottieFile);
     
-    // Create a preview
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
@@ -91,7 +76,6 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     }
 
     try {
-      // Create a new sticker
       const newSticker: Sticker = {
         id: uuidv4(),
         name,
@@ -103,7 +87,6 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
         isCustom: true,
       };
 
-      // Add animation data if it's a Lottie file
       if (isLottie) {
         newSticker.animation = previewUrl;
         newSticker.animationType = 'lottie';
@@ -138,14 +121,11 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     }
 
     try {
-      // Create a widget and get a sticker
       const letterOrEmoji = widgetEmoji || name.charAt(0).toUpperCase();
       
-      // Generate auto-code for the widget if code was entered
       let widgetActions = {};
       if (widgetCode.trim()) {
         try {
-          // Create a safe way to evaluate the widget code
           const createActions = new Function('state', `
             return ${widgetCode};
           `);
@@ -188,7 +168,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     }
   };
 
-  const handleSubmitWidgetZip = () => {
+  const handleSubmitWidgetZip = async () => {
     if (!name.trim() || !widgetZipFile) {
       toast({
         title: "Missing information",
@@ -199,16 +179,16 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     }
 
     try {
-      // In a real implementation, we would process the ZIP file here
-      // For this demo, we'll just create a placeholder widget
-      const letterOrEmoji = name.charAt(0).toUpperCase();
-      const newSticker = createSimpleWidget({
-        name,
-        title: name,
-        description: "Widget loaded from a ZIP file",
-        icon: createSimpleIcon(letterOrEmoji, "#6200EA"),
-        backgroundColor: "#6200EA"
-      });
+      const newSticker = await processWidgetPackage(widgetZipFile, name);
+      
+      if (!newSticker) {
+        toast({
+          title: "Error processing widget",
+          description: "Failed to process the widget package. Please check the file format.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       onStickerCreated(newSticker);
       setIsOpen(false);
@@ -265,7 +245,6 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
               <TabsTrigger value="package">Upload Package</TabsTrigger>
             </TabsList>
             
-            {/* Simple Sticker Tab */}
             <TabsContent value="simple" className="space-y-4 mt-4">
               <div className="grid gap-4">
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -321,7 +300,6 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
               </div>
             </TabsContent>
             
-            {/* Widget Sticker Tab */}
             <TabsContent value="widget" className="space-y-4 mt-4">
               <div className="grid gap-4">
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -428,7 +406,6 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
               </div>
             </TabsContent>
             
-            {/* Package Upload Tab */}
             <TabsContent value="package" className="space-y-4 mt-4">
               <div className="grid gap-4">
                 <div className="grid grid-cols-4 items-center gap-4">
