@@ -51,8 +51,7 @@ export const addCustomWidget = (name: string, title: string, content: string) =>
 const Dashboard = () => {
   const [stickers, setStickers] = useState<StickerType[]>([]);
   const [background, setBackground] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [activeSticker, setActiveSticker] = useState<StickerType | null>(null);
+  const [openWidgets, setOpenWidgets] = useState<Map<string, { sticker: StickerType, isOpen: boolean }>>(new Map());
   const [isRepositioning, setIsRepositioning] = useState(false);
   const { toast } = useToast();
   
@@ -138,14 +137,21 @@ const Dashboard = () => {
 
   const handleStickerClick = (sticker: StickerType) => {
     if (sticker.placed) {
-      setActiveSticker(sticker);
-      setModalOpen(true);
+      // Add or update the sticker in the openWidgets Map
+      setOpenWidgets(prev => {
+        const newMap = new Map(prev);
+        newMap.set(sticker.id, { sticker, isOpen: true });
+        return newMap;
+      });
     }
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setActiveSticker(null);
+  const handleCloseModal = (stickerId: string) => {
+    setOpenWidgets(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(stickerId);
+      return newMap;
+    });
   };
 
   const handleBackgroundChange = (url: string | null) => {
@@ -162,6 +168,13 @@ const Dashboard = () => {
       )
     );
     
+    // Close the widget if it's open
+    setOpenWidgets(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(sticker.id);
+      return newMap;
+    });
+    
     toast({
       title: "Sticker removed!",
       description: "The sticker has been sent back to the sidebar.",
@@ -175,6 +188,18 @@ const Dashboard = () => {
         s.id === updatedSticker.id ? updatedSticker : s
       )
     );
+    
+    // Update the sticker in openWidgets if it's there
+    setOpenWidgets(prev => {
+      if (!prev.has(updatedSticker.id)) return prev;
+      
+      const newMap = new Map(prev);
+      newMap.set(updatedSticker.id, { 
+        sticker: updatedSticker, 
+        isOpen: prev.get(updatedSticker.id)?.isOpen || false 
+      });
+      return newMap;
+    });
   };
 
   // Handle the creation of a new custom sticker
@@ -196,6 +221,13 @@ const Dashboard = () => {
     if (sticker.isCustom) {
       setStickers(prevStickers => prevStickers.filter(s => s.id !== sticker.id));
       
+      // Close the widget if it's open
+      setOpenWidgets(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(sticker.id);
+        return newMap;
+      });
+      
       toast({
         title: "Sticker deleted!",
         description: "The custom sticker has been permanently removed.",
@@ -203,9 +235,6 @@ const Dashboard = () => {
       });
     }
   };
-
-  // Get the widget data for the active sticker
-  const activeWidgetData = activeSticker ? widgetDataMap[activeSticker.name] : null;
 
   // Filter stickers that have been placed
   const placedStickers = stickers.filter(sticker => sticker.placed);
@@ -218,6 +247,7 @@ const Dashboard = () => {
         onStickerClick={handleStickerClick}
         onStickerCreated={handleStickerCreated}
         onStickerDelete={handleStickerDelete}
+        onStickerUpdate={handleUpdateSticker}
       />
       
       <div 
@@ -261,12 +291,21 @@ const Dashboard = () => {
         />
       </div>
       
-      <WidgetModal 
-        isOpen={modalOpen} 
-        onClose={handleCloseModal} 
-        sticker={activeSticker} 
-        widgetData={activeWidgetData} 
-      />
+      {/* Render multiple widget modals */}
+      {Array.from(openWidgets.entries()).map(([id, { sticker, isOpen }]) => {
+        const widgetData = widgetDataMap[sticker.name];
+        if (!widgetData) return null;
+        
+        return (
+          <WidgetModal 
+            key={id}
+            isOpen={isOpen}
+            onClose={() => handleCloseModal(id)}
+            sticker={sticker}
+            widgetData={widgetData}
+          />
+        );
+      })}
     </div>
   );
 };

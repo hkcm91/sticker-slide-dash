@@ -18,7 +18,7 @@ const WidgetModal = ({ isOpen, onClose, sticker, widgetData }: WidgetModalProps)
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] p-0 border-none bg-transparent overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] p-0 border-none bg-transparent overflow-hidden shadow-xl">
         <DialogClose className="absolute right-2 top-2 z-10 rounded-full bg-background/90 p-1.5 text-foreground shadow-sm opacity-80 hover:opacity-100">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>

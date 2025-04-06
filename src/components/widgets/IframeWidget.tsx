@@ -6,12 +6,14 @@ interface IframeWidgetProps {
   widgetId: string;
   height?: number | string;
   width?: number | string;
+  className?: string;
 }
 
 const IframeWidget: React.FC<IframeWidgetProps> = ({ 
   widgetId,
-  height = '100%',
-  width = '100%'
+  height = 300,
+  width = '100%',
+  className
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { isLoaded } = useWidgetIframe({
@@ -20,7 +22,7 @@ const IframeWidget: React.FC<IframeWidgetProps> = ({
   });
 
   return (
-    <div className="relative w-full h-full">
+    <div className={`relative w-full h-full rounded-lg overflow-hidden ${className}`}>
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-background">
           <div className="animate-pulse text-sm text-muted-foreground">Loading widget...</div>
