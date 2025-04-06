@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import StickerUploader from './StickerUploader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -40,10 +39,8 @@ const StickerSidebar = ({
     setIsCollapsed(!isCollapsed);
   };
 
-  // Filter stickers by type
+  // Filter all available stickers (not placed on the dashboard)
   const availableStickers = stickers.filter(sticker => !sticker.placed);
-  const defaultStickers = availableStickers.filter(sticker => !sticker.isCustom);
-  const customStickers = availableStickers.filter(sticker => sticker.isCustom);
 
   // Handle deleting a sticker from the sidebar
   const handleDeleteFromSidebar = (sticker: StickerType, e: React.MouseEvent) => {
@@ -212,69 +209,43 @@ const StickerSidebar = ({
           )}
         </div>
       ) : (
-        <Tabs defaultValue="default" className="flex-1 flex flex-col">
-          <TabsList className="mx-2 mt-2 grid w-[calc(100%-16px)] grid-cols-2">
-            <TabsTrigger value="default">Default</TabsTrigger>
-            <TabsTrigger value="custom">Custom</TabsTrigger>
-          </TabsList>
+        <div className="flex-1 flex flex-col">
+          <div className="p-2 mb-2 bg-gray-100">
+            <h3 className="text-sm font-medium px-2 py-1">All Stickers</h3>
+          </div>
           
-          <TabsContent value="default" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-2 grid grid-cols-3 gap-3">
-                {defaultStickers.map((sticker) => (
-                  <div key={sticker.id} className="relative group flex flex-col items-center">
-                    <Sticker
-                      sticker={sticker}
-                      onDragStart={onDragStart}
-                      onClick={() => onStickerClick(sticker)}
-                      isDraggable={true}
-                      className="mx-auto"
-                    />
-                  </div>
-                ))}
-                {defaultStickers.length === 0 && (
-                  <div className="col-span-3 text-center text-gray-500 text-xs mt-4">
-                    No default stickers available
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="custom" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-2 grid grid-cols-3 gap-3">
-                {customStickers.map((sticker) => (
-                  <div key={sticker.id} className="relative group flex flex-col items-center">
-                    <Sticker
-                      sticker={sticker}
-                      onDragStart={onDragStart}
-                      onClick={() => handleStickerClick(sticker)}
-                      isDraggable={true}
-                      className="mx-auto"
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 text-red-500 opacity-70 hover:opacity-100 mt-1"
-                      onClick={(e) => handleDeleteFromSidebar(sticker, e)}
-                      title="Delete sticker"
-                    >
-                      <Trash size={12} />
-                    </Button>
-                  </div>
-                ))}
-                {customStickers.length === 0 && (
-                  <div className="col-span-3 text-center text-gray-500 text-xs mt-4">
-                    No custom stickers yet.
-                    <br />
-                    Create one using the button above!
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+          <ScrollArea className="flex-1">
+            <div className="p-2 grid grid-cols-3 gap-3">
+              {availableStickers.map((sticker) => (
+                <div key={sticker.id} className="relative group flex flex-col items-center">
+                  <Sticker
+                    sticker={sticker}
+                    onDragStart={onDragStart}
+                    onClick={() => sticker.isCustom ? handleStickerClick(sticker) : onStickerClick(sticker)}
+                    isDraggable={true}
+                    className="mx-auto"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 text-red-500 opacity-70 hover:opacity-100 mt-1"
+                    onClick={(e) => handleDeleteFromSidebar(sticker, e)}
+                    title="Delete sticker"
+                  >
+                    <Trash size={12} />
+                  </Button>
+                </div>
+              ))}
+              {availableStickers.length === 0 && (
+                <div className="col-span-3 text-center text-gray-500 text-xs mt-4">
+                  No stickers available.
+                  <br />
+                  Create one using the button above!
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       )}
     </div>
   );
