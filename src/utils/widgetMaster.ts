@@ -398,20 +398,6 @@ export const getWidgetHtml = async (widgetId: string): Promise<string | null> =>
     const toggleButton = document.getElementById('toggle-button');
     if (toggleButton) toggleButton.addEventListener('click', handleToggle);
     
-    // Add a fallback state display if none exists
-    if (!document.getElementById('widget-state-display')) {
-      const stateDisplay = document.createElement('pre');
-      stateDisplay.id = 'widget-state-display';
-      stateDisplay.style.margin = '10px';
-      stateDisplay.style.padding = '10px';
-      stateDisplay.style.background = '#f5f5f5';
-      stateDisplay.style.border = '1px solid #ddd';
-      stateDisplay.style.borderRadius = '4px';
-      stateDisplay.style.overflow = 'auto';
-      stateDisplay.textContent = 'Waiting for state...';
-      document.body.appendChild(stateDisplay);
-    }
-    
     // Signal we're ready to receive state
     signalReady();
   });
