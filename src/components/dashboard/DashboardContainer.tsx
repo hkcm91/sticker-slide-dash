@@ -1,0 +1,99 @@
+
+import React from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Sticker as StickerType } from '@/types/stickers';
+import PlacedStickers from './PlacedStickers';
+import DashboardHint from './DashboardHint';
+import { Sparkles } from 'lucide-react';
+
+interface DashboardContainerProps {
+  background: string | null;
+  showHint: boolean;
+  hasSeenHint: boolean;
+  placedStickers: StickerType[];
+  onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => void;
+  onStickerClick: (sticker: StickerType) => void;
+  onStickerDelete: (sticker: StickerType) => void;
+  onStickerUpdate: (sticker: StickerType) => void;
+}
+
+const DashboardContainer: React.FC<DashboardContainerProps> = ({
+  background,
+  showHint,
+  hasSeenHint,
+  placedStickers,
+  onDragOver,
+  onDrop,
+  onDragStart,
+  onStickerClick,
+  onStickerDelete,
+  onStickerUpdate
+}) => {
+  const { theme } = useTheme();
+
+  const getBackgroundStyle = () => {
+    if (background && theme.backgroundStyle === 'image') {
+      return {
+        backgroundImage: `url(${background})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+    
+    if (theme.backgroundStyle === 'gradient') {
+      const { startColor, endColor, direction } = theme.gradientOptions;
+      return {
+        background: `linear-gradient(${direction}, ${startColor}, ${endColor})`
+      };
+    }
+    
+    return {
+      backgroundColor: theme.backgroundColor
+    };
+  };
+
+  return (
+    <div 
+      className="flex-1 relative overflow-hidden transition-all duration-300"
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+      style={getBackgroundStyle()}
+    >
+      <div 
+        className={`absolute inset-0 ${
+          background && theme.backgroundStyle === 'image' ? 'bg-black/10' : 
+          theme.mode === 'dark' ? 'bg-gray-900' : 'bg-white'
+        }`}
+        style={{ opacity: theme.backgroundOpacity }}
+      >
+        {showHint && !hasSeenHint && (
+          <DashboardHint />
+        )}
+        
+        <div className="p-6">
+          {placedStickers.length === 0 && (
+            <div className="h-full flex items-center justify-center opacity-40">
+              <div className="text-center text-gray-400">
+                <Sparkles className="h-12 w-12 mx-auto mb-2 animate-pulse" />
+              </div>
+            </div>
+          )}
+          
+          <div className="mt-6 h-full">
+            <PlacedStickers 
+              stickers={placedStickers}
+              onDragStart={onDragStart}
+              onStickerClick={onStickerClick}
+              onStickerDelete={onStickerDelete}
+              onStickerUpdate={onStickerUpdate}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardContainer;
