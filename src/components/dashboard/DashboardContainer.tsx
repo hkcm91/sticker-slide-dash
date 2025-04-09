@@ -90,6 +90,7 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
             <div className="h-full flex items-center justify-center opacity-40">
               <div className="text-center text-gray-400">
                 <Sparkles className="h-12 w-12 mx-auto mb-2 animate-pulse" />
+                <p className="text-sm mt-2">Add stickers to your dashboard by dragging them here</p>
               </div>
             </div>
           )}

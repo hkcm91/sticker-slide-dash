@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 import { useToast } from '@/hooks/use-toast';
-import { Group } from 'lucide-react';
+import { Group, Ungroup, MoveHorizontal, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SelectionOverlayProps {
@@ -82,6 +82,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     if (selectedStickers.size > 1) {
       toast({
         title: `Moving ${selectedStickers.size} items`,
+        description: "Drag to reposition the selected items",
         duration: 2000,
       });
     }
@@ -105,6 +106,13 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   };
   
   const handleMouseUp = () => {
+    if (isDragging && selectedStickers.size > 0) {
+      toast({
+        title: "Items repositioned",
+        description: `Moved ${selectedStickers.size} items`,
+        duration: 1500,
+      });
+    }
     setIsDragging(false);
   };
   
@@ -119,18 +127,22 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     onMultiResize([...selectedStickers], scaleRatio);
     
     // Show a toast when resizing multiple items
-    if (selectedStickers.size > 1) {
-      toast({
-        title: `Resizing ${selectedStickers.size} items`,
-        duration: 1000,
-      });
-    }
+    toast({
+      title: `Resizing ${selectedStickers.size} items`,
+      duration: 1000,
+    });
   };
   
   const handleGroupClick = () => {
     if (onGroupStickers && selectedStickers.size > 1) {
       onGroupStickers([...selectedStickers]);
       clearSelection();
+      
+      toast({
+        title: "Items grouped",
+        description: `${selectedStickers.size} items have been grouped together`,
+        duration: 2000,
+      });
     }
   };
   
@@ -139,13 +151,14 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   return (
     <div 
       ref={overlayRef}
-      className="absolute border-2 border-dashed border-blue-500 bg-blue-100/20 z-50 cursor-move"
+      className="absolute border-2 border-dashed border-blue-500 bg-blue-400/10 z-50 cursor-move"
       style={{
         left: `${boundingBox.x}px`,
         top: `${boundingBox.y}px`,
         width: `${boundingBox.width}px`,
         height: `${boundingBox.height}px`,
-        pointerEvents: 'all'
+        pointerEvents: 'all',
+        backdropFilter: 'blur(2px)'
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -154,17 +167,20 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       onWheel={handleWheel}
     >
       {/* Selection count badge */}
-      <div className="absolute -top-8 left-0 bg-blue-500 text-white px-2 py-1 rounded-md text-xs font-medium">
-        {selectedStickers.size} selected
+      <div className="absolute -top-9 left-0 bg-black/85 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-2">
+        <span className="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+          {selectedStickers.size}
+        </span>
+        <span>selected</span>
       </div>
       
       {/* Quick tools */}
-      <div className="absolute -top-8 right-0 flex space-x-1">
+      <div className="absolute -top-9 right-0 flex space-x-1">
         {onGroupStickers && selectedStickers.size > 1 && (
           <Button 
             size="sm" 
             variant="secondary"
-            className="h-7 text-xs font-medium"
+            className="h-7 bg-black/85 hover:bg-black text-white text-xs font-medium border-0"
             onClick={handleGroupClick}
           >
             <Group className="h-3.5 w-3.5 mr-1" />
@@ -173,9 +189,15 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
         )}
       </div>
       
+      {/* Move indicators */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center opacity-30 pointer-events-none">
+        <MoveHorizontal className="w-6 h-6 text-blue-500" />
+        <ArrowUpDown className="w-6 h-6 text-blue-500 mt-1" />
+      </div>
+      
       {/* Resize handle */}
       <div 
-        className="absolute -right-3 -bottom-3 w-6 h-6 bg-blue-500 rounded-full cursor-se-resize flex items-center justify-center"
+        className="absolute -right-3 -bottom-3 w-6 h-6 bg-blue-500 rounded-full cursor-se-resize flex items-center justify-center shadow-md"
         title="Drag to resize or use mouse wheel"
       >
         <div className="w-2 h-2 bg-white rounded-full"></div>

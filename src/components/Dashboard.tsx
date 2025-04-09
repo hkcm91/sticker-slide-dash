@@ -120,7 +120,14 @@ const Dashboard = () => {
             onCloseDockedWidget={handleStickerDelete}
             onToggleLock={handleToggleLock}
             onChangeZIndex={handleChangeZIndex}
-          />
+          >
+            <SelectionOverlay
+              placedStickers={placedStickers}
+              onMultiMove={handleMultiMove}
+              onMultiResize={handleMultiResize}
+              onGroupStickers={handleGroupStickers}
+            />
+          </DashboardContainer>
           
           {showLayerPanel && (
             <LayerPanel 
@@ -134,7 +141,7 @@ const Dashboard = () => {
           
           {/* Layer panel toggle button */}
           <Button
-            className="absolute bottom-4 right-4 z-50 rounded-full w-10 h-10 p-0 shadow-lg bg-blue-500 hover:bg-blue-600"
+            className="absolute bottom-4 right-4 z-50 rounded-full w-10 h-10 p-0 shadow-lg bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
             onClick={toggleLayerPanel}
             title={showLayerPanel ? "Close layer panel" : "Open layer panel"}
           >

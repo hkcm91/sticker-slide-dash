@@ -4,6 +4,7 @@ import { Sticker as StickerType } from '@/types/stickers';
 import { Lock, Unlock, Trash2, RotateCw, ChevronUp, ChevronDown, SquareCheck } from 'lucide-react';
 import { Slider } from '../ui/slider';
 import { useSelection } from '@/contexts/SelectionContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface StickerControlsProps {
   sticker: StickerType;
@@ -25,6 +26,7 @@ const StickerControls = ({
   onChangeZIndex
 }: StickerControlsProps) => {
   const { toggleSelection, isSelected } = useSelection();
+  const { toast } = useToast();
   
   if (!sticker.placed) return null;
 
@@ -32,12 +34,38 @@ const StickerControls = ({
   const showControls = isHovered || sticker.locked;
   
   if (!showControls) return null;
+  
+  const handleToggleLock = () => {
+    if (onToggleLock) {
+      onToggleLock();
+      
+      // Show feedback toast
+      toast({
+        title: sticker.locked ? "Sticker unlocked" : "Sticker locked",
+        description: sticker.locked ? "The sticker can now be moved." : "The sticker is now locked in place.",
+        duration: 2000,
+      });
+    }
+  };
+  
+  const handleChangeZIndex = (change: number) => {
+    if (onChangeZIndex) {
+      onChangeZIndex(change);
+      
+      // Show feedback toast
+      toast({
+        title: change > 0 ? "Brought forward" : "Sent backward",
+        description: `Sticker layer position changed.`,
+        duration: 1500,
+      });
+    }
+  };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {/* Top controls - centered and overlapping the sticker */}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+      {/* Top controls - based on the reference image */}
       <div 
-        className="absolute top-0 left-0 right-0 flex justify-center space-x-1 bg-black/75 backdrop-blur-sm text-white p-2 rounded-t-md pointer-events-auto"
+        className="absolute top-0 left-0 right-0 flex justify-center space-x-1 bg-black/85 backdrop-blur-sm text-white p-2 rounded-t-md pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
@@ -61,7 +89,7 @@ const StickerControls = ({
         {onToggleLock && (
           <button 
             className="p-1.5 hover:bg-white/30 rounded-full transition-colors" 
-            onClick={onToggleLock}
+            onClick={handleToggleLock}
             title={sticker.locked ? "Unlock" : "Lock"}
           >
             {sticker.locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
@@ -79,22 +107,22 @@ const StickerControls = ({
         )}
       </div>
       
-      {/* Z-index controls - right side */}
+      {/* Z-index controls - reference image shows vertical controls */}
       {onChangeZIndex && (
         <div 
-          className="absolute right-0 top-1/3 flex flex-col justify-center space-y-1 pointer-events-auto"
+          className="absolute right-0 top-1/3 flex flex-col space-y-0.5 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <button 
-            className="p-1.5 bg-black/75 hover:bg-black/90 rounded-l-md transition-colors text-white"
-            onClick={() => onChangeZIndex(1)}
+            className="p-1.5 bg-black/85 hover:bg-black rounded-l-md transition-colors text-white"
+            onClick={() => handleChangeZIndex(1)}
             title="Bring forward"
           >
             <ChevronUp className="w-4 h-4" />
           </button>
           <button 
-            className="p-1.5 bg-black/75 hover:bg-black/90 rounded-l-md transition-colors text-white"
-            onClick={() => onChangeZIndex(-1)}
+            className="p-1.5 bg-black/85 hover:bg-black rounded-l-md transition-colors text-white"
+            onClick={() => handleChangeZIndex(-1)}
             title="Send backward"
           >
             <ChevronDown className="w-4 h-4" />
@@ -102,10 +130,10 @@ const StickerControls = ({
         </div>
       )}
       
-      {/* Opacity slider - bottom of sticker */}
+      {/* Opacity slider - similar to the reference image */}
       {onOpacityChange && (
         <div 
-          className="absolute bottom-0 left-0 right-0 flex justify-center bg-black/75 backdrop-blur-sm p-2 rounded-b-md pointer-events-auto"
+          className="absolute bottom-0 left-0 right-0 flex justify-center bg-black/85 backdrop-blur-sm p-2 rounded-b-md pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="w-full px-2">
