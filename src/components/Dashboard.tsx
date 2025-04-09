@@ -24,11 +24,14 @@ const Dashboard = () => {
     hasSeenHint,
     showHint,
     placedStickers,
+    dockedStickers,
     handleDragStart,
     handleDrop,
     handleDragOver,
     handleStickerClick,
     handleCloseModal,
+    handleDockWidget,
+    handleUndockWidget,
     handleBackgroundChange,
     handleStickerDelete,
     handleUpdateSticker,
@@ -54,12 +57,15 @@ const Dashboard = () => {
         showHint={showHint}
         hasSeenHint={hasSeenHint}
         placedStickers={placedStickers}
+        dockedStickers={dockedStickers}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onDragStart={handleDragStart}
         onStickerClick={handleStickerClick}
         onStickerDelete={handleStickerDelete}
         onStickerUpdate={handleUpdateSticker}
+        onUndockWidget={handleUndockWidget}
+        onCloseDockedWidget={handleStickerDelete}
       />
       
       <ThemeCustomizer 
@@ -70,6 +76,7 @@ const Dashboard = () => {
       <WidgetModals 
         openWidgets={openWidgets}
         onCloseModal={handleCloseModal}
+        onDockWidget={handleDockWidget}
       />
     </div>
   );

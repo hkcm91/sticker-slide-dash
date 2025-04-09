@@ -74,6 +74,47 @@ export function useStickerHandlers(
     });
   };
 
+  const handleDockWidget = (sticker: StickerType) => {
+    // Close the modal if it's open
+    setOpenWidgets(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(sticker.id);
+      return newMap;
+    });
+    
+    // Update the sticker to be docked
+    setStickers(prevStickers => 
+      prevStickers.map(s => 
+        s.id === sticker.id 
+          ? { ...s, docked: true }
+          : s
+      )
+    );
+    
+    toast({
+      title: "Widget docked!",
+      description: "The widget has been docked to the bottom of the dashboard.",
+      duration: 3000,
+    });
+  };
+
+  const handleUndockWidget = (sticker: StickerType) => {
+    // Update the sticker to be undocked
+    setStickers(prevStickers => 
+      prevStickers.map(s => 
+        s.id === sticker.id 
+          ? { ...s, docked: false }
+          : s
+      )
+    );
+    
+    toast({
+      title: "Widget undocked!",
+      description: "The widget has been undocked from the dashboard.",
+      duration: 3000,
+    });
+  };
+
   const handleStickerDelete = (sticker: StickerType) => {
     if ((sticker as any).permanentDelete) {
       setStickers(prevStickers => 
@@ -90,7 +131,7 @@ export function useStickerHandlers(
       setStickers(prevStickers => {
         return prevStickers.map(s => 
           s.id === sticker.id 
-            ? { ...s, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 } 
+            ? { ...s, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0, docked: false } 
             : s
         );
       });
@@ -154,6 +195,8 @@ export function useStickerHandlers(
     handleDragOver,
     handleStickerClick,
     handleCloseModal,
+    handleDockWidget,
+    handleUndockWidget,
     handleStickerDelete,
     handleUpdateSticker,
     handleStickerCreated,

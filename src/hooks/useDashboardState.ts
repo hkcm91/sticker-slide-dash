@@ -24,6 +24,8 @@ export function useDashboardState() {
     handleDragOver,
     handleStickerClick,
     handleCloseModal,
+    handleDockWidget,
+    handleUndockWidget,
     handleStickerDelete,
     handleUpdateSticker,
     handleStickerCreated,
@@ -52,7 +54,8 @@ export function useDashboardState() {
     }
   }, [stickers]);
 
-  const placedStickers = stickers.filter(sticker => sticker.placed);
+  const placedStickers = stickers.filter(sticker => sticker.placed && !sticker.docked);
+  const dockedStickers = stickers.filter(sticker => sticker.docked);
 
   return {
     stickers,
@@ -61,11 +64,14 @@ export function useDashboardState() {
     hasSeenHint,
     showHint,
     placedStickers,
+    dockedStickers,
     handleDragStart,
     handleDrop,
     handleDragOver,
     handleStickerClick,
     handleCloseModal,
+    handleDockWidget,
+    handleUndockWidget,
     handleBackgroundChange,
     handleStickerDelete,
     handleUpdateSticker,

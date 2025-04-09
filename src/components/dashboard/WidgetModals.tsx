@@ -7,9 +7,14 @@ import WidgetModal from '../WidgetModal';
 interface WidgetModalsProps {
   openWidgets: Map<string, { sticker: StickerType, isOpen: boolean }>;
   onCloseModal: (stickerId: string) => void;
+  onDockWidget?: (sticker: StickerType) => void;
 }
 
-const WidgetModals: React.FC<WidgetModalsProps> = ({ openWidgets, onCloseModal }) => {
+const WidgetModals: React.FC<WidgetModalsProps> = ({ 
+  openWidgets, 
+  onCloseModal,
+  onDockWidget
+}) => {
   return (
     <>
       {Array.from(openWidgets.entries()).map(([id, { sticker, isOpen }]) => {
@@ -28,6 +33,7 @@ const WidgetModals: React.FC<WidgetModalsProps> = ({ openWidgets, onCloseModal }
             onClose={() => onCloseModal(id)}
             sticker={sticker}
             widgetData={widgetData}
+            onDock={onDockWidget}
           />
         );
       })}

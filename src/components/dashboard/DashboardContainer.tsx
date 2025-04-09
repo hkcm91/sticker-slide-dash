@@ -5,18 +5,22 @@ import { Sticker as StickerType } from '@/types/stickers';
 import PlacedStickers from './PlacedStickers';
 import DashboardHint from './DashboardHint';
 import { Sparkles } from 'lucide-react';
+import DockedWidgets from './DockedWidgets';
 
 interface DashboardContainerProps {
   background: string | null;
   showHint: boolean;
   hasSeenHint: boolean;
   placedStickers: StickerType[];
+  dockedStickers?: StickerType[];
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => void;
   onStickerClick: (sticker: StickerType) => void;
   onStickerDelete: (sticker: StickerType) => void;
   onStickerUpdate: (sticker: StickerType) => void;
+  onUndockWidget?: (sticker: StickerType) => void;
+  onCloseDockedWidget?: (sticker: StickerType) => void;
 }
 
 const DashboardContainer: React.FC<DashboardContainerProps> = ({
@@ -24,12 +28,15 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
   showHint,
   hasSeenHint,
   placedStickers,
+  dockedStickers = [],
   onDragOver,
   onDrop,
   onDragStart,
   onStickerClick,
   onStickerDelete,
-  onStickerUpdate
+  onStickerUpdate,
+  onUndockWidget,
+  onCloseDockedWidget
 }) => {
   const { theme } = useTheme();
 
@@ -73,7 +80,7 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
         )}
         
         <div className="p-6">
-          {placedStickers.length === 0 && (
+          {placedStickers.length === 0 && dockedStickers.length === 0 && (
             <div className="h-full flex items-center justify-center opacity-40">
               <div className="text-center text-gray-400">
                 <Sparkles className="h-12 w-12 mx-auto mb-2 animate-pulse" />
@@ -92,6 +99,15 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Docked widgets area */}
+      {dockedStickers.length > 0 && onUndockWidget && onCloseDockedWidget && (
+        <DockedWidgets 
+          dockedWidgets={dockedStickers} 
+          onUndockWidget={onUndockWidget}
+          onCloseWidget={onCloseDockedWidget}
+        />
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 export interface Sticker {
   id: string;
   name: string;
@@ -6,6 +7,7 @@ export interface Sticker {
   animationType?: 'lottie' | 'gif'; // Type of animation
   position: { x: number; y: number };
   placed: boolean;
+  docked?: boolean; // Added for dockable widgets
   size?: number;
   rotation?: number;
   widgetType?: string; // Maps to a registered widget name

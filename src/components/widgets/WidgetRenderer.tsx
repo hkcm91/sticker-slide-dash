@@ -16,9 +16,15 @@ interface WidgetRendererProps {
   sticker: StickerType;
   widgetData: WidgetData;
   className?: string;
+  hideHeader?: boolean;
 }
 
-const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, className }) => {
+const WidgetRenderer: React.FC<WidgetRendererProps> = ({ 
+  sticker, 
+  widgetData, 
+  className,
+  hideHeader = false
+}) => {
   const [lottieError, setLottieError] = useState(false);
   const [widgetError, setWidgetError] = useState<string | null>(null);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
@@ -56,56 +62,58 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   if (sticker.packageUrl) {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`} style={{ height: '300px', width: '100%', minWidth: '300px' }}>
-        <div className="widget-header p-2 border-b border-border/20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold">{widgetData.title}</h3>
+        {!hideHeader && (
+          <div className="widget-header p-2 border-b border-border/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">{widgetData.title}</h3>
+              
+              {isAdvancedWidget && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 bg-purple-50 border-purple-200 text-purple-700">Advanced</Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">This is an advanced widget with extended capabilities</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             
-            {isAdvancedWidget && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 bg-purple-50 border-purple-200 text-purple-700">Advanced</Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">This is an advanced widget with extended capabilities</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            <div className="flex gap-1">
+              {sticker.permissions?.includes('storage') && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-4 h-4">
+                        <Database className="h-3 w-3 text-blue-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Storage access</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              {sticker.permissions?.includes('network') && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-4 h-4">
+                        <ShieldAlert className="h-3 w-3 text-orange-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Network access</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
-          
-          <div className="flex gap-1">
-            {sticker.permissions?.includes('storage') && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-4 h-4">
-                      <Database className="h-3 w-3 text-blue-500" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">Storage access</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
-            {sticker.permissions?.includes('network') && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-4 h-4">
-                      <ShieldAlert className="h-3 w-3 text-orange-500" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">Network access</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        </div>
+        )}
         
         <IframeWidget 
           widgetId={sticker.widgetType} 
@@ -128,7 +136,9 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     if (isValidLottie && lottieData) {
       return (
         <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md p-4 ${className}`}>
-          <h3 className="text-md font-semibold mb-2">{widgetData.title}</h3>
+          {!hideHeader && (
+            <h3 className="text-md font-semibold mb-2">{widgetData.title}</h3>
+          )}
           <div className="lottie-container relative" style={{ width: '100%', height: '200px' }}>
             <Lottie 
               animationData={lottieData} 
@@ -145,7 +155,9 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
               }}
             />
           </div>
-          <p className="text-sm mt-2 text-muted-foreground">{widgetData.content}</p>
+          {!hideHeader && (
+            <p className="text-sm mt-2 text-muted-foreground">{widgetData.content}</p>
+          )}
         </div>
       );
     }
@@ -155,10 +167,12 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   if (hasCustomData) {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md p-4 ${className}`}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-md font-semibold">{widgetData.title || sticker.name}</h3>
-          <FileJson className="h-4 w-4 text-blue-500" />
-        </div>
+        {!hideHeader && (
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-md font-semibold">{widgetData.title || sticker.name}</h3>
+            <FileJson className="h-4 w-4 text-blue-500" />
+          </div>
+        )}
         
         <div className="bg-black/10 p-3 rounded overflow-auto max-h-[200px]">
           <pre className="text-xs font-mono">
@@ -166,9 +180,11 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
           </pre>
         </div>
         
-        <p className="text-sm mt-3 text-muted-foreground">
-          {widgetData.content || "Custom data widget"}
-        </p>
+        {!hideHeader && (
+          <p className="text-sm mt-3 text-muted-foreground">
+            {widgetData.content || "Custom data widget"}
+          </p>
+        )}
       </div>
     );
   }
@@ -176,8 +192,8 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   // Fallback to generic widget
   return (
     <GenericWidget 
-      title={widgetData.title} 
-      content={widgetData.content} 
+      title={hideHeader ? undefined : widgetData.title} 
+      content={hideHeader ? undefined : widgetData.content} 
       className={`shadow-md backdrop-blur-md ${className}`}
     />
   );
