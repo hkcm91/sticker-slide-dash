@@ -183,12 +183,12 @@ const Sticker = ({
         <StickerControls 
           sticker={sticker} 
           isHovered={isHovered} 
-          onDelete={onDelete}
+          onDelete={onDelete ? (() => onDelete(sticker)) : undefined}
           onRotate={handleRotate}
           onOpacityChange={handleOpacityChange}
-          onToggleLock={handleToggleLock}
-          onToggleVisibility={handleToggleVisibility}
-          onChangeZIndex={onChangeZIndex && handleChangeZIndex}
+          onToggleLock={onToggleLock ? (() => onToggleLock(sticker)) : undefined}
+          onToggleVisibility={onToggleVisibility ? (() => onToggleVisibility(sticker)) : undefined}
+          onChangeZIndex={onChangeZIndex ? ((change: number) => onChangeZIndex(sticker, change)) : undefined}
         />
       </div>
     </div>
