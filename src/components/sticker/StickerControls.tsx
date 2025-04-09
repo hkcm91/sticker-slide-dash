@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
-import { ArrowLeftCircle, RotateCw, Eye, Layers, Lock, Unlock } from 'lucide-react';
+import { ArrowLeftCircle, RotateCw, Eye, EyeOff, Layers, Lock, Unlock } from 'lucide-react';
 
 interface StickerControlsProps {
   sticker: StickerType;
@@ -88,7 +88,7 @@ const StickerControls: React.FC<StickerControlsProps> = ({
               onClick={handleToggleVisibility}
               title={sticker.visible === false ? "Show sticker" : "Hide sticker"}
             >
-              <Eye size={12} className={sticker.visible === false ? "opacity-50" : ""} />
+              {sticker.visible === false ? <EyeOff size={12} /> : <Eye size={12} />}
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import StickerContent from './sticker/StickerContent';
 import StickerControls from './sticker/StickerControls';
 import { useStickerInteractions } from '@/hooks/useStickerInteractions';
+import { useSelection } from '@/contexts/SelectionContext';
 
 interface StickerProps {
   sticker: StickerType;
@@ -14,6 +15,9 @@ interface StickerProps {
   className?: string;
   onDelete?: (sticker: StickerType) => void;
   onUpdate?: (sticker: StickerType) => void;
+  onToggleLock?: (sticker: StickerType) => void;
+  onToggleVisibility?: (sticker: StickerType) => void;
+  onChangeZIndex?: (sticker: StickerType, change: number) => void;
 }
 
 const Sticker = ({ 
@@ -23,7 +27,10 @@ const Sticker = ({
   isDraggable, 
   className,
   onDelete,
-  onUpdate
+  onUpdate,
+  onToggleLock,
+  onToggleVisibility,
+  onChangeZIndex
 }: StickerProps) => {
   const {
     isDragging,
@@ -41,9 +48,50 @@ const Sticker = ({
     setIsHovered
   } = useStickerInteractions({ sticker, onUpdate });
 
+  const { isMultiSelectMode, isSelected, toggleSelection } = useSelection();
+
   const combinedDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    // If in multi-select mode and this sticker is selected, drag all selected stickers
+    if (isMultiSelectMode && isSelected(sticker.id)) {
+      // Parent drag handler will handle the multi-drag logic
+      parentDragStart(e, sticker);
+      return;
+    }
+
     handleDragStart(e);
     parentDragStart(e, sticker);
+  };
+
+  const handleStickerClick = (e: React.MouseEvent) => {
+    if (isMultiSelectMode) {
+      // In multi-select mode, clicks toggle selection
+      e.stopPropagation();
+      toggleSelection(sticker.id, e.shiftKey);
+    } else {
+      // Normal click behavior
+      onClick(sticker);
+    }
+  };
+
+  const handleToggleLock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleLock) {
+      onToggleLock(sticker);
+    }
+  };
+
+  const handleToggleVisibility = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleVisibility) {
+      onToggleVisibility(sticker);
+    }
+  };
+
+  const handleChangeZIndex = (change: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onChangeZIndex) {
+      onChangeZIndex(sticker, change);
+    }
   };
 
   // Apply different styling based on sticker type
@@ -99,13 +147,14 @@ const Sticker = ({
         isDragging ? 'opacity-50' : 'opacity-100',
         isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         sticker.locked ? 'cursor-not-allowed' : '',
+        isSelected(sticker.id) && 'ring-2 ring-blue-500',
         getStickerTypeClasses(),
         className
       )}
       draggable={(isDraggable || sticker.placed) && !sticker.locked}
       onDragStart={sticker.locked ? undefined : combinedDragStart}
       onDragEnd={handleDragEnd}
-      onClick={() => onClick(sticker)}
+      onClick={handleStickerClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onWheel={sticker.locked ? undefined : handleResize}
@@ -137,6 +186,9 @@ const Sticker = ({
           onDelete={onDelete}
           onRotate={handleRotate}
           onOpacityChange={handleOpacityChange}
+          onToggleLock={handleToggleLock}
+          onToggleVisibility={handleToggleVisibility}
+          onChangeZIndex={onChangeZIndex && handleChangeZIndex}
         />
       </div>
     </div>

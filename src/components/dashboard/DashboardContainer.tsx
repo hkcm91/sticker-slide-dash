@@ -21,6 +21,10 @@ interface DashboardContainerProps {
   onStickerUpdate: (sticker: StickerType) => void;
   onUndockWidget?: (sticker: StickerType) => void;
   onCloseDockedWidget?: (sticker: StickerType) => void;
+  onToggleLock?: (sticker: StickerType) => void;
+  onToggleVisibility?: (sticker: StickerType) => void;
+  onChangeZIndex?: (sticker: StickerType, change: number) => void;
+  children?: React.ReactNode;
 }
 
 const DashboardContainer: React.FC<DashboardContainerProps> = ({
@@ -36,7 +40,11 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
   onStickerDelete,
   onStickerUpdate,
   onUndockWidget,
-  onCloseDockedWidget
+  onCloseDockedWidget,
+  onToggleLock,
+  onToggleVisibility,
+  onChangeZIndex,
+  children
 }) => {
   const { theme } = useTheme();
 
@@ -95,10 +103,16 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
               onStickerClick={onStickerClick}
               onStickerDelete={onStickerDelete}
               onStickerUpdate={onStickerUpdate}
+              onToggleLock={onToggleLock}
+              onToggleVisibility={onToggleVisibility}
+              onChangeZIndex={onChangeZIndex}
             />
           </div>
         </div>
       </div>
+      
+      {/* Render the children (for selection overlay) */}
+      {children}
       
       {/* Docked widgets area */}
       {dockedStickers.length > 0 && onUndockWidget && onCloseDockedWidget && (
