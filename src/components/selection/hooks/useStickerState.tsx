@@ -17,7 +17,7 @@ export function useStickerState(placedStickers: StickerType[]) {
   }, [selectedStickers, placedStickers]);
   
   return {
-    // Explicitly call the function and ensure it returns boolean
-    areAllLocked: areAllLocked()
+    // Ensure we return a boolean by using double negation
+    areAllLocked: !!areAllLocked()
   };
 }
