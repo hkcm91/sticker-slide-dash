@@ -8,6 +8,7 @@ import { initialStickers } from './dashboard/initialStickers';
 import { initializeWidgetDataMap, addCustomWidget } from './dashboard/widgetDataInitializer';
 import { useToast } from '@/hooks/use-toast';
 import { saveStickersToStorage, loadStickersFromStorage } from '@/utils/compressionUtils';
+import { performScheduledCleanup } from '@/utils/stickerCleanupUtils';
 
 export function useDashboardState() {
   const [stickers, setStickers] = useState<StickerType[]>([]);
@@ -57,6 +58,50 @@ export function useDashboardState() {
       }
     }
   }, [stickers]);
+  
+  // Automatic cleanup effect
+  useEffect(() => {
+    // Perform scheduled cleanup check
+    if (stickers.length > 0) {
+      // Run after a short delay to avoid interfering with initial load
+      const cleanupTimer = setTimeout(() => {
+        const cleaned = performScheduledCleanup(stickers, setStickers);
+        
+        if (cleaned) {
+          console.log("Automatic sticker cleanup performed");
+        }
+      }, 5000);
+      
+      return () => clearTimeout(cleanupTimer);
+    }
+  }, [stickers]);
+
+  // Update lastUsed timestamp when interacting with stickers
+  const updateLastUsedTimestamp = (stickerId: string) => {
+    setStickers(prevStickers => 
+      prevStickers.map(sticker => 
+        sticker.id === stickerId
+          ? { ...sticker, lastUsed: new Date().toISOString() }
+          : sticker
+      )
+    );
+  };
+
+  // Enhance the original handlers with timestamp updates
+  const enhancedHandlers = {
+    handleStickerClick: (sticker: StickerType) => {
+      updateLastUsedTimestamp(sticker.id);
+      handleStickerClick(sticker);
+    },
+    handleDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
+      updateLastUsedTimestamp(sticker.id);
+      handleDragStart(e, sticker);
+    },
+    handleUpdateSticker: (updatedSticker: StickerType) => {
+      updatedSticker.lastUsed = new Date().toISOString();
+      handleUpdateSticker(updatedSticker);
+    }
+  };
 
   const placedStickers = stickers.filter(sticker => sticker.placed && !sticker.docked);
   const dockedStickers = stickers.filter(sticker => sticker.docked);
@@ -69,16 +114,16 @@ export function useDashboardState() {
     showHint,
     placedStickers,
     dockedStickers,
-    handleDragStart,
+    handleDragStart: enhancedHandlers.handleDragStart,
     handleDrop,
     handleDragOver,
-    handleStickerClick,
+    handleStickerClick: enhancedHandlers.handleStickerClick,
     handleCloseModal,
     handleDockWidget,
     handleUndockWidget,
     handleBackgroundChange,
     handleStickerDelete,
-    handleUpdateSticker,
+    handleUpdateSticker: enhancedHandlers.handleUpdateSticker,
     handleStickerCreated,
     handleImportStickers
   };
