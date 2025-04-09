@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
@@ -29,8 +28,10 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const { selectedStickers, isMultiSelectMode } = useSelection();
   
-  // Custom hooks for managing selection state and interactions
-  const { boundingBox, showTools } = useSelectionBoundingBox(placedStickers, overlayRef);
+  const { 
+    boundingBox,
+    showTools 
+  } = useSelectionBoundingBox(placedStickers, overlayRef);
   
   const { 
     isDragging,
@@ -49,14 +50,13 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   
   const { areAllLocked } = useStickerState(placedStickers);
   
-  // Don't render anything if no selection or not in multi-select mode
   if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) return null;
   
   return (
     <SelectionBoundingBox
       isDragging={isDragging}
       boundingBox={boundingBox}
-      areAllLocked={areAllLocked} // Now properly typed as boolean
+      areAllLocked={areAllLocked}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Lock, MoveHorizontal, ArrowUpDown } from 'lucide-react';
 
 interface SelectionBoundingBoxProps {
   isDragging: boolean;
   boundingBox: { x: number; y: number; width: number; height: number };
-  areAllLocked: boolean; // This is explicitly typed as boolean
+  areAllLocked: boolean; // Explicitly typed as boolean
   onMouseDown: (e: React.MouseEvent) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
