@@ -34,16 +34,6 @@ const StickerUploadOptions: React.FC<StickerUploadOptionsProps> = ({
             onStickerCreated(sticker);
             setIsDialogOpen(false);
           }}
-          onImportStickers={(stickers) => {
-            if (onImportStickers) {
-              onImportStickers(stickers);
-              toast({
-                title: "Stickers imported!",
-                description: `${stickers.length} stickers have been added to your collection.`,
-              });
-            }
-            setIsDialogOpen(false);
-          }}
           isOpen={isDialogOpen}
           onOpenChange={setIsDialogOpen}
         />
