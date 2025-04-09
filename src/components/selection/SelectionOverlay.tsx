@@ -49,7 +49,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     isAllSameGroup
   } = useGroupOperations(placedStickers, onGroupStickers, onUngroupStickers);
   
-  // This value is now guaranteed to be a boolean
+  // This value is guaranteed to be a boolean from the hook
   const { areAllLocked } = useStickerState(placedStickers);
   
   if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) return null;
