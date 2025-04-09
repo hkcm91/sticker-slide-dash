@@ -12,6 +12,13 @@ interface WidgetRendererProps {
   className?: string;
 }
 
+// Define an interface for Lottie animation data
+interface LottieAnimationData {
+  v: string | number;
+  layers: any[];
+  [key: string]: any;
+}
+
 const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, className }) => {
   // Check if widget has a Lottie animation to display
   const hasLottieAnimation = sticker.animationType === 'lottie' && sticker.animation;
@@ -36,7 +43,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   
   // Handle widgets with lottie animations
   if (hasLottieAnimation) {
-    let lottieData = null;
+    let lottieData: LottieAnimationData | null = null;
     let isValidLottie = false;
     
     try {
@@ -47,8 +54,8 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
             const parsedData = JSON.parse(sticker.animation);
             // Validate that the parsed data has required Lottie properties
             if (parsedData && typeof parsedData === 'object' && 
-                parsedData.v !== undefined && // Version
-                parsedData.layers !== undefined && // Layers
+                'v' in parsedData && // Version
+                'layers' in parsedData && // Layers
                 Array.isArray(parsedData.layers)) {
               lottieData = parsedData;
               isValidLottie = true;
@@ -60,15 +67,15 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
           }
         } else {
           // It's a URL or other string format
-          lottieData = sticker.animation;
+          lottieData = sticker.animation as unknown as LottieAnimationData;
           isValidLottie = true; // We assume URLs are valid until proven otherwise
         }
       } else if (sticker.animation && typeof sticker.animation === 'object' &&
-                sticker.animation.v !== undefined && 
-                sticker.animation.layers !== undefined &&
+                'v' in sticker.animation && 
+                'layers' in sticker.animation &&
                 Array.isArray(sticker.animation.layers)) {
         // It's already an object, validate basic Lottie structure
-        lottieData = sticker.animation;
+        lottieData = sticker.animation as LottieAnimationData;
         isValidLottie = true;
       }
     } catch (e) {
@@ -88,7 +95,10 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
                 loop={true}
                 onError={() => {
                   console.error("Lottie animation failed to render");
-                  isValidLottie = false;
+                }}
+                rendererSettings={{
+                  preserveAspectRatio: 'xMidYMid slice',
+                  progressiveLoad: true,
                 }}
               />
             </div>
