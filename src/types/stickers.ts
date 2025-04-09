@@ -1,4 +1,3 @@
-
 export interface Sticker {
   id: string;
   name: string;
@@ -38,6 +37,31 @@ export interface Sticker {
     capabilities?: string[];
   };
   permissions?: string[]; // Added for widget permissions
+  
+  // New properties for enhanced sticker functionality
+  type?: 'widget' | 'image' | 'video' | 'media' | 'custom'; // Type of sticker
+  content?: string; // URL or content for media stickers
+  contentType?: string; // MIME type for content
+  zIndex?: number; // Z-index for layering stickers
+  opacity?: number; // Opacity level for the sticker
+  interactions?: { // Define possible interactions
+    draggable?: boolean;
+    resizable?: boolean;
+    rotatable?: boolean;
+    clickable?: boolean;
+    hoverable?: boolean;
+  };
+  effects?: { // Visual effects
+    shadow?: boolean;
+    glow?: boolean;
+    blur?: number;
+    grayscale?: boolean;
+  };
+  transformOrigin?: string; // CSS transform-origin property
+  transformStyle?: string; // Additional transform styles
+  locked?: boolean; // Whether the sticker position is locked
+  visible?: boolean; // Whether the sticker is visible
+  groupId?: string; // For grouping related stickers
 }
 
 export interface WidgetData {

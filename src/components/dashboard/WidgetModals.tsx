@@ -21,10 +21,28 @@ const WidgetModals: React.FC<WidgetModalsProps> = ({
         const widgetData = getWidgetData(sticker.name);
         if (!widgetData) return null;
         
+        // Customize the title based on sticker type (widget, image, video, etc.)
+        let title = widgetData.title || sticker.name;
+        
         // If there's custom widget data, add it to the title
         if (sticker.widgetData) {
-          widgetData.title = `${widgetData.title || sticker.name} (with JSON Data)`;
+          title = `${title} (with JSON Data)`;
         }
+        
+        // Handle different sticker types
+        if (sticker.type === 'image') {
+          title = `Image: ${title}`;
+        } else if (sticker.type === 'video') {
+          title = `Video: ${title}`;
+        } else if (sticker.type === 'media') {
+          title = `Media: ${title}`;
+        }
+        
+        // Update the widget data with the customized title
+        const updatedWidgetData = {
+          ...widgetData,
+          title
+        };
         
         return (
           <WidgetModal 
@@ -32,7 +50,7 @@ const WidgetModals: React.FC<WidgetModalsProps> = ({
             isOpen={isOpen}
             onClose={() => onCloseModal(id)}
             sticker={sticker}
-            widgetData={widgetData}
+            widgetData={updatedWidgetData}
             onDock={onDockWidget}
           />
         );
