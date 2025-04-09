@@ -15,6 +15,10 @@ export interface Sticker {
   widgetCode?: string; // Code for widget functionality
   widgetActions?: Record<string, (state: any, payload?: any) => any>; // Actions for the widget
   permanentDelete?: boolean; // Flag to indicate permanent deletion
+  isPremium?: boolean; // Flag to indicate if this is a premium widget
+  price?: number; // Price of the widget if it's premium
+  purchasedOn?: string; // Date when the widget was purchased
+  purchaseId?: string; // ID of the purchase transaction
 }
 
 export interface WidgetData {

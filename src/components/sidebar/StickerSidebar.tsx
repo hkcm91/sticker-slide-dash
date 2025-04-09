@@ -4,12 +4,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { processWidgetPackage } from '@/utils/widgetMaster';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import StickersList from './StickersList';
 import StickerUploadOptions from './StickerUploadOptions';
 import SidebarHeader from './SidebarHeader';
 import CollapsedSidebar from './CollapsedSidebar';
 import StickerEditForm from './sticker-edit/StickerEditForm';
+import WidgetMarketplace from './WidgetMarketplace';
 
 interface StickerSidebarProps {
   stickers: StickerType[];
@@ -37,6 +39,7 @@ const StickerSidebar: React.FC<StickerSidebarProps> = ({
   const [currentlyEditing, setCurrentlyEditing] = useState<StickerType | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [processingPackage, setProcessingPackage] = useState(false);
+  const [activeTab, setActiveTab] = useState("stickers");
   
   const { toast } = useToast();
 
@@ -163,17 +166,34 @@ const StickerSidebar: React.FC<StickerSidebarProps> = ({
             className={getHeaderClasses()}
           />
 
-          <StickerUploadOptions 
-            stickers={stickers}
-            onStickerCreated={onStickerCreated}
-            onImportStickers={onImportStickers}
-          />
-          
-          <StickersList 
-            stickers={stickers}
-            onDragStart={onDragStart}
-            onStickerClick={handleStickerClick}
-          />
+          <Tabs defaultValue="stickers" onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <div className="px-3 pt-1">
+              <TabsList className="w-full">
+                <TabsTrigger value="stickers" className="flex-1">Stickers</TabsTrigger>
+                <TabsTrigger value="marketplace" className="flex-1">Marketplace</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="stickers" className="flex-1 flex flex-col mt-2">
+              <StickerUploadOptions 
+                stickers={stickers}
+                onStickerCreated={onStickerCreated}
+                onImportStickers={onImportStickers}
+              />
+              
+              <StickersList 
+                stickers={stickers}
+                onDragStart={onDragStart}
+                onStickerClick={handleStickerClick}
+              />
+            </TabsContent>
+            
+            <TabsContent value="marketplace" className="flex-1 flex flex-col mt-0">
+              <WidgetMarketplace 
+                onAddSticker={onStickerCreated}
+              />
+            </TabsContent>
+          </Tabs>
         </>
       )}
 

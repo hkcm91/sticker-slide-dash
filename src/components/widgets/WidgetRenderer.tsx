@@ -4,6 +4,8 @@ import { Sticker as StickerType, WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from './PomodoroWidget';
 import IframeWidget from './IframeWidget';
 import GenericWidget from './GenericWidget';
+import WeatherWidget from './WeatherWidget';
+import StockWidget from './StockWidget';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { validateLottieAnimation } from '@/utils/lottieUtils';
 
@@ -19,6 +21,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   
   const hasLottieAnimation = sticker.animationType === 'lottie' && sticker.animation;
   
+  // Handle built-in widgets
   if (sticker.widgetType === 'Pomodoro') {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
@@ -27,6 +30,23 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     );
   }
   
+  if (sticker.widgetType === 'WeatherWidget') {
+    return (
+      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
+        <WeatherWidget widgetName="WeatherWidget" />
+      </div>
+    );
+  }
+  
+  if (sticker.widgetType === 'StockWidget') {
+    return (
+      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
+        <StockWidget widgetName="StockWidget" />
+      </div>
+    );
+  }
+  
+  // Handle iframe-based widgets (for uploaded widget packages)
   if (sticker.packageUrl) {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`} style={{ height: '300px', width: '100%', minWidth: '300px' }}>
@@ -35,6 +55,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     );
   }
   
+  // Handle Lottie animation widgets
   if (hasLottieAnimation && !lottieError) {
     const { isValid: isValidLottie, data: lottieData } = validateLottieAnimation(sticker.animation);
     
@@ -64,6 +85,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     }
   }
   
+  // Fallback to generic widget
   return (
     <GenericWidget 
       title={widgetData.title} 
