@@ -20,6 +20,22 @@ export interface Sticker {
   purchasedOn?: string; // Date when the widget was purchased
   purchaseId?: string; // ID of the purchase transaction
   widgetData?: any; // Custom JSON data for the widget
+  widgetConfig?: { // Added for complex widgets
+    size?: {
+      width: number;
+      height: number;
+      resizable?: boolean;
+      minWidth?: number;
+      minHeight?: number;
+      maxWidth?: number;
+      maxHeight?: number;
+    };
+    settings?: Record<string, any>;
+    permissions?: string[];
+    dependencies?: string[];
+    capabilities?: string[];
+  };
+  permissions?: string[]; // Added for widget permissions
 }
 
 export interface WidgetData {
