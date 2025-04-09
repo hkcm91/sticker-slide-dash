@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
-import { ArrowLeftCircle, RotateCw } from 'lucide-react';
+import { ArrowLeftCircle, RotateCw, AlertTriangle } from 'lucide-react';
 import Lottie from 'lottie-react';
 
 interface StickerProps {
@@ -36,10 +37,13 @@ const Sticker = ({
   const stickerRef = useRef<HTMLDivElement>(null);
   const [lottieData, setLottieData] = useState<LottieAnimationData | null>(null);
   const [isValidLottie, setIsValidLottie] = useState(false);
+  const [lottieError, setLottieError] = useState(false);
   
   useEffect(() => {
     if (sticker.animation && sticker.animationType === 'lottie') {
       setIsValidLottie(false);
+      setLottieError(false);
+      
       try {
         if (typeof sticker.animation === 'string') {
           if (sticker.animation.trim().startsWith('{')) {
@@ -48,28 +52,38 @@ const Sticker = ({
               if (parsedData && typeof parsedData === 'object' && 
                   'v' in parsedData && 
                   'layers' in parsedData && 
-                  Array.isArray(parsedData.layers)) {
+                  Array.isArray(parsedData.layers) &&
+                  parsedData.layers.length > 0) {
                 setLottieData(parsedData);
                 setIsValidLottie(true);
               } else {
-                console.error('Invalid Lottie animation data structure');
+                console.error('Invalid Lottie animation data structure in Sticker');
+                setIsValidLottie(false);
               }
             } catch (e) {
-              console.error('Failed to parse Lottie animation JSON:', e);
+              console.error('Failed to parse Lottie animation JSON in Sticker:', e);
+              setIsValidLottie(false);
             }
+          } else if (sticker.animation.trim().startsWith('http')) {
+            // It's a URL, we'll need to handle this differently or provide a fallback
+            console.log('Lottie URL detected in Sticker, using fallback');
+            setIsValidLottie(false);
           } else {
-            setLottieData(sticker.animation as unknown as LottieAnimationData);
-            setIsValidLottie(true);
+            setIsValidLottie(false);
           }
         } else if (sticker.animation && typeof sticker.animation === 'object' &&
                  'v' in sticker.animation && 
                  'layers' in sticker.animation &&
-                 Array.isArray(sticker.animation.layers)) {
+                 Array.isArray(sticker.animation.layers) &&
+                 sticker.animation.layers.length > 0) {
           setLottieData(sticker.animation as LottieAnimationData);
           setIsValidLottie(true);
+        } else {
+          console.error('Invalid Lottie animation object structure in Sticker');
+          setIsValidLottie(false);
         }
       } catch (e) {
-        console.error('Failed to process Lottie animation:', e);
+        console.error('Failed to process Lottie animation in Sticker:', e);
         setIsValidLottie(false);
       }
     }
@@ -143,7 +157,7 @@ const Sticker = ({
 
   const renderStickerContent = () => {
     if (sticker.animationType === 'lottie') {
-      if (isValidLottie && lottieData) {
+      if (isValidLottie && lottieData && !lottieError) {
         try {
           return (
             <div className="w-full h-full p-2">
@@ -151,22 +165,33 @@ const Sticker = ({
                 animationData={lottieData} 
                 loop={true} 
                 className="w-full h-full"
-                onError={() => {
-                  console.error("Lottie animation failed to render");
-                  setIsValidLottie(false);
+                onError={(e) => {
+                  console.error("Lottie animation failed to render in Sticker:", e);
+                  setLottieError(true);
+                }}
+                lottieRef={(ref) => {
+                  if (ref) {
+                    ref.addEventListener('error', () => {
+                      console.error("Lottie animation error event in Sticker");
+                      setLottieError(true);
+                    });
+                  }
                 }}
                 rendererSettings={{
                   preserveAspectRatio: 'xMidYMid slice',
                   progressiveLoad: true,
+                  hideOnTransparent: false,
                 }}
               />
             </div>
           );
         } catch (error) {
-          console.error("Error rendering Lottie animation:", error);
+          console.error("Error rendering Lottie animation in Sticker:", error);
+          setLottieError(true);
         }
       }
       
+      // Fallback for invalid Lottie
       return (
         <div className="flex items-center justify-center w-full h-full bg-violet-100 rounded-full">
           <span className="text-violet-600 text-xs font-medium">Lottie</span>
