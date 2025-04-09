@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import StickerSidebar from './sidebar/StickerSidebar';
 import ThemeCustomizer from './ThemeCustomizer';
