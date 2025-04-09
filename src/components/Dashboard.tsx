@@ -93,7 +93,11 @@ const Dashboard = () => {
         onDockWidget={handleDockWidget}
       />
       
-      <StorageMonitor visible={showStorageMonitor} />
+      <StorageMonitor 
+        visible={showStorageMonitor} 
+        stickers={stickers}
+        onImportStickers={handleImportStickers}
+      />
     </div>
   );
 };
