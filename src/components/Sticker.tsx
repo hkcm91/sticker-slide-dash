@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
@@ -36,12 +35,30 @@ const Sticker = ({
     if (sticker.animation && sticker.animationType === 'lottie') {
       try {
         // Handle both string JSON and object formats
-        const animationData = typeof sticker.animation === 'string' 
-          ? (sticker.animation.startsWith('{') ? JSON.parse(sticker.animation) : sticker.animation)
-          : sticker.animation;
-        setLottieData(animationData);
+        if (typeof sticker.animation === 'string') {
+          // Check if it's a valid JSON string
+          if (sticker.animation.trim().startsWith('{')) {
+            try {
+              const parsedData = JSON.parse(sticker.animation);
+              // Validate that the parsed data has required Lottie properties
+              if (parsedData && typeof parsedData === 'object') {
+                setLottieData(parsedData);
+              } else {
+                console.error('Invalid Lottie animation data structure');
+              }
+            } catch (e) {
+              console.error('Failed to parse Lottie animation JSON:', e);
+            }
+          } else {
+            // It's probably a URL or other string format
+            setLottieData(sticker.animation);
+          }
+        } else if (sticker.animation && typeof sticker.animation === 'object') {
+          // It's already an object
+          setLottieData(sticker.animation);
+        }
       } catch (e) {
-        console.error('Failed to parse Lottie animation:', e);
+        console.error('Failed to process Lottie animation:', e);
       }
     }
   }, [sticker.animation, sticker.animationType]);
@@ -124,7 +141,21 @@ const Sticker = ({
   // Render the sticker content based on type
   const renderStickerContent = () => {
     if (sticker.animationType === 'lottie' && lottieData) {
-      return <Lottie animationData={lottieData} loop={true} className="w-full h-full p-2" />;
+      try {
+        // Only render if lottieData is valid
+        if (lottieData && (typeof lottieData === 'object' || typeof lottieData === 'string')) {
+          return <Lottie animationData={lottieData} loop={true} className="w-full h-full p-2" />;
+        }
+      } catch (error) {
+        console.error("Error rendering Lottie animation:", error);
+      }
+      
+      // Fallback if there's an issue with the Lottie animation
+      return (
+        <div className="flex items-center justify-center w-full h-full bg-violet-100 rounded-full">
+          <span className="text-violet-600 text-xs font-medium">Lottie</span>
+        </div>
+      );
     } else {
       // Force image refresh by using a key with the id and placed status
       // This ensures the image is re-rendered when placed status changes
