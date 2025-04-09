@@ -1,4 +1,3 @@
-
 export interface Sticker {
   id: string;
   name: string;
@@ -61,4 +60,10 @@ export interface UploadedWidget {
   icon?: string;
   animation?: string | object; // Added Lottie animation support
   animationType?: 'lottie' | 'gif'; // Type of animation
+}
+
+export interface LottieAnimationData {
+  v: string | number;
+  layers: any[];
+  [key: string]: any;
 }

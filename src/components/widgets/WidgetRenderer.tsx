@@ -1,21 +1,16 @@
+
 import React, { useState, useRef } from 'react';
 import { Sticker as StickerType, WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from './PomodoroWidget';
 import IframeWidget from './IframeWidget';
 import GenericWidget from './GenericWidget';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
-import { AlertTriangle } from 'lucide-react';
+import { validateLottieAnimation } from '@/utils/lottieUtils';
 
 interface WidgetRendererProps {
   sticker: StickerType;
   widgetData: WidgetData;
   className?: string;
-}
-
-interface LottieAnimationData {
-  v: string | number;
-  layers: any[];
-  [key: string]: any;
 }
 
 const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, className }) => {
@@ -41,52 +36,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   }
   
   if (hasLottieAnimation && !lottieError) {
-    let lottieData: LottieAnimationData | null = null;
-    let isValidLottie = false;
-    
-    try {
-      if (typeof sticker.animation === 'string') {
-        if (sticker.animation.trim().startsWith('{')) {
-          try {
-            const parsedData = JSON.parse(sticker.animation);
-            if (parsedData && typeof parsedData === 'object' && 
-                'v' in parsedData && 
-                'layers' in parsedData && 
-                Array.isArray(parsedData.layers) && 
-                parsedData.layers.length > 0) {
-              lottieData = parsedData;
-              isValidLottie = true;
-            } else {
-              console.error('Invalid Lottie animation data structure, missing required properties');
-              isValidLottie = false;
-            }
-          } catch (e) {
-            console.error('Failed to parse Lottie animation JSON:', e);
-            isValidLottie = false;
-          }
-        } else if (sticker.animation.trim().startsWith('http')) {
-          console.log('Lottie animation URL detected, using fallback');
-          isValidLottie = false;
-        } else {
-          console.error('Invalid Lottie animation format');
-          isValidLottie = false;
-        }
-      } else if (sticker.animation && typeof sticker.animation === 'object' &&
-                'v' in sticker.animation && 
-                'layers' in sticker.animation &&
-                Array.isArray(sticker.animation.layers) &&
-                sticker.animation.layers.length > 0) {
-        lottieData = sticker.animation as LottieAnimationData;
-        isValidLottie = true;
-      } else {
-        console.error('Invalid Lottie animation object structure');
-        isValidLottie = false;
-      }
-    } catch (e) {
-      console.error('Failed to process Lottie animation:', e);
-      lottieData = null;
-      isValidLottie = false;
-    }
+    const { isValid: isValidLottie, data: lottieData } = validateLottieAnimation(sticker.animation);
     
     if (isValidLottie && lottieData) {
       return (
