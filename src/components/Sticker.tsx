@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
@@ -17,6 +16,7 @@ interface StickerProps {
   onUpdate?: (sticker: StickerType) => void;
   onToggleLock?: (sticker: StickerType) => void;
   onChangeZIndex?: (sticker: StickerType, change: number) => void;
+  onToggleVisibility?: (sticker: StickerType) => void;
 }
 
 const Sticker = ({ 
@@ -28,7 +28,8 @@ const Sticker = ({
   onDelete,
   onUpdate,
   onToggleLock,
-  onChangeZIndex
+  onChangeZIndex,
+  onToggleVisibility
 }: StickerProps) => {
   const {
     isDragging,
@@ -49,9 +50,7 @@ const Sticker = ({
   const { isMultiSelectMode, isSelected, toggleSelection } = useSelection();
 
   const combinedDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    // If in multi-select mode and this sticker is selected, drag all selected stickers
     if (isMultiSelectMode && isSelected(sticker.id)) {
-      // Parent drag handler will handle the multi-drag logic
       parentDragStart(e, sticker);
       return;
     }
@@ -64,20 +63,17 @@ const Sticker = ({
     e.stopPropagation();
     
     if (isMultiSelectMode) {
-      // In multi-select mode, clicks toggle selection
       toggleSelection(sticker.id, e.shiftKey);
     } else {
-      // Normal click behavior
       onClick(sticker);
     }
   };
 
-  // Ensure we wrap these handlers properly for StickerControls
   const handleDelete = () => onDelete?.(sticker);
   const handleToggleLock = () => onToggleLock?.(sticker);
   const handleChangeZIndex = (change: number) => onChangeZIndex?.(sticker, change);
+  const handleToggleVisibility = () => onToggleVisibility?.(sticker);
 
-  // Apply different styling based on sticker type
   const getStickerTypeClasses = () => {
     switch(sticker.type) {
       case 'image':
@@ -94,10 +90,8 @@ const Sticker = ({
     }
   };
 
-  // Determine if effects should be applied
   const shouldApplyEffects = sticker.placed && sticker.effects;
   
-  // Compute effects styling
   const getEffectsStyle = () => {
     if (!shouldApplyEffects) return {};
     
@@ -170,6 +164,7 @@ const Sticker = ({
           onOpacityChange={handleOpacityChange}
           onToggleLock={onToggleLock ? handleToggleLock : undefined}
           onChangeZIndex={onChangeZIndex ? handleChangeZIndex : undefined}
+          onToggleVisibility={onToggleVisibility ? handleToggleVisibility : undefined}
         />
       </div>
     </div>

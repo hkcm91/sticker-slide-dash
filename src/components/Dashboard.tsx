@@ -85,6 +85,16 @@ const Dashboard = () => {
       });
     }
   };
+  
+  const handleToggleVisibility = (sticker: {id: string, hidden?: boolean}) => {
+    const stickerToUpdate = stickers.find(s => s.id === sticker.id);
+    if (stickerToUpdate) {
+      handleUpdateSticker({
+        ...stickerToUpdate,
+        hidden: !stickerToUpdate.hidden
+      });
+    }
+  };
 
   return (
     <SelectionProvider stickers={stickers}>
@@ -120,12 +130,14 @@ const Dashboard = () => {
             onCloseDockedWidget={handleStickerDelete}
             onToggleLock={handleToggleLock}
             onChangeZIndex={handleChangeZIndex}
+            onToggleVisibility={handleToggleVisibility}
           >
             <SelectionOverlay
               placedStickers={placedStickers}
               onMultiMove={handleMultiMove}
               onMultiResize={handleMultiResize}
               onGroupStickers={handleGroupStickers}
+              onUngroupStickers={handleUngroupStickers}
             />
           </DashboardContainer>
           
@@ -136,6 +148,8 @@ const Dashboard = () => {
               onGroupStickers={handleGroupStickers}
               onUngroupStickers={handleUngroupStickers}
               onMoveLayer={handleMoveLayer}
+              onToggleLock={handleToggleLock}
+              onToggleVisibility={handleToggleVisibility}
             />
           )}
           

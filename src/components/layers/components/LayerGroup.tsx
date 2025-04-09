@@ -11,6 +11,7 @@ interface LayerGroupProps {
   onToggleExpand: (groupId: string) => void;
   onToggleLock: (sticker: StickerType) => void;
   onMoveLayer: (stickerId: string, change: number) => void;
+  onToggleVisibility?: (sticker: StickerType) => void;
 }
 
 const LayerGroup: React.FC<LayerGroupProps> = ({
@@ -19,7 +20,8 @@ const LayerGroup: React.FC<LayerGroupProps> = ({
   isExpanded,
   onToggleExpand,
   onToggleLock,
-  onMoveLayer
+  onMoveLayer,
+  onToggleVisibility
 }) => {
   return (
     <div className="border border-gray-200 dark:border-gray-800 rounded-md mb-2">
@@ -43,6 +45,7 @@ const LayerGroup: React.FC<LayerGroupProps> = ({
               onToggleLock={onToggleLock}
               onMoveUp={() => onMoveLayer(sticker.id, 1)}
               onMoveDown={() => onMoveLayer(sticker.id, -1)}
+              onToggleVisibility={onToggleVisibility ? () => onToggleVisibility(sticker) : undefined}
             />
           ))}
         </div>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
-import { Lock, Unlock, Trash2, RotateCw, ChevronUp, ChevronDown, SquareCheck } from 'lucide-react';
+import { Lock, Unlock, Trash2, RotateCw, ChevronUp, ChevronDown, SquareCheck, Eye, EyeOff } from 'lucide-react';
 import { Slider } from '../ui/slider';
 import { useSelection } from '@/contexts/SelectionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,7 @@ interface StickerControlsProps {
   onOpacityChange?: (opacity: number) => void;
   onToggleLock?: () => void;
   onChangeZIndex?: (change: number) => void;
+  onToggleVisibility?: () => void;
 }
 
 const StickerControls = ({
@@ -23,7 +24,8 @@ const StickerControls = ({
   onRotate,
   onOpacityChange,
   onToggleLock,
-  onChangeZIndex
+  onChangeZIndex,
+  onToggleVisibility
 }: StickerControlsProps) => {
   const { toggleSelection, isSelected } = useSelection();
   const { toast } = useToast();
@@ -60,6 +62,19 @@ const StickerControls = ({
       });
     }
   };
+  
+  const handleToggleVisibility = () => {
+    if (onToggleVisibility) {
+      onToggleVisibility();
+      
+      // Show feedback toast
+      toast({
+        title: sticker.hidden ? "Sticker shown" : "Sticker hidden",
+        description: sticker.hidden ? "The sticker is now visible." : "The sticker is now hidden.",
+        duration: 1500,
+      });
+    }
+  };
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
@@ -75,6 +90,16 @@ const StickerControls = ({
         >
           <SquareCheck className={`w-4 h-4 ${isSelected(sticker.id) ? "text-blue-400" : "text-white/70"}`} />
         </button>
+        
+        {onToggleVisibility && (
+          <button 
+            className="p-1.5 hover:bg-white/30 rounded-full transition-colors" 
+            onClick={handleToggleVisibility}
+            title={sticker.hidden ? "Show" : "Hide"}
+          >
+            {sticker.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
         
         {onRotate && (
           <button 

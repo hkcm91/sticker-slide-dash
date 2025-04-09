@@ -11,13 +11,15 @@ interface SelectionOverlayProps {
   onMultiMove: (stickerIds: string[], deltaX: number, deltaY: number) => void;
   onMultiResize: (stickerIds: string[], scaleRatio: number) => void;
   onGroupStickers?: (stickerIds: string[]) => void;
+  onUngroupStickers?: (groupId: string) => void;
 }
 
 const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   placedStickers,
   onMultiMove,
   onMultiResize,
-  onGroupStickers
+  onGroupStickers,
+  onUngroupStickers
 }) => {
   const { selectedStickers, isMultiSelectMode, clearSelection } = useSelection();
   const [boundingBox, setBoundingBox] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -146,6 +148,34 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     }
   };
   
+  const handleUngroupClick = () => {
+    if (!onUngroupStickers || selectedStickers.size !== 1) return;
+    
+    const stickerId = [...selectedStickers][0];
+    const sticker = placedStickers.find(s => s.id === stickerId);
+    
+    if (sticker && sticker.groupId) {
+      onUngroupStickers(sticker.groupId);
+      clearSelection();
+      
+      toast({
+        title: "Group disbanded",
+        description: "The stickers have been ungrouped",
+        duration: 2000,
+      });
+    }
+  };
+  
+  // Check if the selected sticker is part of a group
+  const hasSelectedGroup = () => {
+    if (selectedStickers.size !== 1) return false;
+    
+    const stickerId = [...selectedStickers][0];
+    const sticker = placedStickers.find(s => s.id === stickerId);
+    
+    return sticker && sticker.groupId;
+  };
+  
   if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) return null;
   
   return (
@@ -185,6 +215,18 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
           >
             <Group className="h-3.5 w-3.5 mr-1" />
             Group
+          </Button>
+        )}
+        
+        {onUngroupStickers && hasSelectedGroup() && (
+          <Button 
+            size="sm" 
+            variant="secondary"
+            className="h-7 bg-black/85 hover:bg-black text-white text-xs font-medium border-0"
+            onClick={handleUngroupClick}
+          >
+            <Ungroup className="h-3.5 w-3.5 mr-1" />
+            Ungroup
           </Button>
         )}
       </div>

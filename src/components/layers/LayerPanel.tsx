@@ -19,6 +19,8 @@ interface LayerPanelProps {
   onGroupStickers: (stickerIds: string[]) => void;
   onUngroupStickers: (groupId: string) => void;
   onMoveLayer: (stickerId: string, change: number) => void;
+  onToggleLock?: (sticker: StickerType) => void;
+  onToggleVisibility?: (sticker: StickerType) => void;
 }
 
 const LayerPanel: React.FC<LayerPanelProps> = ({
@@ -26,7 +28,9 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
   onStickerUpdate,
   onGroupStickers,
   onUngroupStickers,
-  onMoveLayer
+  onMoveLayer,
+  onToggleLock,
+  onToggleVisibility
 }) => {
   const { 
     selectedStickers, 
@@ -44,16 +48,15 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
   );
 
   const handleToggleLock = (sticker: StickerType) => {
-    onStickerUpdate({
-      ...sticker,
-      locked: !sticker.locked
-    });
-    
-    toast({
-      title: sticker.locked ? "Sticker unlocked" : "Sticker locked",
-      description: sticker.locked ? "The sticker can now be moved and edited." : "The sticker is now locked in place.",
-      duration: 2000,
-    });
+    if (onToggleLock) {
+      onToggleLock(sticker);
+    }
+  };
+  
+  const handleToggleVisibility = (sticker: StickerType) => {
+    if (onToggleVisibility) {
+      onToggleVisibility(sticker);
+    }
   };
 
   const handleGroupSelected = () => {
@@ -172,6 +175,7 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
                       onToggleExpand={toggleGroupExpansion}
                       onToggleLock={handleToggleLock}
                       onMoveLayer={onMoveLayer}
+                      onToggleVisibility={handleToggleVisibility}
                     />
                   );
                 } else {
@@ -183,6 +187,7 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
                       onToggleLock={handleToggleLock}
                       onMoveUp={() => onMoveLayer(item.id, 1)}
                       onMoveDown={() => onMoveLayer(item.id, -1)}
+                      onToggleVisibility={() => handleToggleVisibility(item)}
                     />
                   );
                 }
