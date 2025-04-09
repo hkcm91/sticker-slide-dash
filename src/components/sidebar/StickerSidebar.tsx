@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -10,7 +9,7 @@ import StickersList from './StickersList';
 import StickerUploadOptions from './StickerUploadOptions';
 import SidebarHeader from './SidebarHeader';
 import CollapsedSidebar from './CollapsedSidebar';
-import StickerEditForm from './StickerEditForm';
+import StickerEditForm from './sticker-edit/StickerEditForm';
 
 interface StickerSidebarProps {
   stickers: StickerType[];
