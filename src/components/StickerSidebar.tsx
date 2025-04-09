@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { processWidgetPackage } from '@/utils/widgetMaster';
 import { useToast } from '@/hooks/use-toast';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import BackupRestoreData from './BackupRestoreData';
+import BackupRestoreData from './sidebar/BackupRestoreData';
 
 interface StickerSidebarProps {
   stickers: StickerType[];
