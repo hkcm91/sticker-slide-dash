@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
 import { ArrowLeftCircle, RotateCw, AlertTriangle } from 'lucide-react';
-import Lottie from 'lottie-react';
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 
 interface StickerProps {
   sticker: StickerType;
@@ -38,6 +37,7 @@ const Sticker = ({
   const [lottieData, setLottieData] = useState<LottieAnimationData | null>(null);
   const [isValidLottie, setIsValidLottie] = useState(false);
   const [lottieError, setLottieError] = useState(false);
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
   
   useEffect(() => {
     if (sticker.animation && sticker.animationType === 'lottie') {
@@ -65,7 +65,6 @@ const Sticker = ({
               setIsValidLottie(false);
             }
           } else if (sticker.animation.trim().startsWith('http')) {
-            // It's a URL, we'll need to handle this differently or provide a fallback
             console.log('Lottie URL detected in Sticker, using fallback');
             setIsValidLottie(false);
           } else {
@@ -169,14 +168,7 @@ const Sticker = ({
                   console.error("Lottie animation failed to render in Sticker:", e);
                   setLottieError(true);
                 }}
-                lottieRef={(ref) => {
-                  if (ref) {
-                    ref.addEventListener('error', () => {
-                      console.error("Lottie animation error event in Sticker");
-                      setLottieError(true);
-                    });
-                  }
-                }}
+                lottieRef={lottieRef}
                 rendererSettings={{
                   preserveAspectRatio: 'xMidYMid slice',
                   progressiveLoad: true,
@@ -191,7 +183,6 @@ const Sticker = ({
         }
       }
       
-      // Fallback for invalid Lottie
       return (
         <div className="flex items-center justify-center w-full h-full bg-violet-100 rounded-full">
           <span className="text-violet-600 text-xs font-medium">Lottie</span>

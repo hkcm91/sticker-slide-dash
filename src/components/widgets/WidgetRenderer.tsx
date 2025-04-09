@@ -1,10 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Sticker as StickerType, WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from './PomodoroWidget';
 import IframeWidget from './IframeWidget';
 import GenericWidget from './GenericWidget';
-import Lottie from 'lottie-react';
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { AlertTriangle } from 'lucide-react';
 
 interface WidgetRendererProps {
@@ -13,7 +12,6 @@ interface WidgetRendererProps {
   className?: string;
 }
 
-// Define an interface for Lottie animation data
 interface LottieAnimationData {
   v: string | number;
   layers: any[];
@@ -22,11 +20,10 @@ interface LottieAnimationData {
 
 const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, className }) => {
   const [lottieError, setLottieError] = useState(false);
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
   
-  // Check if widget has a Lottie animation to display
   const hasLottieAnimation = sticker.animationType === 'lottie' && sticker.animation;
   
-  // Handle built-in widget types
   if (sticker.widgetType === 'Pomodoro') {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
@@ -35,7 +32,6 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     );
   }
   
-  // Handle iframe-based widgets (ZIP packages)
   if (sticker.packageUrl) {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`} style={{ height: '300px', width: '100%', minWidth: '300px' }}>
@@ -44,23 +40,20 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     );
   }
   
-  // Handle widgets with lottie animations
   if (hasLottieAnimation && !lottieError) {
     let lottieData: LottieAnimationData | null = null;
     let isValidLottie = false;
     
     try {
       if (typeof sticker.animation === 'string') {
-        // Check if it's a valid JSON string
         if (sticker.animation.trim().startsWith('{')) {
           try {
             const parsedData = JSON.parse(sticker.animation);
-            // Validate that the parsed data has required Lottie properties
             if (parsedData && typeof parsedData === 'object' && 
-                'v' in parsedData && // Version
-                'layers' in parsedData && // Layers
+                'v' in parsedData && 
+                'layers' in parsedData && 
                 Array.isArray(parsedData.layers) && 
-                parsedData.layers.length > 0) { // Make sure layers array is not empty
+                parsedData.layers.length > 0) {
               lottieData = parsedData;
               isValidLottie = true;
             } else {
@@ -72,7 +65,6 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
             isValidLottie = false;
           }
         } else if (sticker.animation.trim().startsWith('http')) {
-          // It's a URL, we'll need to return a fallback until we can implement proper URL fetching
           console.log('Lottie animation URL detected, using fallback');
           isValidLottie = false;
         } else {
@@ -84,7 +76,6 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
                 'layers' in sticker.animation &&
                 Array.isArray(sticker.animation.layers) &&
                 sticker.animation.layers.length > 0) {
-        // It's already an object, validate basic Lottie structure with non-empty layers
         lottieData = sticker.animation as LottieAnimationData;
         isValidLottie = true;
       } else {
@@ -109,14 +100,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
                 console.error("Lottie animation failed to render:", e);
                 setLottieError(true);
               }}
-              lottieRef={(ref) => {
-                if (ref) {
-                  ref.addEventListener('error', () => {
-                    console.error("Lottie animation error event");
-                    setLottieError(true);
-                  });
-                }
-              }}
+              lottieRef={lottieRef}
               rendererSettings={{
                 preserveAspectRatio: 'xMidYMid slice',
                 progressiveLoad: true,
@@ -130,7 +114,6 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
     }
   }
   
-  // Fallback for other widget types or when Lottie fails
   return (
     <GenericWidget 
       title={widgetData.title} 
