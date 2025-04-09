@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Sticker } from '@/types/stickers';
 import { WidgetAPI, registerWidget } from '@/lib/widgetAPI';
-import { addWidget } from '@/utils/widgetHelpers';
+import { registerWidgetData } from '@/utils/widgetRegistry';
 
 // Interface for widget configuration
 export interface WidgetConfig {
@@ -83,8 +83,8 @@ export function registerWidgetModule(config: WidgetConfig): Widget {
     price: config.price,
   };
   
-  // Register with the dashboard widget data system
-  addWidget(name, config.displayName, config.description);
+  // Register with the widget data registry
+  registerWidgetData(name, config.displayName, config.description);
   
   // Create the complete widget object
   const widget: Widget = {
@@ -134,4 +134,3 @@ export function getPremiumWidgets(): Widget[] {
 export function getFreeWidgets(): Widget[] {
   return Object.values(widgetRegistry).filter(widget => !widget.isPremium);
 }
-

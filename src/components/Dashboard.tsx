@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
@@ -14,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Heart, Home, Coffee, Sun, Star, BookOpen } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
 import { builtInWidgets, initializeWidgets } from '@/widgets/builtin';
+import { getWidgetData, registerWidgetData } from '@/utils/widgetRegistry';
 
 const heartIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>');
 const homeIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>');
@@ -36,21 +38,23 @@ const initialStickers: StickerType[] = [
   ...builtInWidgetStickers,
 ];
 
-const widgetDataMap: Record<string, WidgetData> = {
-  'Heart': { title: 'Heart Widget', content: 'Track your favorites and loved items.' },
-  'Home': { title: 'Home Widget', content: 'Control your smart home devices.' },
-  'Coffee': { title: 'Coffee Widget', content: 'Find the best coffee shops nearby.' },
-  'Sun': { title: 'Sun Widget', content: 'Check today\'s sunrise and sunset times.' },
-  'Star': { title: 'Star Widget', content: 'View your starred and favorite items.' },
-  'Book': { title: 'Book Widget', content: 'Access your reading list and book notes.' },
-  'Pomodoro': { title: 'Pomodoro Timer', content: 'A simple Pomodoro timer to help you stay focused.' },
-  'ToDoList': { title: 'To Do List', content: 'Keep track of your tasks and to-dos.' },
-  'WeatherWidget': { title: 'Weather', content: 'Check the current weather conditions for your location.' },
-  'StockWidget': { title: 'Stock Tracker', content: 'Monitor stock prices and market trends.' },
+// Initialize widget data map with default widgets
+const initializeWidgetDataMap = () => {
+  // Register basic widgets
+  registerWidgetData('Heart', 'Heart Widget', 'Track your favorites and loved items.');
+  registerWidgetData('Home', 'Home Widget', 'Control your smart home devices.');
+  registerWidgetData('Coffee', 'Coffee Widget', 'Find the best coffee shops nearby.');
+  registerWidgetData('Sun', 'Sun Widget', 'Check today\'s sunrise and sunset times.');
+  registerWidgetData('Star', 'Star Widget', 'View your starred and favorite items.');
+  registerWidgetData('Book', 'Book Widget', 'Access your reading list and book notes.');
+  registerWidgetData('Pomodoro', 'Pomodoro Timer', 'A simple Pomodoro timer to help you stay focused.');
+  registerWidgetData('ToDoList', 'To Do List', 'Keep track of your tasks and to-dos.');
+  registerWidgetData('WeatherWidget', 'Weather', 'Check the current weather conditions for your location.');
+  registerWidgetData('StockWidget', 'Stock Tracker', 'Monitor stock prices and market trends.');
 };
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
-  widgetDataMap[name] = { title, content };
+  registerWidgetData(name, title, content);
 };
 
 const Dashboard = () => {
@@ -64,6 +68,9 @@ const Dashboard = () => {
   const { theme } = useTheme();
   
   useEffect(() => {
+    // Initialize widget data map
+    initializeWidgetDataMap();
+    // Initialize built-in widgets
     initializeWidgets();
     
     const savedStickers = localStorage.getItem('stickers');
@@ -232,12 +239,75 @@ const Dashboard = () => {
   const handleStickerCreated = (newSticker: StickerType) => {
     setStickers(prevStickers => [...prevStickers, newSticker]);
     
-    if (!widgetDataMap[newSticker.name]) {
-      widgetDataMap[newSticker.name] = {
-        title: `${newSticker.name}`,
-        content: `This is a custom sticker you created. You can connect it to a widget by updating the widgetType property.`
-      };
+    if (!getWidgetData(newSticker.name)) {
+      registerWidgetData(newSticker.name, `${newSticker.name}`, 
+        `This is a custom sticker you created. You can connect it to a widget by updating the widgetType property.`
+      );
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
+    e.dataTransfer.setData('stickerId', sticker.id);
+    setIsRepositioning(sticker.placed);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const stickerId = e.dataTransfer.getData('stickerId');
+    const offsetX = parseInt(e.dataTransfer.getData('offsetX') || '0', 10);
+    const offsetY = parseInt(e.dataTransfer.getData('offsetY') || '0', 10);
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - offsetX;
+    const y = e.clientY - rect.top - offsetY;
+    
+    setStickers(prevStickers => 
+      prevStickers.map(sticker => 
+        sticker.id === stickerId 
+          ? { ...sticker, position: { x, y }, placed: true } 
+          : sticker
+      )
+    );
+    
+    if (isRepositioning) {
+      toast({
+        title: "Sticker repositioned!",
+        description: "Your sticker has been moved to a new position.",
+        duration: 3000,
+      });
+    } else {
+      toast({
+        title: "Sticker placed!",
+        description: "Click on the sticker to open the widget. Scroll to resize, R key to rotate, or return it to tray.",
+        duration: 3000,
+      });
+    }
+    
+    setIsRepositioning(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleStickerClick = (sticker: StickerType) => {
+    if (sticker.placed) {
+      setOpenWidgets(prev => {
+        const newMap = new Map(prev);
+        newMap.set(sticker.id, { sticker, isOpen: true });
+        return newMap;
+      });
+    }
+  };
+
+  const handleImportStickers = (importedStickers: StickerType[]) => {
+    setStickers(prevStickers => [...prevStickers, ...importedStickers]);
+    
+    toast({
+      title: "Stickers imported!",
+      description: `${importedStickers.length} stickers have been added to your collection.`,
+      duration: 3000,
+    });
   };
 
   const placedStickers = stickers.filter(sticker => sticker.placed);
@@ -272,6 +342,7 @@ const Dashboard = () => {
         onStickerCreated={handleStickerCreated}
         onStickerDelete={handleStickerDelete}
         onStickerUpdate={handleUpdateSticker}
+        onImportStickers={handleImportStickers}
         sidebarStyle={theme.sidebarStyle}
       />
       
@@ -331,7 +402,7 @@ const Dashboard = () => {
       </div>
       
       {Array.from(openWidgets.entries()).map(([id, { sticker, isOpen }]) => {
-        const widgetData = widgetDataMap[sticker.name];
+        const widgetData = getWidgetData(sticker.name);
         if (!widgetData) return null;
         
         return (

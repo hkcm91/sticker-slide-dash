@@ -1,5 +1,5 @@
 
-import { addCustomWidget } from '@/components/Dashboard';
+import { registerWidgetData } from '@/utils/widgetRegistry';
 
 /**
  * Adds a new custom widget to the dashboard
@@ -13,7 +13,7 @@ import { addCustomWidget } from '@/components/Dashboard';
  * ```
  */
 export const addWidget = (name: string, title: string, content: string) => {
-  addCustomWidget(name, title, content);
+  registerWidgetData(name, title, content);
   console.log(`Widget '${name}' has been added! You can now create a sticker for it.`);
   return true;
 };

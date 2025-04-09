@@ -5,6 +5,7 @@ import { Sticker as StickerType } from '@/types/stickers';
 import { WidgetData } from '@/types/stickers';
 import { X } from 'lucide-react';
 import WidgetRenderer from './widgets/WidgetRenderer';
+import { getWidgetData } from '@/utils/widgetRegistry';
 
 interface WidgetModalProps {
   isOpen: boolean;
