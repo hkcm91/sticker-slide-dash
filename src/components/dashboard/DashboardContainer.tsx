@@ -22,7 +22,6 @@ interface DashboardContainerProps {
   onUndockWidget?: (sticker: StickerType) => void;
   onCloseDockedWidget?: (sticker: StickerType) => void;
   onToggleLock?: (sticker: StickerType) => void;
-  onToggleVisibility?: (sticker: StickerType) => void;
   onChangeZIndex?: (sticker: StickerType, change: number) => void;
   children?: React.ReactNode;
 }
@@ -42,7 +41,6 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
   onUndockWidget,
   onCloseDockedWidget,
   onToggleLock,
-  onToggleVisibility,
   onChangeZIndex,
   children
 }) => {
@@ -104,7 +102,6 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
               onStickerDelete={onStickerDelete}
               onStickerUpdate={onStickerUpdate}
               onToggleLock={onToggleLock}
-              onToggleVisibility={onToggleVisibility}
               onChangeZIndex={onChangeZIndex}
             />
           </div>
