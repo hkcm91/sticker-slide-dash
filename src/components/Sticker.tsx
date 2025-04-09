@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
@@ -29,10 +30,12 @@ const Sticker = ({
   const [rotation, setRotation] = useState(sticker.rotation || 0); // Use sticker's rotation or default
   const stickerRef = useRef<HTMLDivElement>(null);
   const [lottieData, setLottieData] = useState<any>(null);
+  const [isValidLottie, setIsValidLottie] = useState(false);
   
   // Load Lottie animation if available
   useEffect(() => {
     if (sticker.animation && sticker.animationType === 'lottie') {
+      setIsValidLottie(false);
       try {
         // Handle both string JSON and object formats
         if (typeof sticker.animation === 'string') {
@@ -41,8 +44,12 @@ const Sticker = ({
             try {
               const parsedData = JSON.parse(sticker.animation);
               // Validate that the parsed data has required Lottie properties
-              if (parsedData && typeof parsedData === 'object') {
+              if (parsedData && typeof parsedData === 'object' && 
+                  parsedData.v !== undefined && // Version
+                  parsedData.layers !== undefined && // Layers
+                  Array.isArray(parsedData.layers)) {
                 setLottieData(parsedData);
+                setIsValidLottie(true);
               } else {
                 console.error('Invalid Lottie animation data structure');
               }
@@ -51,14 +58,21 @@ const Sticker = ({
             }
           } else {
             // It's probably a URL or other string format
+            // For URLs, we don't validate the content structure here
             setLottieData(sticker.animation);
+            setIsValidLottie(true);
           }
-        } else if (sticker.animation && typeof sticker.animation === 'object') {
-          // It's already an object
+        } else if (sticker.animation && typeof sticker.animation === 'object' &&
+                  sticker.animation.v !== undefined && 
+                  sticker.animation.layers !== undefined &&
+                  Array.isArray(sticker.animation.layers)) {
+          // It's already an object, validate basic Lottie structure
           setLottieData(sticker.animation);
+          setIsValidLottie(true);
         }
       } catch (e) {
         console.error('Failed to process Lottie animation:', e);
+        setIsValidLottie(false);
       }
     }
   }, [sticker.animation, sticker.animationType]);
@@ -140,14 +154,25 @@ const Sticker = ({
 
   // Render the sticker content based on type
   const renderStickerContent = () => {
-    if (sticker.animationType === 'lottie' && lottieData) {
-      try {
-        // Only render if lottieData is valid
-        if (lottieData && (typeof lottieData === 'object' || typeof lottieData === 'string')) {
-          return <Lottie animationData={lottieData} loop={true} className="w-full h-full p-2" />;
+    if (sticker.animationType === 'lottie') {
+      if (isValidLottie && lottieData) {
+        try {
+          return (
+            <div className="w-full h-full p-2">
+              <Lottie 
+                animationData={lottieData} 
+                loop={true} 
+                className="w-full h-full"
+                onError={() => {
+                  console.error("Lottie animation failed to render");
+                  setIsValidLottie(false);
+                }}
+              />
+            </div>
+          );
+        } catch (error) {
+          console.error("Error rendering Lottie animation:", error);
         }
-      } catch (error) {
-        console.error("Error rendering Lottie animation:", error);
       }
       
       // Fallback if there's an issue with the Lottie animation
