@@ -1,192 +1,79 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
-import { useToast } from '@/hooks/use-toast';
-import { getWidgetData, registerWidgetData } from '@/utils/widgetRegistry';
+import { 
+  useStickerDragHandlers, 
+  useStickerWidgetHandlers, 
+  useStickerManagementHandlers 
+} from './stickerHandlers';
 
 export function useStickerHandlers(
   stickers: StickerType[],
   setStickers: React.Dispatch<React.SetStateAction<StickerType[]>>,
   setOpenWidgets: React.Dispatch<React.SetStateAction<Map<string, { sticker: StickerType, isOpen: boolean }>>>
 ) {
-  const [isRepositioning, setIsRepositioning] = useState(false);
-  const { toast } = useToast();
+  // Get handlers from separated hooks
+  const {
+    isRepositioning,
+    handleDragStart: dragStartHandler,
+    handleDrop: dropHandler,
+    handleDragOver
+  } = useStickerDragHandlers();
 
+  const {
+    handleStickerClick: stickerClickHandler,
+    handleCloseModal: closeModalHandler,
+    handleDockWidget: dockWidgetHandler,
+    handleUndockWidget: undockWidgetHandler
+  } = useStickerWidgetHandlers();
+
+  const {
+    handleStickerDelete: stickerDeleteHandler,
+    handleUpdateSticker: updateStickerHandler,
+    handleStickerCreated: stickerCreatedHandler,
+    handleImportStickers: importStickersHandler
+  } = useStickerManagementHandlers();
+
+  // Create wrapper functions that provide the required dependencies
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
-    e.dataTransfer.setData('stickerId', sticker.id);
-    setIsRepositioning(sticker.placed);
+    dragStartHandler(e, sticker);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const stickerId = e.dataTransfer.getData('stickerId');
-    const offsetX = parseInt(e.dataTransfer.getData('offsetX') || '0', 10);
-    const offsetY = parseInt(e.dataTransfer.getData('offsetY') || '0', 10);
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - offsetX;
-    const y = e.clientY - rect.top - offsetY;
-    
-    setStickers(prevStickers => 
-      prevStickers.map(sticker => 
-        sticker.id === stickerId 
-          ? { ...sticker, position: { x, y }, placed: true } 
-          : sticker
-      )
-    );
-    
-    if (isRepositioning) {
-      toast({
-        title: "Sticker repositioned!",
-        description: "Your sticker has been moved to a new position.",
-        duration: 3000,
-      });
-    } else {
-      toast({
-        title: "Sticker placed!",
-        description: "Click on the sticker to open the widget. Scroll to resize, R key to rotate, or return it to tray.",
-        duration: 3000,
-      });
-    }
-    
-    setIsRepositioning(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+    const updateFunction = dropHandler(e);
+    setStickers(updateFunction);
   };
 
   const handleStickerClick = (sticker: StickerType) => {
-    if (sticker.placed) {
-      setOpenWidgets(prev => {
-        const newMap = new Map(prev);
-        newMap.set(sticker.id, { sticker, isOpen: true });
-        return newMap;
-      });
-    }
+    stickerClickHandler(sticker, setOpenWidgets);
   };
 
   const handleCloseModal = (stickerId: string) => {
-    setOpenWidgets(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(stickerId);
-      return newMap;
-    });
+    closeModalHandler(stickerId, setOpenWidgets);
   };
 
   const handleDockWidget = (sticker: StickerType) => {
-    // Close the modal if it's open
-    setOpenWidgets(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(sticker.id);
-      return newMap;
-    });
-    
-    // Update the sticker to be docked
-    setStickers(prevStickers => 
-      prevStickers.map(s => 
-        s.id === sticker.id 
-          ? { ...s, docked: true }
-          : s
-      )
-    );
-    
-    toast({
-      title: "Widget docked!",
-      description: "The widget has been docked to the bottom of the dashboard.",
-      duration: 3000,
-    });
+    dockWidgetHandler(sticker, setOpenWidgets, setStickers);
   };
 
   const handleUndockWidget = (sticker: StickerType) => {
-    // Update the sticker to be undocked
-    setStickers(prevStickers => 
-      prevStickers.map(s => 
-        s.id === sticker.id 
-          ? { ...s, docked: false }
-          : s
-      )
-    );
-    
-    toast({
-      title: "Widget undocked!",
-      description: "The widget has been undocked from the dashboard.",
-      duration: 3000,
-    });
+    undockWidgetHandler(sticker, setStickers);
   };
 
   const handleStickerDelete = (sticker: StickerType) => {
-    if ((sticker as any).permanentDelete) {
-      setStickers(prevStickers => 
-        prevStickers.filter(s => s.id !== sticker.id)
-      );
-      
-      toast({
-        title: "Sticker permanently deleted",
-        description: "The sticker has been completely removed from your collection.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } else {
-      setStickers(prevStickers => {
-        return prevStickers.map(s => 
-          s.id === sticker.id 
-            ? { ...s, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0, docked: false } 
-            : s
-        );
-      });
-      
-      setOpenWidgets(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(sticker.id);
-        return newMap;
-      });
-      
-      toast({
-        title: "Sticker returned to tray!",
-        description: "The sticker has been returned to your tray and is available for reuse.",
-        duration: 3000,
-      });
-    }
+    stickerDeleteHandler(sticker, setStickers, setOpenWidgets);
   };
 
   const handleUpdateSticker = (updatedSticker: StickerType) => {
-    setStickers(prevStickers => 
-      prevStickers.map(s => 
-        s.id === updatedSticker.id ? updatedSticker : s
-      )
-    );
-    
-    setOpenWidgets(prev => {
-      if (!prev.has(updatedSticker.id)) return prev;
-      
-      const newMap = new Map(prev);
-      newMap.set(updatedSticker.id, { 
-        sticker: updatedSticker, 
-        isOpen: prev.get(updatedSticker.id)?.isOpen || false 
-      });
-      return newMap;
-    });
+    updateStickerHandler(updatedSticker, setStickers, setOpenWidgets);
   };
 
   const handleStickerCreated = (newSticker: StickerType) => {
-    setStickers(prevStickers => [...prevStickers, newSticker]);
-    
-    if (!getWidgetData(newSticker.name)) {
-      registerWidgetData(newSticker.name, `${newSticker.name}`, 
-        `This is a custom sticker you created. You can connect it to a widget by updating the widgetType property.`
-      );
-    }
+    stickerCreatedHandler(newSticker, setStickers);
   };
 
   const handleImportStickers = (importedStickers: StickerType[]) => {
-    setStickers(prevStickers => [...prevStickers, ...importedStickers]);
-    
-    toast({
-      title: "Stickers imported!",
-      description: `${importedStickers.length} stickers have been added to your collection.`,
-      duration: 3000,
-    });
+    importStickersHandler(importedStickers, setStickers);
   };
 
   return {
