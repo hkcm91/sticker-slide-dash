@@ -62,6 +62,7 @@ export interface Sticker {
   transformStyle?: string; // Additional transform styles
   locked?: boolean; // Whether the sticker position is locked
   visible?: boolean; // Whether the sticker is visible
+  hidden?: boolean; // Whether the sticker is hidden
   groupId?: string; // For grouping related stickers
   lastUsed?: string; // ISO timestamp of when the sticker was last used
   
