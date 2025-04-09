@@ -17,7 +17,7 @@ interface StickerInteractions {
   stickerRef: React.RefObject<HTMLDivElement>;
   handleDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
   handleDragEnd: () => void;
-  handleRotate: (e: React.MouseEvent) => void;
+  handleRotate: () => void;
   handleResize: (e: React.WheelEvent) => void;
   handleOpacityChange: (opacity: number) => void;
   setIsHovered: (value: boolean) => void;
@@ -35,8 +35,17 @@ export const useStickerInteractions = ({
   const [zIndex, setZIndex] = useState(sticker.zIndex || 10);
   const stickerRef = useRef<HTMLDivElement>(null);
   
+  // Update local state when sticker props change
+  useEffect(() => {
+    setSize(sticker.size || 60);
+    setRotation(sticker.rotation || 0);
+    setOpacity(sticker.opacity || 1);
+    setZIndex(sticker.zIndex || 10);
+  }, [sticker.size, sticker.rotation, sticker.opacity, sticker.zIndex]);
+  
   useEffect(() => {
     if (sticker.placed && onUpdate) {
+      // Only update when placed and a change occurs
       onUpdate({
         ...sticker,
         size,
@@ -102,10 +111,8 @@ export const useStickerInteractions = ({
     setIsDragging(false);
   };
 
-  const handleRotate = (e: React.MouseEvent) => {
+  const handleRotate = () => {
     if (sticker.locked) return;
-    
-    e.stopPropagation();
     setRotation((prev) => (prev + 15) % 360);
   };
 

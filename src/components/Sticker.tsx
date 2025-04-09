@@ -73,26 +73,11 @@ const Sticker = ({
     }
   };
 
-  const handleToggleLock = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onToggleLock) {
-      onToggleLock(sticker);
-    }
-  };
-
-  const handleToggleVisibility = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onToggleVisibility) {
-      onToggleVisibility(sticker);
-    }
-  };
-
-  const handleChangeZIndex = (change: number) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onChangeZIndex) {
-      onChangeZIndex(sticker, change);
-    }
-  };
+  // Ensure we wrap these handlers properly for StickerControls
+  const handleDelete = () => onDelete?.(sticker);
+  const handleToggleLock = () => onToggleLock?.(sticker);
+  const handleToggleVisibility = () => onToggleVisibility?.(sticker);
+  const handleChangeZIndex = (change: number) => onChangeZIndex?.(sticker, change);
 
   // Apply different styling based on sticker type
   const getStickerTypeClasses = () => {
@@ -143,7 +128,7 @@ const Sticker = ({
     <div
       ref={stickerRef}
       className={cn(
-        'select-none cursor-pointer rounded-full flex items-center justify-center transition-all',
+        'select-none cursor-pointer rounded-full flex items-center justify-center transition-all overflow-visible',
         isDragging ? 'opacity-50' : 'opacity-100',
         isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         sticker.locked ? 'cursor-not-allowed' : '',
@@ -183,12 +168,12 @@ const Sticker = ({
         <StickerControls 
           sticker={sticker} 
           isHovered={isHovered} 
-          onDelete={onDelete ? (() => onDelete(sticker)) : undefined}
+          onDelete={onDelete ? handleDelete : undefined}
           onRotate={handleRotate}
           onOpacityChange={handleOpacityChange}
-          onToggleLock={onToggleLock ? (() => onToggleLock(sticker)) : undefined}
-          onToggleVisibility={onToggleVisibility ? (() => onToggleVisibility(sticker)) : undefined}
-          onChangeZIndex={onChangeZIndex ? ((change: number) => onChangeZIndex(sticker, change)) : undefined}
+          onToggleLock={onToggleLock ? handleToggleLock : undefined}
+          onToggleVisibility={onToggleVisibility ? handleToggleVisibility : undefined}
+          onChangeZIndex={onChangeZIndex ? handleChangeZIndex : undefined}
         />
       </div>
     </div>
