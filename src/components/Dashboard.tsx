@@ -246,60 +246,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
-    e.dataTransfer.setData('stickerId', sticker.id);
-    setIsRepositioning(sticker.placed);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const stickerId = e.dataTransfer.getData('stickerId');
-    const offsetX = parseInt(e.dataTransfer.getData('offsetX') || '0', 10);
-    const offsetY = parseInt(e.dataTransfer.getData('offsetY') || '0', 10);
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - offsetX;
-    const y = e.clientY - rect.top - offsetY;
-    
-    setStickers(prevStickers => 
-      prevStickers.map(sticker => 
-        sticker.id === stickerId 
-          ? { ...sticker, position: { x, y }, placed: true } 
-          : sticker
-      )
-    );
-    
-    if (isRepositioning) {
-      toast({
-        title: "Sticker repositioned!",
-        description: "Your sticker has been moved to a new position.",
-        duration: 3000,
-      });
-    } else {
-      toast({
-        title: "Sticker placed!",
-        description: "Click on the sticker to open the widget. Scroll to resize, R key to rotate, or return it to tray.",
-        duration: 3000,
-      });
-    }
-    
-    setIsRepositioning(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const handleStickerClick = (sticker: StickerType) => {
-    if (sticker.placed) {
-      setOpenWidgets(prev => {
-        const newMap = new Map(prev);
-        newMap.set(sticker.id, { sticker, isOpen: true });
-        return newMap;
-      });
-    }
-  };
-
   const handleImportStickers = (importedStickers: StickerType[]) => {
     setStickers(prevStickers => [...prevStickers, ...importedStickers]);
     
