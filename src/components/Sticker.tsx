@@ -16,7 +16,6 @@ interface StickerProps {
   onDelete?: (sticker: StickerType) => void;
   onUpdate?: (sticker: StickerType) => void;
   onToggleLock?: (sticker: StickerType) => void;
-  onToggleVisibility?: (sticker: StickerType) => void;
   onChangeZIndex?: (sticker: StickerType, change: number) => void;
 }
 
@@ -29,7 +28,6 @@ const Sticker = ({
   onDelete,
   onUpdate,
   onToggleLock,
-  onToggleVisibility,
   onChangeZIndex
 }: StickerProps) => {
   const {
@@ -63,9 +61,10 @@ const Sticker = ({
   };
 
   const handleStickerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     if (isMultiSelectMode) {
       // In multi-select mode, clicks toggle selection
-      e.stopPropagation();
       toggleSelection(sticker.id, e.shiftKey);
     } else {
       // Normal click behavior
@@ -76,7 +75,6 @@ const Sticker = ({
   // Ensure we wrap these handlers properly for StickerControls
   const handleDelete = () => onDelete?.(sticker);
   const handleToggleLock = () => onToggleLock?.(sticker);
-  const handleToggleVisibility = () => onToggleVisibility?.(sticker);
   const handleChangeZIndex = (change: number) => onChangeZIndex?.(sticker, change);
 
   // Apply different styling based on sticker type
@@ -132,7 +130,7 @@ const Sticker = ({
         isDragging ? 'opacity-50' : 'opacity-100',
         isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         sticker.locked ? 'cursor-not-allowed' : '',
-        isSelected(sticker.id) && 'ring-2 ring-blue-500',
+        isSelected(sticker.id) && 'ring-2 ring-blue-500 ring-offset-2',
         getStickerTypeClasses(),
         className
       )}
@@ -155,8 +153,7 @@ const Sticker = ({
               transformOrigin: sticker.transformOrigin || 'center',
               zIndex: zIndex || 10,
               opacity: opacity,
-              visibility: sticker.visible === false ? 'hidden' : 'visible',
-              transition: 'transform 0.2s ease, opacity 0.3s ease',
+              transition: 'transform 0.2s ease, opacity 0.3s ease, box-shadow 0.3s ease',
               ...getEffectsStyle()
             } 
           : {}
@@ -172,7 +169,6 @@ const Sticker = ({
           onRotate={handleRotate}
           onOpacityChange={handleOpacityChange}
           onToggleLock={onToggleLock ? handleToggleLock : undefined}
-          onToggleVisibility={onToggleVisibility ? handleToggleVisibility : undefined}
           onChangeZIndex={onChangeZIndex ? handleChangeZIndex : undefined}
         />
       </div>

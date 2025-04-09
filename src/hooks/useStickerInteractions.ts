@@ -43,9 +43,9 @@ export const useStickerInteractions = ({
     setZIndex(sticker.zIndex || 10);
   }, [sticker.size, sticker.rotation, sticker.opacity, sticker.zIndex]);
   
+  // Update the sticker when local state changes
   useEffect(() => {
     if (sticker.placed && onUpdate) {
-      // Only update when placed and a change occurs
       onUpdate({
         ...sticker,
         size,
@@ -54,8 +54,9 @@ export const useStickerInteractions = ({
         zIndex
       });
     }
-  }, [size, rotation, opacity, zIndex, sticker.placed]);
+  }, [size, rotation, opacity, zIndex, sticker.placed, onUpdate, sticker]);
 
+  // Keyboard shortcuts for sticker manipulation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isHovered || sticker.locked) return;

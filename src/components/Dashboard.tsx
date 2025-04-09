@@ -76,16 +76,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleToggleVisibility = (sticker: {id: string, visible?: boolean}) => {
-    const stickerToUpdate = stickers.find(s => s.id === sticker.id);
-    if (stickerToUpdate) {
-      handleUpdateSticker({
-        ...stickerToUpdate,
-        visible: stickerToUpdate.visible === false ? true : false
-      });
-    }
-  };
-
   const handleChangeZIndex = (sticker: {id: string}, change: number) => {
     const stickerToUpdate = stickers.find(s => s.id === sticker.id);
     if (stickerToUpdate) {
@@ -129,13 +119,13 @@ const Dashboard = () => {
             onUndockWidget={handleUndockWidget}
             onCloseDockedWidget={handleStickerDelete}
             onToggleLock={handleToggleLock}
-            onToggleVisibility={handleToggleVisibility}
             onChangeZIndex={handleChangeZIndex}
           >
             <SelectionOverlay 
               placedStickers={placedStickers}
               onMultiMove={handleMultiMove}
               onMultiResize={handleMultiResize}
+              onGroupStickers={handleGroupStickers}
             />
           </DashboardContainer>
           
@@ -151,8 +141,7 @@ const Dashboard = () => {
           
           {/* Layer panel toggle button */}
           <Button
-            className="absolute bottom-4 right-4 z-50 rounded-full w-10 h-10 p-0 shadow-lg"
-            variant="secondary"
+            className="absolute bottom-4 right-4 z-50 rounded-full w-10 h-10 p-0 shadow-lg bg-blue-500 hover:bg-blue-600"
             onClick={toggleLayerPanel}
             title={showLayerPanel ? "Close layer panel" : "Open layer panel"}
           >

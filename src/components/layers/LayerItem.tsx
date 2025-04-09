@@ -2,7 +2,7 @@
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
-import { MoveUp, MoveDown, Eye, EyeOff, Lock, Unlock, Layers } from 'lucide-react';
+import { MoveUp, MoveDown, Lock, Unlock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface LayerItemProps {
   sticker: StickerType;
   onToggleLock: (sticker: StickerType) => void;
-  onToggleVisibility: (sticker: StickerType) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
 }
@@ -18,7 +17,6 @@ interface LayerItemProps {
 const LayerItem: React.FC<LayerItemProps> = ({
   sticker,
   onToggleLock,
-  onToggleVisibility,
   onMoveUp,
   onMoveDown
 }) => {
@@ -33,10 +31,10 @@ const LayerItem: React.FC<LayerItemProps> = ({
   return (
     <div 
       className={cn(
-        "flex items-center px-2 py-1 rounded-md text-sm",
+        "flex items-center px-2 py-1.5 rounded-md text-sm mb-1",
         isMultiSelectMode && "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
-        isSelected(sticker.id) && "bg-blue-100 dark:bg-blue-900",
-        sticker.locked && "opacity-50"
+        isSelected(sticker.id) && "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500",
+        sticker.locked && "opacity-70"
       )}
       onClick={handleClick}
     >
@@ -52,23 +50,11 @@ const LayerItem: React.FC<LayerItemProps> = ({
         </div>
       )}
       
-      <div className="flex-1 truncate ml-1">
-        {sticker.name || "Unnamed Sticker"}
+      <div className="flex-1 truncate ml-1 font-medium">
+        {sticker.name || `Sticker ${sticker.id.slice(0, 4)}`}
       </div>
       
       <div className="flex items-center gap-1">
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          className="h-6 w-6"
-          onClick={(e) => { e.stopPropagation(); onToggleVisibility(sticker); }}
-        >
-          {sticker.visible === false ? 
-            <EyeOff className="h-3 w-3" /> : 
-            <Eye className="h-3 w-3" />
-          }
-        </Button>
-        
         <Button 
           size="icon" 
           variant="ghost" 
