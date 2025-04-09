@@ -65,6 +65,10 @@ export interface Sticker {
   
   // Storage metadata to help with compression
   storageCompressed?: boolean; // Flag indicating if this object has been compressed for storage
+  compressionLevel?: string; // Level of compression applied
+  originalDataSize?: number; // Size of data before compression (for metrics)
+  compressedDataSize?: number; // Size after compression (for metrics)
+  lastCompressedAt?: string; // Timestamp of last compression
 }
 
 export interface WidgetData {
