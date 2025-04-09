@@ -56,7 +56,7 @@ const Dashboard = () => {
     handleUngroupStickers,
     handleMoveLayer,
     toggleLayerPanel
-  } = useStickerGroupHandlers(stickers, /* setStickers from useDashboardState */);
+  } = useStickerGroupHandlers(stickers, handleUpdateSticker);
 
   // Double-click handler to toggle storage monitor for debugging
   const handleDoubleClick = (e: React.MouseEvent) => {
