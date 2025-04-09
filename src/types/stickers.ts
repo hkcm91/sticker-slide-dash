@@ -62,6 +62,9 @@ export interface Sticker {
   locked?: boolean; // Whether the sticker position is locked
   visible?: boolean; // Whether the sticker is visible
   groupId?: string; // For grouping related stickers
+  
+  // Storage metadata to help with compression
+  storageCompressed?: boolean; // Flag indicating if this object has been compressed for storage
 }
 
 export interface WidgetData {
