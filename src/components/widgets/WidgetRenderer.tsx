@@ -8,6 +8,7 @@ import WeatherWidget from './WeatherWidget';
 import StockWidget from './StockWidget';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { validateLottieAnimation } from '@/utils/lottieUtils';
+import { Code, FileJson } from 'lucide-react';
 
 interface WidgetRendererProps {
   sticker: StickerType;
@@ -20,6 +21,7 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   
   const hasLottieAnimation = sticker.animationType === 'lottie' && sticker.animation;
+  const hasCustomData = sticker.widgetData !== undefined;
   
   // Handle built-in widgets
   if (sticker.widgetType === 'Pomodoro') {
@@ -83,6 +85,28 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
         </div>
       );
     }
+  }
+  
+  // Handle widgets with custom JSON data
+  if (hasCustomData) {
+    return (
+      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md p-4 ${className}`}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-md font-semibold">{widgetData.title || sticker.name}</h3>
+          <FileJson className="h-4 w-4 text-blue-500" />
+        </div>
+        
+        <div className="bg-black/10 p-3 rounded overflow-auto max-h-[200px]">
+          <pre className="text-xs font-mono">
+            {JSON.stringify(sticker.widgetData, null, 2)}
+          </pre>
+        </div>
+        
+        <p className="text-sm mt-3 text-muted-foreground">
+          {widgetData.content || "Custom data widget"}
+        </p>
+      </div>
+    );
   }
   
   // Fallback to generic widget

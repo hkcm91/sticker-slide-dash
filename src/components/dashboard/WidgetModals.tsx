@@ -16,6 +16,11 @@ const WidgetModals: React.FC<WidgetModalsProps> = ({ openWidgets, onCloseModal }
         const widgetData = getWidgetData(sticker.name);
         if (!widgetData) return null;
         
+        // If there's custom widget data, add it to the title
+        if (sticker.widgetData) {
+          widgetData.title = `${widgetData.title || sticker.name} (with JSON Data)`;
+        }
+        
         return (
           <WidgetModal 
             key={id}

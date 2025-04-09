@@ -19,6 +19,7 @@ export interface Sticker {
   price?: number; // Price of the widget if it's premium
   purchasedOn?: string; // Date when the widget was purchased
   purchaseId?: string; // ID of the purchase transaction
+  widgetData?: any; // Custom JSON data for the widget
 }
 
 export interface WidgetData {
