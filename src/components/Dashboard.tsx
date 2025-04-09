@@ -120,14 +120,7 @@ const Dashboard = () => {
             onCloseDockedWidget={handleStickerDelete}
             onToggleLock={handleToggleLock}
             onChangeZIndex={handleChangeZIndex}
-          >
-            <SelectionOverlay 
-              placedStickers={placedStickers}
-              onMultiMove={handleMultiMove}
-              onMultiResize={handleMultiResize}
-              onGroupStickers={handleGroupStickers}
-            />
-          </DashboardContainer>
+          />
           
           {showLayerPanel && (
             <LayerPanel 

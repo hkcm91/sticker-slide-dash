@@ -10,7 +10,6 @@ interface PlacedStickersProps {
   onStickerDelete: (sticker: StickerType) => void;
   onStickerUpdate: (sticker: StickerType) => void;
   onToggleLock?: (sticker: StickerType) => void;
-  onToggleVisibility?: (sticker: StickerType) => void;
   onChangeZIndex?: (sticker: StickerType, change: number) => void;
 }
 
@@ -21,7 +20,6 @@ const PlacedStickers: React.FC<PlacedStickersProps> = ({
   onStickerDelete,
   onStickerUpdate,
   onToggleLock,
-  onToggleVisibility,
   onChangeZIndex
 }) => {
   return (
@@ -36,7 +34,6 @@ const PlacedStickers: React.FC<PlacedStickersProps> = ({
           onDelete={onStickerDelete}
           onUpdate={onStickerUpdate}
           onToggleLock={onToggleLock}
-          onToggleVisibility={onToggleVisibility}
           onChangeZIndex={onChangeZIndex}
         />
       ))}
