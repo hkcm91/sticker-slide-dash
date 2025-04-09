@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, HardDrive, CleanIcon, HistoryIcon } from 'lucide-react';
+import { AlertCircle, HardDrive, Trash2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { findUnusedStickers } from '@/utils/stickerCleanupUtils';
 import { Sticker } from '@/types/stickers';
