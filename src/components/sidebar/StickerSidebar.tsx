@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -10,7 +11,6 @@ import SidebarHeader from './SidebarHeader';
 import CollapsedSidebar from './CollapsedSidebar';
 import StickerEditForm from './sticker-edit/StickerEditForm';
 import WidgetMarketplace from './WidgetMarketplace';
-import SidebarTabs from './SidebarTabs';
 import { useStickerSidebar } from './hooks/useStickerSidebar';
 
 interface StickerSidebarProps {
@@ -33,7 +33,7 @@ const StickerSidebar: React.FC<StickerSidebarProps> = ({
   onStickerUpdate,
   onImportStickers,
   sidebarStyle
-}: StickerSidebarProps) => {
+}) => {
   const { 
     isCollapsed, 
     setIsCollapsed,
@@ -78,15 +78,19 @@ const StickerSidebar: React.FC<StickerSidebarProps> = ({
             className={getHeaderClasses()}
           />
 
-          <SidebarTabs 
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            stickers={stickers}
-            onStickerCreated={onStickerCreated}
-            onImportStickers={onImportStickers}
-            onDragStart={onDragStart}
-            onStickerClick={handleStickerClick}
-          />
+          <div className="flex-1 flex flex-col">
+            <StickerUploadOptions 
+              stickers={stickers}
+              onStickerCreated={onStickerCreated}
+              onImportStickers={onImportStickers}
+            />
+            
+            <StickersList 
+              stickers={stickers}
+              onDragStart={onDragStart}
+              onStickerClick={handleStickerClick}
+            />
+          </div>
         </>
       )}
 
