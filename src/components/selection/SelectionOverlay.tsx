@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';

@@ -12,11 +12,11 @@ export function useStickerState(placedStickers: StickerType[]) {
     
     return [...selectedStickers].every(id => {
       const sticker = placedStickers.find(s => s.id === id);
-      return Boolean(sticker && sticker.locked === true);
+      return sticker?.locked === true;
     });
   }, [selectedStickers, placedStickers]);
   
   return {
-    areAllLocked: areAllLocked() // Ensures this is always a boolean
+    areAllLocked: areAllLocked() // This is now guaranteed to be a boolean
   };
 }
