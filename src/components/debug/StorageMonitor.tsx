@@ -6,12 +6,19 @@ import { AlertCircle, HardDrive, Trash2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { findUnusedStickers } from '@/utils/stickerCleanupUtils';
 import { Sticker } from '@/types/stickers';
+import BackupRestoreDialog from './BackupRestoreDialog';
 
 interface StorageMonitorProps {
   visible?: boolean;
+  stickers: Sticker[];
+  onImportStickers?: (stickers: Sticker[]) => void;
 }
 
-const StorageMonitor: React.FC<StorageMonitorProps> = ({ visible = false }) => {
+const StorageMonitor: React.FC<StorageMonitorProps> = ({ 
+  visible = false, 
+  stickers = [],
+  onImportStickers
+}) => {
   const [storageUsed, setStorageUsed] = useState(0);
   const [storageQuota, setStorageQuota] = useState(5 * 1024 * 1024); // Default to 5MB
   const [isNearLimit, setIsNearLimit] = useState(false);
@@ -173,6 +180,15 @@ const StorageMonitor: React.FC<StorageMonitorProps> = ({ visible = false }) => {
               Unused Stickers:
             </span>
             <span>{unusedCount}</span>
+          </div>
+        )}
+        
+        {onImportStickers && (
+          <div className="mt-3 pt-2 border-t border-border">
+            <BackupRestoreDialog 
+              stickers={stickers} 
+              onImportStickers={onImportStickers} 
+            />
           </div>
         )}
       </div>

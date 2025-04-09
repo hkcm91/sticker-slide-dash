@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from './Sticker';
-import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link, Sparkles, HardDrive } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash, X, PackageOpen, Code, Link, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

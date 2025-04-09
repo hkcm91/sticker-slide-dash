@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { initializeWidgets } from '@/widgets/builtin';
@@ -36,19 +35,14 @@ export function useDashboardState() {
     handleImportStickers
   } = useStickerHandlers(stickers, setStickers, setOpenWidgets);
   
-  // Initialize on mount
   useEffect(() => {
-    // Initialize widget data map
     initializeWidgetDataMap();
-    // Initialize built-in widgets
     initializeWidgets();
     
-    // Load stickers from storage with recovery options
     const loadedStickers = loadStickersFromStorage(initialStickers);
     setStickers(loadedStickers);
   }, []);
   
-  // Save stickers to localStorage with compression and error handling
   useEffect(() => {
     if (stickers.length > 0) {
       const saved = saveStickersToStorage(stickers);
@@ -59,11 +53,8 @@ export function useDashboardState() {
     }
   }, [stickers]);
   
-  // Automatic cleanup effect
   useEffect(() => {
-    // Perform scheduled cleanup check
     if (stickers.length > 0) {
-      // Run after a short delay to avoid interfering with initial load
       const cleanupTimer = setTimeout(() => {
         const cleaned = performScheduledCleanup(stickers, setStickers);
         
@@ -76,7 +67,6 @@ export function useDashboardState() {
     }
   }, [stickers]);
 
-  // Update lastUsed timestamp when interacting with stickers
   const updateLastUsedTimestamp = (stickerId: string) => {
     setStickers(prevStickers => 
       prevStickers.map(sticker => 
@@ -87,7 +77,6 @@ export function useDashboardState() {
     );
   };
 
-  // Enhance the original handlers with timestamp updates
   const enhancedHandlers = {
     handleStickerClick: (sticker: StickerType) => {
       updateLastUsedTimestamp(sticker.id);
