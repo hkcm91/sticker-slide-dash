@@ -19,6 +19,17 @@ export interface WidgetConfig {
   state?: Record<string, any>;
   actions?: Record<string, (state: any, payload?: any) => any>;
   render?: (props: any) => JSX.Element;
+  
+  // Advanced configuration options
+  dependencies?: string[];
+  permissions?: string[];
+  settings?: Record<string, any>;
+  configSchema?: Record<string, any>;
+  capabilities?: string[];
+  dataSource?: {
+    type: string;
+    config: Record<string, any>;
+  };
 }
 
 // Interface for a complete widget
@@ -61,6 +72,30 @@ export function registerWidgetModule(config: WidgetConfig): Widget {
         return true;
       }
       return false;
+    },
+    
+    // Add advanced API methods for more complex widgets
+    getConfig() {
+      return {
+        settings: config.settings || {},
+        permissions: config.permissions || [],
+        dependencies: config.dependencies || [],
+        capabilities: config.capabilities || []
+      };
+    },
+    
+    updateConfig(newConfig: Partial<{
+      settings: Record<string, any>,
+      permissions: string[],
+      dependencies: string[],
+      capabilities: string[]
+    }>) {
+      if (widgetRegistry[id]) {
+        widgetRegistry[id].settings = { ...(widgetRegistry[id].settings || {}), ...(newConfig.settings || {}) };
+        widgetRegistry[id].permissions = [...(widgetRegistry[id].permissions || []), ...(newConfig.permissions || [])];
+        widgetRegistry[id].dependencies = [...(widgetRegistry[id].dependencies || []), ...(newConfig.dependencies || [])];
+        widgetRegistry[id].capabilities = [...(widgetRegistry[id].capabilities || []), ...(newConfig.capabilities || [])];
+      }
     }
   };
   

@@ -11,12 +11,16 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
   const [isLoaded, setIsLoaded] = useState(false);
   const [isWidgetReady, setIsWidgetReady] = useState(false);
   const [widgetState, setWidgetState] = useState<any>({});
+  const [error, setError] = useState<string | null>(null);
+  const [widgetConfig, setWidgetConfig] = useState<any>(null);
+  const [widgetPermissions, setWidgetPermissions] = useState<string[]>([]);
   const messageHandlerRef = useRef<any>(null);
   
   // Load the HTML content into the iframe
   useEffect(() => {
     setIsLoaded(false);
     setIsWidgetReady(false);
+    setError(null);
     
     if (!widgetId || !iframeRef.current) return;
     
@@ -32,11 +36,11 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
             htmlExists: !!html, 
             iframeExists: !!iframeRef.current 
           });
+          setError('Failed to load widget content');
           return;
         }
         
         console.log(`[Parent] HTML content for widget ${widgetId} retrieved (${html.length} bytes)`);
-        console.log(`[Parent] HTML content preview: ${html.substring(0, 200)}...`);
         
         // Set the content into the iframe
         iframeRef.current.srcdoc = html;
@@ -44,6 +48,7 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
         console.log(`[Parent] Set srcdoc for iframe widget ${widgetId}. Waiting for WIDGET_READY signal.`);
       } catch (error) {
         console.error('[Parent] Error loading widget iframe content:', error);
+        setError('Error loading widget content');
       }
     };
     
@@ -86,11 +91,21 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
             
             setWidgetState(state || {});
             
+            // Get widget configuration and permissions if available
+            if (payload && payload.config) {
+              setWidgetConfig(payload.config);
+              setWidgetPermissions(payload.config.permissions || []);
+            }
+            
             // Send the initial state to the iframe
             if (currentIframe.contentWindow) {
               currentIframe.contentWindow.postMessage({
                 type: 'INIT_STATE',
-                payload: state || {}
+                payload: {
+                  state: state || {},
+                  config: widgetConfig,
+                  permissions: widgetPermissions
+                }
               }, '*');
               console.log(`[Parent] Sent INIT_STATE to widget ${widgetId}`);
             } else {
@@ -109,7 +124,7 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
           
           // Update our local state
           setWidgetState(payload || {});
-        } 
+        }
         else if (type === 'GET_STATE') {
           console.log(`[Parent] Iframe requested current state for widget ${widgetId}`);
           
@@ -126,6 +141,52 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
           } else {
             console.error(`[Parent] Iframe contentWindow lost before sending CURRENT_STATE to ${widgetId}`);
           }
+        }
+        else if (type === 'UPDATE_CONFIG') {
+          console.log(`[Parent] Updating config for widget ${widgetId}:`, payload);
+          
+          setWidgetConfig(payload || {});
+        }
+        else if (type === 'PERMISSION_REQUEST') {
+          console.log(`[Parent] Widget ${widgetId} requesting permission:`, payload);
+          
+          // Here we would typically show a permission request dialog to the user
+          // For this example, we'll auto-approve if it's a known permission
+          const knownPermissions = ['storage', 'network', 'notifications'];
+          const permission = payload.permission;
+          
+          if (knownPermissions.includes(permission)) {
+            // Auto-approve known permissions
+            const updatedPermissions = [...widgetPermissions, permission];
+            setWidgetPermissions(updatedPermissions);
+            
+            // Notify the widget of permission granted
+            if (currentIframe.contentWindow) {
+              currentIframe.contentWindow.postMessage({
+                type: 'PERMISSION_RESPONSE',
+                payload: {
+                  permission,
+                  granted: true
+                }
+              }, '*');
+            }
+          } else {
+            // Deny unknown permissions
+            if (currentIframe.contentWindow) {
+              currentIframe.contentWindow.postMessage({
+                type: 'PERMISSION_RESPONSE',
+                payload: {
+                  permission,
+                  granted: false,
+                  reason: 'Unknown permission type'
+                }
+              }, '*');
+            }
+          }
+        }
+        else if (type === 'WIDGET_ERROR') {
+          console.error(`[Parent] Widget ${widgetId} reported an error:`, payload);
+          setError(payload.message || 'Widget error');
         }
       } catch (error) {
         console.error('[Parent] Error handling iframe message:', error);
@@ -149,11 +210,14 @@ export const useWidgetIframe = ({ widgetId, iframeRef }: UseWidgetIframeProps) =
       
       setIsWidgetReady(false);
     };
-  }, [widgetId, iframeRef, isLoaded]);
+  }, [widgetId, iframeRef, isLoaded, widgetConfig, widgetPermissions]);
   
   return {
     isLoaded: isLoaded && isWidgetReady,
-    widgetState
+    widgetState,
+    error,
+    widgetConfig,
+    widgetPermissions
   };
 };
 

@@ -1,3 +1,4 @@
+
 export interface WidgetState {
   [key: string]: any;
 }
@@ -7,6 +8,30 @@ export interface WidgetAPI {
   getState(): WidgetState;
   setState(state: Partial<WidgetState>): void;
   trigger(action: string, payload?: any): boolean;
+  
+  // Advanced API methods for complex widgets
+  getConfig?: () => {
+    settings: Record<string, any>;
+    permissions: string[];
+    dependencies: string[];
+    capabilities: string[];
+  };
+  
+  updateConfig?: (config: Partial<{
+    settings: Record<string, any>;
+    permissions: string[];
+    dependencies: string[];
+    capabilities: string[];
+  }>) => void;
+  
+  // Data operations for complex widgets
+  fetchData?: (params?: any) => Promise<any>;
+  saveData?: (data: any) => Promise<boolean>;
+  
+  // Event handling
+  subscribe?: (event: string, callback: (data: any) => void) => void;
+  unsubscribe?: (event: string) => void;
+  publish?: (event: string, data: any) => void;
   
   // Helper methods can be added by specific widget implementations
   [key: string]: any;

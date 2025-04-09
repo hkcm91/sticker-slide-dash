@@ -8,7 +8,9 @@ import WeatherWidget from './WeatherWidget';
 import StockWidget from './StockWidget';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { validateLottieAnimation } from '@/utils/lottieUtils';
-import { Code, FileJson } from 'lucide-react';
+import { Code, FileJson, ShieldAlert, Database } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface WidgetRendererProps {
   sticker: StickerType;
@@ -18,10 +20,12 @@ interface WidgetRendererProps {
 
 const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, className }) => {
   const [lottieError, setLottieError] = useState(false);
+  const [widgetError, setWidgetError] = useState<string | null>(null);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   
   const hasLottieAnimation = sticker.animationType === 'lottie' && sticker.animation;
   const hasCustomData = sticker.widgetData !== undefined;
+  const isAdvancedWidget = sticker.widgetConfig !== undefined;
   
   // Handle built-in widgets
   if (sticker.widgetType === 'Pomodoro') {
@@ -52,7 +56,67 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({ sticker, widgetData, cl
   if (sticker.packageUrl) {
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`} style={{ height: '300px', width: '100%', minWidth: '300px' }}>
-        <IframeWidget widgetId={sticker.widgetType} />
+        <div className="widget-header p-2 border-b border-border/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold">{widgetData.title}</h3>
+            
+            {isAdvancedWidget && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 bg-purple-50 border-purple-200 text-purple-700">Advanced</Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">This is an advanced widget with extended capabilities</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+          
+          <div className="flex gap-1">
+            {sticker.permissions?.includes('storage') && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-4 h-4">
+                      <Database className="h-3 w-3 text-blue-500" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Storage access</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            {sticker.permissions?.includes('network') && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-4 h-4">
+                      <ShieldAlert className="h-3 w-3 text-orange-500" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Network access</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
+        
+        <IframeWidget 
+          widgetId={sticker.widgetType} 
+          onError={(error) => setWidgetError(error)}
+        />
+        
+        {widgetError && (
+          <div className="p-3 text-xs text-red-600 bg-red-50 border-t border-red-200">
+            Error: {widgetError}
+          </div>
+        )}
       </div>
     );
   }
