@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 import { useToast } from '@/hooks/use-toast';
-import { Group, Ungroup, MoveHorizontal, ArrowUpDown } from 'lucide-react';
+import { Group, Ungroup, MoveHorizontal, ArrowUpDown, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SelectionOverlayProps {
@@ -36,7 +36,9 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       return;
     }
     
-    const selectedStickerObjs = placedStickers.filter(s => selectedStickers.has(s.id));
+    const selectedStickerObjs = placedStickers.filter(s => 
+      selectedStickers.has(s.id) && !s.hidden
+    );
     
     if (selectedStickerObjs.length === 0) {
       setShowTools(false);
@@ -63,10 +65,10 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     
     // Add padding to the bounding box
     setBoundingBox({
-      x: minX - 5,
-      y: minY - 5,
-      width: maxX - minX + 10,
-      height: maxY - minY + 10
+      x: minX - 10,
+      y: minY - 10,
+      width: maxX - minX + 20,
+      height: maxY - minY + 20
     });
   }, [selectedStickers, placedStickers]);
   
@@ -80,28 +82,29 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     setIsDragging(true);
     setDragStartPos({ x, y });
     
-    // Show a toast when starting to drag multiple items
-    if (selectedStickers.size > 1) {
-      toast({
-        title: `Moving ${selectedStickers.size} items`,
-        description: "Drag to reposition the selected items",
-        duration: 2000,
-      });
+    // Show feedback when starting to drag
+    if (selectedStickers.size > 0) {
+      document.body.style.cursor = 'grabbing';
     }
   };
   
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     
-    const rect = e.currentTarget.getBoundingClientRect();
+    // Prevent text selection while dragging
+    e.preventDefault();
+    
+    const rect = overlayRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
     const deltaX = x - dragStartPos.x;
     const deltaY = y - dragStartPos.y;
     
-    // Only update if we've moved at least 5px (to avoid tiny movements)
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+    // Only update if we've moved at least 2px (to avoid tiny movements)
+    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
       onMultiMove([...selectedStickers], deltaX, deltaY);
       setDragStartPos({ x, y });
     }
@@ -111,9 +114,11 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     if (isDragging && selectedStickers.size > 0) {
       toast({
         title: "Items repositioned",
-        description: `Moved ${selectedStickers.size} items`,
+        description: `Moved ${selectedStickers.size} item${selectedStickers.size > 1 ? 's' : ''}`,
         duration: 1500,
       });
+      
+      document.body.style.cursor = 'default';
     }
     setIsDragging(false);
   };
@@ -123,16 +128,21 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     
     if (selectedStickers.size === 0) return;
     
-    // Scale ratio - increase or decrease size by 5%
-    const scaleRatio = e.deltaY < 0 ? 1.05 : 0.95;
+    // Scale ratio - increase or decrease size by 5% with Shift key, 2% without
+    const scaleRatio = e.deltaY < 0 
+      ? (e.shiftKey ? 1.05 : 1.02)  // Zoom in
+      : (e.shiftKey ? 0.95 : 0.98); // Zoom out
     
     onMultiResize([...selectedStickers], scaleRatio);
     
-    // Show a toast when resizing multiple items
-    toast({
-      title: `Resizing ${selectedStickers.size} items`,
-      duration: 1000,
-    });
+    // Show feedback for resize
+    if (!isDragging) {
+      toast({
+        title: `Resizing ${selectedStickers.size} sticker${selectedStickers.size > 1 ? 's' : ''}`,
+        description: "Use Shift for larger adjustments",
+        duration: 1000,
+      });
+    }
   };
   
   const handleGroupClick = () => {
@@ -176,12 +186,43 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     return sticker && sticker.groupId;
   };
   
+  // Check if all selected stickers are locked
+  const areAllLocked = () => {
+    if (selectedStickers.size === 0) return false;
+    
+    return [...selectedStickers].every(id => {
+      const sticker = placedStickers.find(s => s.id === id);
+      return sticker && sticker.locked;
+    });
+  };
+  
+  // Is selection all from the same group
+  const isAllSameGroup = () => {
+    if (selectedStickers.size <= 1) return false;
+    
+    let groupId: string | undefined;
+    
+    for (const id of selectedStickers) {
+      const sticker = placedStickers.find(s => s.id === id);
+      
+      if (!sticker || !sticker.groupId) return false;
+      
+      if (groupId === undefined) {
+        groupId = sticker.groupId;
+      } else if (sticker.groupId !== groupId) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+  
   if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) return null;
   
   return (
     <div 
       ref={overlayRef}
-      className="absolute border-2 border-dashed border-blue-500 bg-blue-400/10 z-50 cursor-move"
+      className={`absolute border-2 border-dashed ${isDragging ? 'border-blue-600 bg-blue-400/20' : 'border-blue-500 bg-blue-400/10'} z-50 ${areAllLocked() ? 'cursor-not-allowed' : 'cursor-move'}`}
       style={{
         left: `${boundingBox.x}px`,
         top: `${boundingBox.y}px`,
@@ -190,11 +231,11 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
         pointerEvents: 'all',
         backdropFilter: 'blur(2px)'
       }}
-      onMouseDown={handleMouseDown}
+      onMouseDown={areAllLocked() ? undefined : handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      onWheel={handleWheel}
+      onWheel={areAllLocked() ? undefined : handleWheel}
     >
       {/* Selection count badge */}
       <div className="absolute -top-9 left-0 bg-black/85 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-2">
@@ -202,11 +243,17 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
           {selectedStickers.size}
         </span>
         <span>selected</span>
+        
+        {areAllLocked() && (
+          <span className="flex items-center ml-1">
+            <Lock className="w-3.5 h-3.5 ml-1 text-red-400" />
+          </span>
+        )}
       </div>
       
       {/* Quick tools */}
       <div className="absolute -top-9 right-0 flex space-x-1">
-        {onGroupStickers && selectedStickers.size > 1 && (
+        {onGroupStickers && selectedStickers.size > 1 && !isAllSameGroup() && (
           <Button 
             size="sm" 
             variant="secondary"
@@ -218,7 +265,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
           </Button>
         )}
         
-        {onUngroupStickers && hasSelectedGroup() && (
+        {onUngroupStickers && (hasSelectedGroup() || isAllSameGroup()) && (
           <Button 
             size="sm" 
             variant="secondary"
@@ -233,17 +280,25 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
       
       {/* Move indicators */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center opacity-30 pointer-events-none">
-        <MoveHorizontal className="w-6 h-6 text-blue-500" />
-        <ArrowUpDown className="w-6 h-6 text-blue-500 mt-1" />
+        {!areAllLocked() ? (
+          <>
+            <MoveHorizontal className="w-6 h-6 text-blue-500" />
+            <ArrowUpDown className="w-6 h-6 text-blue-500 mt-1" />
+          </>
+        ) : (
+          <Lock className="w-8 h-8 text-red-500" />
+        )}
       </div>
       
       {/* Resize handle */}
-      <div 
-        className="absolute -right-3 -bottom-3 w-6 h-6 bg-blue-500 rounded-full cursor-se-resize flex items-center justify-center shadow-md"
-        title="Drag to resize or use mouse wheel"
-      >
-        <div className="w-2 h-2 bg-white rounded-full"></div>
-      </div>
+      {!areAllLocked() && (
+        <div 
+          className="absolute -right-3 -bottom-3 w-6 h-6 bg-blue-500 rounded-full cursor-se-resize flex items-center justify-center shadow-md"
+          title="Drag to resize or use mouse wheel"
+        >
+          <div className="w-2 h-2 bg-white rounded-full"></div>
+        </div>
+      )}
     </div>
   );
 };

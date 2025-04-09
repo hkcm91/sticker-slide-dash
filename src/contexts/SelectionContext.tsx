@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
+import { useToast } from '@/hooks/use-toast';
 
 interface SelectionContextType {
   selectedStickers: Set<string>;
@@ -35,6 +36,7 @@ export const SelectionProvider: React.FC<SelectionProviderProps> = ({
 }) => {
   const [selectedStickers, setSelectedStickers] = useState<Set<string>>(new Set());
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const { toast } = useToast();
 
   const toggleSelection = useCallback((stickerId: string, isShiftKey: boolean) => {
     setSelectedStickers(prev => {
@@ -59,23 +61,39 @@ export const SelectionProvider: React.FC<SelectionProviderProps> = ({
 
   const selectAll = useCallback(() => {
     const allStickerIds = stickers
-      .filter(sticker => sticker.placed && !sticker.docked)
+      .filter(sticker => sticker.placed && !sticker.docked && !sticker.hidden)
       .map(sticker => sticker.id);
     
     setSelectedStickers(new Set(allStickerIds));
-  }, [stickers]);
+    
+    toast({
+      title: `Selected ${allStickerIds.length} stickers`,
+      description: "All visible stickers are now selected",
+      duration: 2000,
+    });
+  }, [stickers, toast]);
 
   const clearSelection = useCallback(() => {
     setSelectedStickers(new Set());
   }, []);
 
   const toggleMultiSelectMode = useCallback(() => {
-    setIsMultiSelectMode(prev => !prev);
-    if (!isMultiSelectMode) {
-      // When entering multi-select mode, clear the selection
-      setSelectedStickers(new Set());
-    }
-  }, [isMultiSelectMode]);
+    setIsMultiSelectMode(prev => {
+      const newMode = !prev;
+      if (!newMode) {
+        // When exiting multi-select mode, clear the selection
+        setSelectedStickers(new Set());
+      } else {
+        // When entering multi-select mode, provide feedback
+        toast({
+          title: "Multi-select mode activated",
+          description: "Click on stickers to select multiple items",
+          duration: 3000,
+        });
+      }
+      return newMode;
+    });
+  }, [toast]);
 
   const isSelected = useCallback((stickerId: string) => {
     return selectedStickers.has(stickerId);

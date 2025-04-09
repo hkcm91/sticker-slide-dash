@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import StickerSidebar from './sidebar/StickerSidebar';
 import ThemeCustomizer from './ThemeCustomizer';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -12,6 +13,7 @@ import LayerPanel from './layers/LayerPanel';
 import { useStickerGroupHandlers } from '@/hooks/dashboard/useStickerGroupHandlers';
 import { Button } from './ui/button';
 import { Layers } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
   // This function is now imported from useDashboardState
@@ -24,6 +26,7 @@ export const addCustomWidget = (name: string, title: string, content: string) =>
 const Dashboard = () => {
   const { theme } = useTheme();
   const [showStorageMonitor, setShowStorageMonitor] = useState(false);
+  const { toast } = useToast();
   
   const {
     stickers,
@@ -72,6 +75,12 @@ const Dashboard = () => {
         ...stickerToUpdate,
         locked: !stickerToUpdate.locked
       });
+      
+      toast({
+        title: stickerToUpdate.locked ? "Sticker unlocked" : "Sticker locked",
+        description: stickerToUpdate.locked ? "You can now move this sticker" : "This sticker is now locked in place",
+        duration: 2000,
+      });
     }
   };
 
@@ -81,6 +90,12 @@ const Dashboard = () => {
       handleUpdateSticker({
         ...stickerToUpdate,
         zIndex: (stickerToUpdate.zIndex || 10) + change
+      });
+      
+      toast({
+        title: change > 0 ? "Moved Forward" : "Moved Backward",
+        description: "Layer position changed",
+        duration: 1500,
       });
     }
   };
@@ -92,8 +107,26 @@ const Dashboard = () => {
         ...stickerToUpdate,
         hidden: !stickerToUpdate.hidden
       });
+      
+      toast({
+        title: stickerToUpdate.hidden ? "Sticker shown" : "Sticker hidden",
+        description: stickerToUpdate.hidden ? "Sticker is now visible" : "Sticker is now hidden",
+        duration: 2000,
+      });
     }
   };
+  
+  // Keyboard shortcut for toggle layer panel
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'l' && e.altKey) {
+        toggleLayerPanel();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [toggleLayerPanel]);
 
   return (
     <SelectionProvider stickers={stickers}>
@@ -155,7 +188,7 @@ const Dashboard = () => {
           <Button
             className="absolute bottom-4 right-4 z-50 rounded-full w-10 h-10 p-0 shadow-lg bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
             onClick={toggleLayerPanel}
-            title={showLayerPanel ? "Close layer panel" : "Open layer panel"}
+            title={showLayerPanel ? "Close layer panel" : "Open layer panel (Alt+L)"}
           >
             <Layers className="h-5 w-5" />
           </Button>

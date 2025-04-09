@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -11,9 +11,45 @@ export function useStickerGroupHandlers(
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const { toast } = useToast();
 
+  // Check if we should show a hint about the layer panel
+  useEffect(() => {
+    const hasGroups = stickers.some(sticker => sticker.groupId);
+    const hasMultipleVisibleStickers = stickers.filter(s => s.placed && !s.hidden && !s.docked).length > 2;
+    
+    if (hasGroups || hasMultipleVisibleStickers) {
+      const hasSeenLayerHint = localStorage.getItem('hasSeenLayerPanelHint');
+      
+      if (!hasSeenLayerHint && !showLayerPanel) {
+        toast({
+          title: "Pro Tip: Use the Layer Panel",
+          description: "Click the layers button in the bottom right to manage your stickers.",
+          duration: 5000,
+        });
+        
+        localStorage.setItem('hasSeenLayerPanelHint', 'true');
+      }
+    }
+  }, [stickers, showLayerPanel, toast]);
+
   const handleMultiMove = useCallback((stickerIds: string[], deltaX: number, deltaY: number) => {
+    const stickerGroups = new Map<string | undefined, StickerType[]>();
+    
+    // Group stickers by their groupId
     stickers.forEach(sticker => {
       if (stickerIds.includes(sticker.id) && !sticker.locked) {
+        const key = sticker.groupId || undefined;
+        
+        if (!stickerGroups.has(key)) {
+          stickerGroups.set(key, []);
+        }
+        
+        stickerGroups.get(key)!.push(sticker);
+      }
+    });
+    
+    // Move each sticker
+    stickerGroups.forEach((groupStickers, groupId) => {
+      groupStickers.forEach(sticker => {
         updateSticker({
           ...sticker,
           position: {
@@ -22,7 +58,7 @@ export function useStickerGroupHandlers(
           },
           lastUsed: new Date().toISOString()
         });
-      }
+      });
     });
   }, [stickers, updateSticker]);
 
@@ -51,25 +87,43 @@ export function useStickerGroupHandlers(
     if (stickerIds.length < 2) return;
     
     const groupId = uuidv4();
+    let groupedCount = 0;
+    
+    // Find the highest zIndex among the stickers to be grouped
+    const highestZIndex = Math.max(
+      ...stickers
+        .filter(s => stickerIds.includes(s.id))
+        .map(s => s.zIndex || 0)
+    );
     
     stickers.forEach(sticker => {
       if (stickerIds.includes(sticker.id)) {
-        updateSticker({
+        // Ensure all grouped stickers have the same z-index level or
+        // are very close so they stay together visually
+        const updatedSticker = {
           ...sticker,
           groupId,
+          zIndex: highestZIndex + Math.floor(Math.random() * 2), // Small random offset for better selection
           lastUsed: new Date().toISOString()
-        });
+        };
+        
+        updateSticker(updatedSticker);
+        groupedCount++;
       }
     });
     
-    toast({
-      title: "Stickers grouped",
-      description: `${stickerIds.length} stickers have been grouped together.`,
-      duration: 3000,
-    });
+    if (groupedCount > 0) {
+      toast({
+        title: "Stickers grouped",
+        description: `${groupedCount} stickers have been grouped together.`,
+        duration: 3000,
+      });
+    }
   }, [stickers, updateSticker, toast]);
 
   const handleUngroupStickers = useCallback((groupId: string) => {
+    let ungroupedCount = 0;
+    
     stickers.forEach(sticker => {
       if (sticker.groupId === groupId) {
         const { groupId, ...stickerWithoutGroup } = sticker;
@@ -77,14 +131,17 @@ export function useStickerGroupHandlers(
           ...stickerWithoutGroup,
           lastUsed: new Date().toISOString()
         });
+        ungroupedCount++;
       }
     });
     
-    toast({
-      title: "Group disbanded",
-      description: "The stickers have been ungrouped.",
-      duration: 3000,
-    });
+    if (ungroupedCount > 0) {
+      toast({
+        title: "Group disbanded",
+        description: `${ungroupedCount} stickers have been ungrouped.`,
+        duration: 3000,
+      });
+    }
   }, [stickers, updateSticker, toast]);
 
   const handleMoveLayer = useCallback((stickerId: string, change: number) => {
@@ -96,13 +153,33 @@ export function useStickerGroupHandlers(
     const currentZIndex = stickerToUpdate.zIndex || 10;
     const newZIndex = currentZIndex + change;
     
-    // Update the sticker
-    updateSticker({
-      ...stickerToUpdate,
-      zIndex: newZIndex,
-      lastUsed: new Date().toISOString()
-    });
-  }, [stickers, updateSticker]);
+    // If this sticker is part of a group, we need to update all stickers in the group
+    if (stickerToUpdate.groupId) {
+      const groupId = stickerToUpdate.groupId;
+      const groupStickers = stickers.filter(s => s.groupId === groupId);
+      
+      groupStickers.forEach(sticker => {
+        updateSticker({
+          ...sticker,
+          zIndex: (sticker.zIndex || 10) + change,
+          lastUsed: new Date().toISOString()
+        });
+      });
+      
+      toast({
+        title: change > 0 ? "Group moved forward" : "Group moved backward",
+        description: `The entire group of ${groupStickers.length} stickers was moved.`,
+        duration: 2000,
+      });
+    } else {
+      // Just update the single sticker
+      updateSticker({
+        ...stickerToUpdate,
+        zIndex: newZIndex,
+        lastUsed: new Date().toISOString()
+      });
+    }
+  }, [stickers, updateSticker, toast]);
 
   const toggleLayerPanel = useCallback(() => {
     setShowLayerPanel(prev => !prev);

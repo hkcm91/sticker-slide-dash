@@ -1,10 +1,12 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
 import StickerContent from './sticker/StickerContent';
 import StickerControls from './sticker/StickerControls';
 import { useStickerInteractions } from '@/hooks/useStickerInteractions';
 import { useSelection } from '@/contexts/SelectionContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface StickerProps {
   sticker: StickerType;
@@ -48,8 +50,33 @@ const Sticker = ({
   } = useStickerInteractions({ sticker, onUpdate });
 
   const { isMultiSelectMode, isSelected, toggleSelection } = useSelection();
+  const { toast } = useToast();
+
+  // Highlight effect when selected
+  useEffect(() => {
+    if (isSelected(sticker.id) && sticker.placed) {
+      const stickerElement = stickerRef.current;
+      if (stickerElement) {
+        stickerElement.classList.add('ring-2', 'ring-blue-500');
+        
+        // Remove highlight after 300ms if no longer selected
+        const timeout = setTimeout(() => {
+          if (!isSelected(sticker.id)) {
+            stickerElement.classList.remove('ring-2', 'ring-blue-500');
+          }
+        }, 300);
+        
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [isSelected, sticker.id, sticker.placed, stickerRef]);
 
   const combinedDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (sticker.locked) {
+      e.preventDefault();
+      return;
+    }
+    
     if (isMultiSelectMode && isSelected(sticker.id)) {
       parentDragStart(e, sticker);
       return;
@@ -64,6 +91,15 @@ const Sticker = ({
     
     if (isMultiSelectMode) {
       toggleSelection(sticker.id, e.shiftKey);
+      
+      // Only show toast if selecting (not deselecting)
+      if (!isSelected(sticker.id)) {
+        toast({
+          title: "Sticker selected",
+          description: `${sticker.name || 'Sticker'} added to selection`,
+          duration: 1500,
+        });
+      }
     } else {
       onClick(sticker);
     }
@@ -122,14 +158,14 @@ const Sticker = ({
       className={cn(
         'select-none cursor-pointer rounded-full flex items-center justify-center transition-all overflow-visible',
         isDragging ? 'opacity-50' : 'opacity-100',
-        isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
+        isDraggable && !sticker.locked ? 'cursor-grab active:cursor-grabbing' : '',
         sticker.locked ? 'cursor-not-allowed' : '',
-        isSelected(sticker.id) && 'ring-2 ring-blue-500 ring-offset-2',
+        isSelected(sticker.id) && sticker.placed ? 'ring-2 ring-blue-500 ring-offset-2' : '',
         getStickerTypeClasses(),
         className
       )}
       draggable={(isDraggable || sticker.placed) && !sticker.locked}
-      onDragStart={sticker.locked ? undefined : combinedDragStart}
+      onDragStart={combinedDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleStickerClick}
       onMouseEnter={() => setIsHovered(true)}

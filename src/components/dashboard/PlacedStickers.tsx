@@ -2,6 +2,7 @@
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import Sticker from '../Sticker';
+import { useSelection } from '@/contexts/SelectionContext';
 
 interface PlacedStickersProps {
   stickers: StickerType[];
@@ -24,9 +25,19 @@ const PlacedStickers: React.FC<PlacedStickersProps> = ({
   onChangeZIndex,
   onToggleVisibility
 }) => {
+  const { isMultiSelectMode } = useSelection();
+  
+  // Filter out hidden stickers
+  const visibleStickers = stickers.filter(sticker => !sticker.hidden);
+  
+  // Sort stickers by z-index
+  const sortedStickers = [...visibleStickers].sort((a, b) => 
+    (a.zIndex || 0) - (b.zIndex || 0)
+  );
+
   return (
-    <>
-      {stickers.filter(sticker => !sticker.hidden).map(sticker => (
+    <div className={isMultiSelectMode ? "cursor-crosshair" : ""}>
+      {sortedStickers.map(sticker => (
         <Sticker
           key={sticker.id}
           sticker={sticker}
@@ -40,7 +51,7 @@ const PlacedStickers: React.FC<PlacedStickersProps> = ({
           onToggleVisibility={onToggleVisibility}
         />
       ))}
-    </>
+    </div>
   );
 };
 

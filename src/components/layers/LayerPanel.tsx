@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSelection } from '@/contexts/SelectionContext';
@@ -12,6 +12,8 @@ import {
   LayerFooter,
   LayerNoContent
 } from './components';
+import { Button } from '@/components/ui/button';
+import { Keyboard } from 'lucide-react';
 
 interface LayerPanelProps {
   placedStickers: StickerType[];
@@ -41,11 +43,29 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
   } = useSelection();
   const { toast } = useToast();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   // Sort stickers by z-index (highest first)
   const sortedStickers = [...placedStickers].sort((a, b) => 
     (b.zIndex || 0) - (a.zIndex || 0)
   );
+
+  // Auto-expand all groups on first render
+  useEffect(() => {
+    if (expandedGroups.size === 0) {
+      const groupIds = new Set<string>();
+      
+      placedStickers.forEach(sticker => {
+        if (sticker.groupId) {
+          groupIds.add(sticker.groupId);
+        }
+      });
+      
+      if (groupIds.size > 0) {
+        setExpandedGroups(groupIds);
+      }
+    }
+  }, [placedStickers, expandedGroups.size]);
 
   const handleToggleLock = (sticker: StickerType) => {
     if (onToggleLock) {
@@ -135,6 +155,15 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
   // Check if we can create a group from the selection
   const canGroup = selectedStickers.size > 1;
 
+  const keyboardShortcuts = [
+    { key: "Shift + Click", description: "Add to selection" },
+    { key: "Alt + L", description: "Toggle layer panel" },
+    { key: "Shift + Mouse Wheel", description: "Resize selected stickers" },
+    { key: "R", description: "Rotate sticker (when hovering)" },
+    { key: "[ ]", description: "Adjust opacity (when hovering)" },
+    { key: "- =", description: "Adjust z-index (when hovering)" }
+  ];
+
   return (
     <div className="w-64 h-full border-l border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-950 shadow-lg">
       <LayerHeader 
@@ -198,6 +227,32 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
       </ScrollArea>
       
       <LayerFooter selectedCount={selectedStickers.size} />
+      
+      {/* Keyboard Shortcuts Button */}
+      <div className="border-t border-gray-200 dark:border-gray-800 p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
+          className="text-xs w-full justify-start"
+        >
+          <Keyboard className="w-3.5 h-3.5 mr-2" />
+          {showKeyboardShortcuts ? "Hide Shortcuts" : "Keyboard Shortcuts"}
+        </Button>
+        
+        {showKeyboardShortcuts && (
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-md p-2">
+            <ul className="space-y-1">
+              {keyboardShortcuts.map((shortcut, index) => (
+                <li key={index} className="flex justify-between">
+                  <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">{shortcut.key}</span>
+                  <span>{shortcut.description}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
