@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useToast } from '@/hooks/use-toast';
-import { getWidgetData } from '@/utils/widgetRegistry';
+import { getWidgetData, registerWidgetData } from '@/utils/widgetRegistry';
 
 export function useStickerHandlers(
   stickers: StickerType[],
