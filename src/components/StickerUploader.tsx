@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,10 +18,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 interface StickerUploaderProps {
   onStickerCreated: (sticker: Sticker) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const StickerUploader: React.FC<StickerUploaderProps> = ({ 
+  onStickerCreated,
+  isOpen: externalIsOpen,
+  onOpenChange 
+}) => {
+  const [isOpen, setIsOpen] = useState(externalIsOpen || false);
   const [name, setName] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLottie, setIsLottie] = useState(false);
@@ -42,6 +48,19 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   const [isDragActive, setIsDragActive] = useState(false);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (externalIsOpen !== undefined) {
+      setIsOpen(externalIsOpen);
+    }
+  }, [externalIsOpen]);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
+  };
 
   const toggleInputMethod = () => {
     setIsUrlInput(!isUrlInput);
@@ -128,18 +147,15 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
     }
     
     try {
-      // Check if it's a Lottie JSON URL
       const isLottieJson = iconUrl.endsWith('.json') || iconUrl.includes('lottiefiles');
       setIsLottie(isLottieJson);
       
       if (isLottieJson) {
-        // For Lottie animations, we need to fetch the actual JSON
         const response = await fetch(iconUrl);
         if (!response.ok) throw new Error('Failed to fetch Lottie animation');
         const lottieData = await response.text();
         setPreviewUrl(lottieData);
       } else {
-        // For regular images, we can just use the URL directly
         setPreviewUrl(iconUrl);
       }
       
@@ -234,7 +250,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
       }
 
       onStickerCreated(newSticker);
-      setIsOpen(false);
+      handleOpenChange(false);
       resetForm();
 
       toast({
@@ -292,7 +308,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
       });
 
       onStickerCreated(newSticker);
-      setIsOpen(false);
+      handleOpenChange(false);
       resetForm();
 
       toast({
@@ -336,7 +352,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
       }
 
       onStickerCreated(newSticker);
-      setIsOpen(false);
+      handleOpenChange(false);
       resetForm();
 
       toast({
@@ -377,14 +393,14 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
   return (
     <>
       <Button 
-        onClick={() => setIsOpen(true)} 
+        onClick={() => handleOpenChange(true)} 
         className="w-full mb-3 bg-sticker-purple text-white hover:bg-sticker-purple-light shadow-sm hover:shadow-md transition-all"
       >
         <Plus className="mr-2" size={16} />
         Create Sticker
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden p-0 sticker-uploader-dialog bg-white/95 backdrop-blur-md border border-purple-100 shadow-xl">
           <DialogHeader className="px-6 pt-6 pb-4 dialog-header bg-gradient-to-r from-sticker-purple/90 to-sticker-blue/90 text-white">
             <DialogTitle className="text-xl">Create Custom Sticker or Widget</DialogTitle>
@@ -788,7 +804,7 @@ const StickerUploader: React.FC<StickerUploaderProps> = ({ onStickerCreated }) =
             </ScrollArea>
             
             <DialogFooter className="px-6 py-4 sticker-uploader-footer border-t border-purple-100/50">
-              <Button onClick={() => setIsOpen(false)} variant="outline" className="border-purple-200 hover:border-purple-300 hover:bg-purple-50">Cancel</Button>
+              <Button onClick={() => handleOpenChange(false)} variant="outline" className="border-purple-200 hover:border-purple-300 hover:bg-purple-50">Cancel</Button>
               {activeTab === 'simple' && (
                 <Button onClick={handleSubmitSimpleSticker} className="bg-sticker-purple hover:bg-sticker-purple-light">
                   Create Sticker
