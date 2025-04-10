@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState, DependencyList } from 'react';
 import { widgetEventBus, WidgetEvent } from '@/lib/widgetEventBus';
 
 /**
@@ -12,7 +12,7 @@ import { widgetEventBus, WidgetEvent } from '@/lib/widgetEventBus';
 export function useWidgetEvent(
   eventType: string, 
   callback: (payload: any) => void,
-  deps: React.DependencyList = []
+  deps: DependencyList = []
 ) {
   useEffect(() => {
     const unsubscribe = widgetEventBus.on(eventType, callback);
@@ -46,7 +46,7 @@ export function useEmitWidgetEvent(sourceId?: string) {
  * Hook that returns the current event history
  */
 export function useWidgetEventHistory() {
-  const [history, setHistory] = React.useState(widgetEventBus.getHistory());
+  const [history, setHistory] = useState(widgetEventBus.getHistory());
   
   useEffect(() => {
     // Update history when new events are emitted
