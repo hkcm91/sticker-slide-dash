@@ -13,6 +13,11 @@ interface SelectionContextType {
   selectSticker: (id: string) => void;
   deselectSticker: (id: string) => void;
   selectMultiple: (ids: string[]) => void;
+  // Added missing properties and methods
+  toggleMultiSelectMode: () => void;
+  selectAll: () => void;
+  isSelected: (id: string) => boolean;
+  toggleSelection: (id: string, useShift?: boolean) => void;
 }
 
 const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
@@ -72,6 +77,30 @@ export const SelectionProvider: React.FC<{ children: React.ReactNode, stickers: 
     setSelectedStickers(new Set(ids));
   }, []);
 
+  // Added missing method implementations
+  const toggleMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(prev => !prev);
+  }, []);
+
+  const selectAll = useCallback(() => {
+    const allIds = stickers.map(sticker => sticker.id);
+    setSelectedStickers(new Set(allIds));
+  }, [stickers]);
+
+  const isSelected = useCallback((id: string) => {
+    return selectedStickers.has(id);
+  }, [selectedStickers]);
+
+  const toggleSelection = useCallback((id: string, useShift: boolean = false) => {
+    if (useShift) {
+      // In a real implementation, this would handle shift-selection
+      // for selecting a range of items between the last selected item and this one
+      toggleSelect(id);
+    } else {
+      toggleSelect(id);
+    }
+  }, [toggleSelect]);
+
   // Convert Set to array for compatibility with components expecting an array
   const selection = Array.from(selectedStickers);
 
@@ -87,7 +116,12 @@ export const SelectionProvider: React.FC<{ children: React.ReactNode, stickers: 
         toggleSelect,
         selectSticker,
         deselectSticker,
-        selectMultiple
+        selectMultiple,
+        // Added missing properties and methods
+        toggleMultiSelectMode,
+        selectAll,
+        isSelected,
+        toggleSelection
       }}
     >
       {children}
