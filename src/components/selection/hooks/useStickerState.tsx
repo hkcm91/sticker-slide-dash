@@ -1,36 +1,38 @@
 
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 
 export function useStickerState(placedStickers: StickerType[]): { areAllLocked: boolean } {
   const { selectedStickers } = useSelection();
   
-  // Check if all selected stickers are locked
-  const areAllSelectedLocked = useCallback((): boolean => {
+  // Use useMemo to calculate and memoize the boolean result directly
+  const areAllLocked = useMemo((): boolean => {
+    // Early exit if no stickers are selected
     if (selectedStickers.size === 0) {
-      console.log('No stickers selected, returning false');
+      console.log('[useStickerState] No stickers selected, returning false');
       return false;
     }
     
-    console.log('Selected stickers IDs:', [...selectedStickers]);
+    console.log('[useStickerState] Calculating locked state for selected IDs:', [...selectedStickers]);
     
+    // Check if every selected sticker ID corresponds to a locked sticker
     const result = [...selectedStickers].every(id => {
       const sticker = placedStickers.find(s => s.id === id);
-      console.log('Sticker found:', sticker?.id, 'locked value:', sticker?.locked, 'type:', typeof sticker?.locked);
-      // Explicitly check that locked is boolean true, not truthy value
+      // Log details for the specific sticker being checked
+      console.log(`[useStickerState] Checking sticker ID: ${id}, Found: ${!!sticker}, Locked: ${sticker?.locked}, Type: ${typeof sticker?.locked}`);
+      // Ensure the sticker exists and its locked property is explicitly true
       return sticker?.locked === true;
     });
     
-    console.log('Are all selected stickers locked?', result, 'type:', typeof result);
+    console.log('[useStickerState] Calculation result - areAllLocked:', result, 'type:', typeof result);
     return result;
-  }, [selectedStickers, placedStickers]);
+  }, [selectedStickers, placedStickers]); // Dependencies: re-calculate only if these change
   
-  // Explicitly cast to boolean using Boolean constructor
-  const allLocked = Boolean(areAllSelectedLocked());
-  console.log('Final areAllLocked value:', allLocked, 'type:', typeof allLocked);
+  // The value from useMemo is already a boolean
+  console.log('[useStickerState] Final memoized areAllLocked value:', areAllLocked, 'type:', typeof areAllLocked);
   
   return {
-    areAllLocked: allLocked
+    areAllLocked // Return the memoized boolean value
   };
 }

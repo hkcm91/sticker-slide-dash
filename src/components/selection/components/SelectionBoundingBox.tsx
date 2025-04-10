@@ -27,6 +27,9 @@ const SelectionBoundingBox: React.FC<SelectionBoundingBoxProps> = ({
   overlayRef,
   children
 }) => {
+  // Log the areAllLocked prop to confirm it's a boolean
+  console.log('[SelectionBoundingBox] Received areAllLocked prop:', areAllLocked, 'type:', typeof areAllLocked);
+  
   return (
     <div 
       ref={overlayRef}

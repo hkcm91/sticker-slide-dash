@@ -29,6 +29,9 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const { selectedStickers, isMultiSelectMode } = useSelection();
   
+  console.log('[SelectionOverlay] placedStickers before hook:', placedStickers.length, 'stickers');
+  console.log('[SelectionOverlay] selectedStickers from context:', [...selectedStickers]);
+  
   const { 
     boundingBox,
     showTools 
@@ -51,15 +54,27 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   
   // Get the boolean for whether all selected stickers are locked
   const { areAllLocked } = useStickerState(placedStickers);
-  console.log('In SelectionOverlay - areAllLocked:', areAllLocked, 'type:', typeof areAllLocked);
+  console.log('[SelectionOverlay] Received areAllLocked from hook:', areAllLocked, 'type:', typeof areAllLocked);
   
-  if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) return null;
+  // Ensure areAllLocked is always a boolean with explicit typing
+  const isAllLocked: boolean = Boolean(areAllLocked);
+  
+  if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) {
+    console.log('[SelectionOverlay] Hiding overlay. Conditions:', {
+      size: selectedStickers.size, 
+      isMultiSelectMode, 
+      showTools
+    });
+    return null;
+  }
+  
+  console.log('[SelectionOverlay] Rendering SelectionBoundingBox with isAllLocked:', isAllLocked);
   
   return (
     <SelectionBoundingBox
       isDragging={isDragging}
       boundingBox={boundingBox}
-      areAllLocked={areAllLocked}
+      areAllLocked={isAllLocked}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
