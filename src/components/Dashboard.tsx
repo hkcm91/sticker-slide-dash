@@ -1,19 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
-import StickerSidebar from './sidebar/StickerSidebar';
-import ThemeCustomizer from './ThemeCustomizer';
+import React, { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboardState } from '@/hooks/useDashboardState';
-import DashboardContainer from './dashboard/DashboardContainer';
-import WidgetModals from './dashboard/WidgetModals';
-import StorageMonitor from './debug/StorageMonitor';
 import { SelectionProvider } from '@/contexts/SelectionContext';
-import SelectionOverlay from './selection/SelectionOverlay';
-import LayerPanel from './layers/LayerPanel';
 import { useStickerGroupHandlers } from '@/hooks/dashboard/useStickerGroupHandlers';
-import { Button } from './ui/button';
-import { Layers } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useKeyboardShortcuts } from '@/hooks/dashboard/useKeyboardShortcuts';
+import DashboardLayout from './dashboard/DashboardLayout';
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
   // This function is now imported from useDashboardState
@@ -59,6 +52,9 @@ const Dashboard = () => {
     handleMoveLayer,
     toggleLayerPanel
   } = useStickerGroupHandlers(stickers, handleUpdateSticker);
+
+  // Use our keyboard shortcuts hook
+  useKeyboardShortcuts({ toggleLayerPanel });
 
   // Double-click handler to toggle storage monitor for debugging
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -115,102 +111,48 @@ const Dashboard = () => {
       });
     }
   };
-  
-  // Keyboard shortcut for toggle layer panel
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'l' && e.altKey) {
-        toggleLayerPanel();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [toggleLayerPanel]);
+
+  // Combine all handlers for passing to layout
+  const handlers = {
+    handleDragStart,
+    handleDrop,
+    handleDragOver,
+    handleStickerClick,
+    handleCloseModal,
+    handleDockWidget,
+    handleUndockWidget,
+    handleBackgroundChange,
+    handleStickerDelete,
+    handleUpdateSticker,
+    handleStickerCreated,
+    handleImportStickers,
+    handleToggleLock,
+    handleChangeZIndex,
+    handleToggleVisibility,
+    handleMultiMove,
+    handleMultiResize,
+    handleGroupStickers,
+    handleUngroupStickers,
+    handleMoveLayer,
+    toggleLayerPanel
+  };
 
   return (
     <SelectionProvider stickers={stickers}>
-      <div 
-        className={`flex h-screen overflow-hidden ${theme.mode === 'dark' ? 'dark' : ''}`}
-        onDoubleClick={handleDoubleClick}
-      >
-        <StickerSidebar 
-          stickers={stickers} 
-          onDragStart={handleDragStart} 
-          onStickerClick={handleStickerClick}
-          onStickerCreated={handleStickerCreated}
-          onStickerDelete={handleStickerDelete}
-          onStickerUpdate={handleUpdateSticker}
-          onImportStickers={handleImportStickers}
-          sidebarStyle={theme.sidebarStyle}
-        />
-        
-        <div className="flex-1 flex relative">
-          <DashboardContainer
-            background={background}
-            showHint={showHint}
-            hasSeenHint={hasSeenHint}
-            placedStickers={placedStickers}
-            dockedStickers={dockedStickers}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onDragStart={handleDragStart}
-            onStickerClick={handleStickerClick}
-            onStickerDelete={handleStickerDelete}
-            onStickerUpdate={handleUpdateSticker}
-            onUndockWidget={handleUndockWidget}
-            onCloseDockedWidget={handleStickerDelete}
-            onToggleLock={handleToggleLock}
-            onChangeZIndex={handleChangeZIndex}
-            onToggleVisibility={handleToggleVisibility}
-          >
-            <SelectionOverlay
-              placedStickers={placedStickers}
-              onMultiMove={handleMultiMove}
-              onMultiResize={handleMultiResize}
-              onGroupStickers={handleGroupStickers}
-              onUngroupStickers={handleUngroupStickers}
-            />
-          </DashboardContainer>
-          
-          {showLayerPanel && (
-            <LayerPanel 
-              placedStickers={placedStickers}
-              onStickerUpdate={handleUpdateSticker}
-              onGroupStickers={handleGroupStickers}
-              onUngroupStickers={handleUngroupStickers}
-              onMoveLayer={handleMoveLayer}
-              onToggleLock={handleToggleLock}
-              onToggleVisibility={handleToggleVisibility}
-            />
-          )}
-          
-          <Button
-            className="absolute bottom-4 right-4 z-50 rounded-full w-10 h-10 p-0 shadow-lg bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
-            onClick={toggleLayerPanel}
-            title={showLayerPanel ? "Close layer panel" : "Open layer panel (Alt+L)"}
-          >
-            <Layers className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <ThemeCustomizer 
-          onBackgroundChange={handleBackgroundChange} 
-          currentBackground={background} 
-        />
-        
-        <WidgetModals 
-          openWidgets={openWidgets}
-          onCloseModal={handleCloseModal}
-          onDockWidget={handleDockWidget}
-        />
-        
-        <StorageMonitor 
-          visible={showStorageMonitor} 
-          stickers={stickers}
-          onImportStickers={handleImportStickers}
-        />
-      </div>
+      <DashboardLayout
+        theme={theme}
+        background={background}
+        showHint={showHint}
+        hasSeenHint={hasSeenHint}
+        stickers={stickers}
+        placedStickers={placedStickers}
+        dockedStickers={dockedStickers}
+        openWidgets={openWidgets}
+        showStorageMonitor={showStorageMonitor}
+        showLayerPanel={showLayerPanel}
+        handlers={handlers}
+        handleDoubleClick={handleDoubleClick}
+      />
     </SelectionProvider>
   );
 };
