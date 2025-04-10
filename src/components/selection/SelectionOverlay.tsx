@@ -56,6 +56,9 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   const { areAllLocked } = useStickerState(placedStickers);
   console.log('[SelectionOverlay] Received areAllLocked from hook:', areAllLocked, 'type:', typeof areAllLocked);
   
+  // Force the value to be strictly boolean using double negation
+  const isStrictlyBoolean: boolean = !!areAllLocked;
+  
   if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) {
     console.log('[SelectionOverlay] Hiding overlay. Conditions:', {
       size: selectedStickers.size, 
@@ -65,13 +68,13 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     return null;
   }
   
-  console.log('[SelectionOverlay] Rendering SelectionBoundingBox with isAllLocked:', areAllLocked);
+  console.log('[SelectionOverlay] Rendering SelectionBoundingBox with isAllLocked:', isStrictlyBoolean);
   
   return (
     <SelectionBoundingBox
       isDragging={isDragging}
       boundingBox={boundingBox}
-      areAllLocked={areAllLocked}
+      areAllLocked={isStrictlyBoolean}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
