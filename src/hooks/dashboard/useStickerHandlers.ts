@@ -1,10 +1,13 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { 
   useStickerDragHandlers, 
   useStickerWidgetHandlers, 
   useStickerManagementHandlers 
 } from './stickerHandlers';
+import { useBackgroundAndHints } from './useBackgroundAndHints';
+import { addCustomWidget } from './widgetDataInitializer';
 
 export function useStickerHandlers(
   stickers: StickerType[],
@@ -32,6 +35,14 @@ export function useStickerHandlers(
     handleStickerCreated: stickerCreatedHandler,
     handleImportStickers: importStickersHandler
   } = useStickerManagementHandlers();
+
+  // Import background and hints
+  const {
+    background,
+    hasSeenHint,
+    showHint,
+    handleBackgroundChange
+  } = useBackgroundAndHints();
 
   const updateLastUsedTimestamp = (stickerId: string) => {
     setStickers(prevStickers => 
@@ -110,12 +121,11 @@ export function useStickerHandlers(
 
   return {
     stickers,
-    background,
-    openWidgets,
-    hasSeenHint,
-    showHint,
     placedStickers,
     dockedStickers,
+    background,
+    hasSeenHint,
+    showHint,
     handleDragStart: enhancedHandlers.handleDragStart,
     handleDrop,
     handleDragOver,
