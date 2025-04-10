@@ -9,18 +9,41 @@ import { useSelection } from '@/contexts/SelectionContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface StickerBaseProps {
+  /** The sticker data object */
   sticker: StickerType;
+  /** Handler for when drag starts - used by parent components */
   onDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => void;
+  /** Handler for when the sticker is clicked */
   onClick: (sticker: StickerType) => void;
+  /** Whether the sticker can be dragged */
   isDraggable: boolean;
+  /** Additional CSS classes to apply to the sticker */
   className?: string;
+  /** Optional handler for deleting the sticker */
   onDelete?: (sticker: StickerType) => void;
+  /** Optional handler for updating the sticker properties */
   onUpdate?: (sticker: StickerType) => void;
+  /** Optional handler for toggling the locked state of the sticker */
   onToggleLock?: (sticker: StickerType) => void;
+  /** Optional handler for changing the z-index of the sticker */
   onChangeZIndex?: (sticker: StickerType, change: number) => void;
+  /** Optional handler for toggling the visibility of the sticker */
   onToggleVisibility?: (sticker: StickerType) => void;
 }
 
+/**
+ * StickerBase is the core implementation of a sticker component.
+ * It handles rendering, interactions, and all the UI functionality of stickers.
+ * 
+ * This component is responsible for:
+ * - Rendering the sticker content (image, lottie, etc.)
+ * - Handling interactions (drag, click, hover)
+ * - Displaying controls for modifying the sticker
+ * - Managing selection state
+ * - Applying visual styling based on sticker state
+ * 
+ * @param props - The component props (see StickerBaseProps interface)
+ */
 const StickerBase = ({
   sticker,
   onDragStart: parentDragStart,
@@ -33,6 +56,7 @@ const StickerBase = ({
   onChangeZIndex,
   onToggleVisibility
 }: StickerBaseProps) => {
+  // Use the custom hook to handle sticker interactions like drag, resize, rotate
   const {
     isDragging,
     isHovered,
@@ -49,11 +73,17 @@ const StickerBase = ({
     setIsHovered
   } = useStickerInteractions({ sticker, onUpdate });
 
+  // Get selection-related functions from context
   const { isMultiSelectMode, isSelected, toggleSelection } = useSelection();
   const { toast } = useToast();
 
+  // Track if the sticker is visually hidden (but still in DOM)
   const isVisuallyHidden = sticker.hidden;
 
+  /**
+   * Effect to highlight selected stickers
+   * Adds a blue ring around selected stickers when they're placed on the dashboard
+   */
   useEffect(() => {
     if (isSelected(sticker.id) && sticker.placed) {
       const stickerElement = stickerRef.current;
@@ -71,21 +101,37 @@ const StickerBase = ({
     }
   }, [isSelected, sticker.id, sticker.placed, stickerRef]);
 
+  /**
+   * Handles drag start events, combining the component's internal handler
+   * with the parent-provided handler.
+   * 
+   * @param e - The drag event
+   */
   const combinedDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    // Prevent dragging if sticker is locked
     if (sticker.locked) {
       e.preventDefault();
       return;
     }
     
+    // Special handling for multi-select mode
     if (isMultiSelectMode && isSelected(sticker.id)) {
       parentDragStart(e, sticker);
       return;
     }
 
+    // Normal drag handling
     handleDragStart(e);
     parentDragStart(e, sticker);
   };
 
+  /**
+   * Handles click events on the sticker
+   * In multi-select mode, toggles selection
+   * Otherwise, triggers the onClick handler
+   * 
+   * @param e - The click event
+   */
   const handleStickerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -104,6 +150,7 @@ const StickerBase = ({
     }
   };
 
+  // Handler functions for various sticker controls
   const handleDelete = () => onDelete?.(sticker);
   const handleToggleLock = () => onToggleLock?.(sticker);
   const handleChangeZIndex = (change: number) => onChangeZIndex?.(sticker, change);
@@ -132,8 +179,10 @@ const StickerBase = ({
       style={getStickerStyle(sticker, size, rotation, zIndex, opacity, isVisuallyHidden)}
     >
       <div className="w-full h-full flex items-center justify-center relative">
+        {/* Render the sticker's content (image, lottie, etc.) */}
         <StickerContent sticker={sticker} />
         
+        {/* Render controls when sticker is hovered or locked */}
         <StickerControls 
           sticker={sticker} 
           isHovered={isHovered} 
@@ -149,7 +198,14 @@ const StickerBase = ({
   );
 };
 
-// Helper function to get the sticker's CSS classes based on its type
+/**
+ * Helper function to get CSS classes based on sticker type
+ * Different sticker types get different visual styles
+ * 
+ * @param sticker - The sticker object
+ * @param className - Optional additional classes
+ * @returns The appropriate CSS classes for the sticker type
+ */
 const getStickerTypeClasses = (sticker: StickerType, className?: string) => {
   switch(sticker.type) {
     case 'image':
@@ -166,7 +222,18 @@ const getStickerTypeClasses = (sticker: StickerType, className?: string) => {
   }
 };
 
-// Helper function to calculate the sticker's style
+/**
+ * Helper function to calculate CSS styles for a sticker
+ * Handles positioning, sizing, rotation, and special effects
+ * 
+ * @param sticker - The sticker object
+ * @param size - The size in pixels
+ * @param rotation - The rotation in degrees
+ * @param zIndex - The z-index value
+ * @param opacity - The opacity value (0-1)
+ * @param isVisuallyHidden - Whether the sticker is hidden (reduces opacity)
+ * @returns React CSS properties object for the sticker
+ */
 const getStickerStyle = (
   sticker: StickerType, 
   size: number, 

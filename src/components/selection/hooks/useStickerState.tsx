@@ -3,7 +3,17 @@ import { useMemo } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 
-export function useStickerState(placedStickers: StickerType[]): { areAllLocked: boolean } {
+interface StickerStateResult {
+  areAllLocked: boolean; // Explicitly define as boolean
+}
+
+/**
+ * Hook to determine if all selected stickers have a specific state (e.g., locked)
+ * 
+ * @param placedStickers - Array of stickers placed on the dashboard
+ * @returns Object with areAllLocked boolean
+ */
+export function useStickerState(placedStickers: StickerType[]): StickerStateResult {
   const { selectedStickers } = useSelection();
   
   // Use useMemo to calculate and memoize the boolean result directly
@@ -17,7 +27,7 @@ export function useStickerState(placedStickers: StickerType[]): { areAllLocked: 
     return [...selectedStickers].every(id => {
       const sticker = placedStickers.find(s => s.id === id);
       // Return false if sticker doesn't exist, true only if sticker.locked is true
-      return sticker?.locked === true;
+      return Boolean(sticker?.locked);
     });
   }, [selectedStickers, placedStickers]); // Dependencies: re-calculate only if these change
   
