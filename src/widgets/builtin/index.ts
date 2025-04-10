@@ -1,21 +1,18 @@
 
-import weatherWidget from './WeatherWidget';
-import stockWidget from './StockWidget';
+import { initializeWeatherWidget } from './WeatherWidget';
+import { initializeStockWidget } from './StockWidget';
+import { initializeDebuggingWidget } from '../DebuggingWidget';
 
-// Export all built-in widgets
-export const builtInWidgets = [
-  weatherWidget,
-  stockWidget
-];
-
-// Initialize all built-in widgets
+/**
+ * Initialize all built-in widgets
+ */
 export const initializeWidgets = () => {
   console.log('Initializing built-in widgets...');
-  builtInWidgets.forEach(widget => {
-    if (widget.api) {
-      widget.api.init();
-    }
-  });
+  
+  // Initialize the basic widgets
+  initializeWeatherWidget();
+  initializeStockWidget();
+  
+  // Initialize the debugging widget
+  initializeDebuggingWidget();
 };
-
-export default builtInWidgets;

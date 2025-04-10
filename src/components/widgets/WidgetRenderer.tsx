@@ -4,6 +4,7 @@ import { Sticker as StickerType, WidgetData } from '@/types/stickers';
 import BuiltinWidgetRenderer from './renderers/BuiltinWidgetRenderer';
 import IframeWidgetRenderer from './renderers/IframeWidgetRenderer';
 import BasicWidgetRenderer from './renderers/BasicWidgetRenderer';
+import DebuggingRenderer from './renderers/builtin/DebuggingRenderer';
 
 interface WidgetRendererProps {
   sticker: StickerType;
@@ -18,7 +19,17 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   className,
   hideHeader = false
 }) => {
-  // Handle built-in widgets first
+  // Handle the debugging widget specifically
+  if (sticker.widgetType === 'DebuggingWidget') {
+    return (
+      <DebuggingRenderer
+        className={className}
+        widgetId={sticker.id}
+      />
+    );
+  }
+  
+  // Handle built-in widgets
   if (sticker.widgetType === 'Pomodoro' || 
       sticker.widgetType === 'WeatherWidget' || 
       sticker.widgetType === 'StockWidget') {

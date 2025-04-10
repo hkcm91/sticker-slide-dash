@@ -1,5 +1,14 @@
 
-export { default as PomodoroRenderer } from './PomodoroRenderer';
-export { default as WeatherRenderer } from './WeatherRenderer';
-export { default as StockRenderer } from './StockRenderer';
-export { default as EventLogRenderer } from './EventLogRenderer';
+import PomodoroRenderer from './PomodoroRenderer';
+import WeatherRenderer from './WeatherRenderer';
+import StockRenderer from './StockRenderer';
+import EventLogRenderer from './EventLogRenderer';
+import DebuggingRenderer from './DebuggingRenderer';
+
+export {
+  PomodoroRenderer,
+  WeatherRenderer,
+  StockRenderer,
+  EventLogRenderer,
+  DebuggingRenderer
+};

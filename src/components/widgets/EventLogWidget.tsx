@@ -1,34 +1,38 @@
-
 import React, { useState, useEffect } from 'react';
 import { widgetEventBus, WidgetEvent } from '@/lib/widgetEventBus';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash, RefreshCw, Bug } from 'lucide-react';
+import { Trash, RefreshCw, Bug, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import DebuggingWidget from './DebuggingWidget';
 
 interface EventLogWidgetProps {
   maxEvents?: number;
   className?: string;
+  mode?: 'standard' | 'debug';
 }
 
 const EventLogWidget: React.FC<EventLogWidgetProps> = ({ 
   maxEvents = 10,
-  className
+  className = '',
+  mode = 'standard'
 }) => {
+  if (mode === 'debug') {
+    return <DebuggingWidget className={className} />;
+  }
+  
   const [events, setEvents] = useState<WidgetEvent[]>([]);
   const [debugMode, setDebugMode] = useState(false);
+  const { toast } = useToast();
   
-  // Update our local state when events occur
   useEffect(() => {
-    // Function to update our event list
     const updateEvents = () => {
       setEvents(widgetEventBus.getHistory().slice(0, maxEvents));
     };
     
-    // Set initial events
     updateEvents();
     
-    // Create a listener for ALL events - we use a custom event type here
     const unsubscribe = widgetEventBus.on('*', () => {
       updateEvents();
     });
@@ -47,9 +51,14 @@ const EventLogWidget: React.FC<EventLogWidgetProps> = ({
     const newMode = !debugMode;
     setDebugMode(newMode);
     widgetEventBus.setDebug(newMode);
+    
+    toast({
+      title: newMode ? "Debug mode enabled" : "Debug mode disabled",
+      description: newMode ? "Detailed debugging information will be shown" : "Regular event logging restored",
+      duration: 2000,
+    });
   };
   
-  // Format timestamp to readable time
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
