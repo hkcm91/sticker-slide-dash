@@ -15,6 +15,6 @@ export function useStickerState(placedStickers: StickerType[]) {
     });
   };
   
-  // Return a proper boolean value - using Boolean() to ensure we return a boolean type
+  // Return a proper boolean value - explicitly converting to boolean to ensure type safety
   return { areAllLocked: Boolean(areAllLocked()) };
 }

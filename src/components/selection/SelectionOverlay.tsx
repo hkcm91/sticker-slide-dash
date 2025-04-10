@@ -53,7 +53,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     isAllSameGroup
   } = useGroupOperations(placedStickers, onGroupStickers, onUngroupStickers);
   
-  // Explicitly ensure areAllLocked is boolean
+  // Get the areAllLocked value from the hook - it's already a boolean
   const { areAllLocked } = useStickerState(placedStickers);
   
   if (selectedStickers.size === 0 || !isMultiSelectMode || !showTools) {
@@ -69,7 +69,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     <SelectionBoundingBox
       isDragging={isDragging}
       boundingBox={boundingBox}
-      areAllLocked={Boolean(areAllLocked)}
+      areAllLocked={areAllLocked} // No need to convert to boolean again, it's already boolean
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
