@@ -27,12 +27,8 @@ const PlacedStickers: React.FC<PlacedStickersProps> = ({
 }) => {
   const { isMultiSelectMode } = useSelection();
   
-  // Show a visual indicator for hidden stickers instead of completely removing them
-  // This will help in bringing them back when needed
-  const visibleStickers = stickers.map(sticker => ({
-    ...sticker,
-    visuallyHidden: sticker.hidden
-  }));
+  // Fix: Don't modify stickers here, just filter based on visibility
+  const visibleStickers = stickers.filter(sticker => !sticker.hidden);
   
   // Sort stickers by z-index
   const sortedStickers = [...visibleStickers].sort((a, b) => 
@@ -53,7 +49,6 @@ const PlacedStickers: React.FC<PlacedStickersProps> = ({
           onToggleLock={onToggleLock}
           onChangeZIndex={onChangeZIndex}
           onToggleVisibility={onToggleVisibility}
-          className={sticker.visuallyHidden ? "opacity-20 pointer-events-auto" : ""}
         />
       ))}
     </div>

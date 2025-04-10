@@ -9,9 +9,15 @@ export function useStickerWidgetHandlers() {
     sticker: StickerType, 
     setOpenWidgets: React.Dispatch<React.SetStateAction<Map<string, { sticker: StickerType, isOpen: boolean }>>>
   ) => {
+    // Fix: Don't modify the sticker's placement, just handle widget opening
+    // Only open widget if the sticker is placed
     if (sticker.placed) {
       setOpenWidgets(prev => {
         const newMap = new Map(prev);
+        // If widget is already open, don't change anything
+        if (prev.has(sticker.id) && prev.get(sticker.id)?.isOpen) {
+          return prev;
+        }
         newMap.set(sticker.id, { sticker, isOpen: true });
         return newMap;
       });

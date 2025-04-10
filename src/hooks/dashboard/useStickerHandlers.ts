@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { 
@@ -34,6 +33,25 @@ export function useStickerHandlers(
     handleImportStickers: importStickersHandler
   } = useStickerManagementHandlers();
 
+  const updateLastUsedTimestamp = (stickerId: string) => {
+    setStickers(prevStickers => 
+      prevStickers.map(sticker => 
+        sticker.id === stickerId
+          ? { ...sticker, lastUsed: new Date().toISOString() }
+          : sticker
+      )
+    );
+  };
+  
+  const handleStickerClick = (sticker: StickerType) => {
+    // Fix: Make sure we're not modifying the sticker in a way that makes it disappear
+    // Only update the last used timestamp and open widgets if appropriate
+    updateLastUsedTimestamp(sticker.id);
+    
+    // Call widget handlers without modifying the sticker placement state
+    stickerClickHandler(sticker, setOpenWidgets);
+  };
+
   // Create wrapper functions that provide the required dependencies
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
     dragStartHandler(e, sticker);
@@ -42,10 +60,6 @@ export function useStickerHandlers(
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     const updateFunction = dropHandler(e);
     setStickers(updateFunction);
-  };
-
-  const handleStickerClick = (sticker: StickerType) => {
-    stickerClickHandler(sticker, setOpenWidgets);
   };
 
   const handleCloseModal = (stickerId: string) => {
@@ -76,17 +90,45 @@ export function useStickerHandlers(
     importStickersHandler(importedStickers, setStickers);
   };
 
+  const enhancedHandlers = {
+    handleStickerClick: (sticker: StickerType) => {
+      updateLastUsedTimestamp(sticker.id);
+      handleStickerClick(sticker);
+    },
+    handleDragStart: (e: React.DragEvent<HTMLDivElement>, sticker: StickerType) => {
+      updateLastUsedTimestamp(sticker.id);
+      dragStartHandler(e, sticker);
+    },
+    handleUpdateSticker: (updatedSticker: StickerType) => {
+      updatedSticker.lastUsed = new Date().toISOString();
+      updateStickerHandler(updatedSticker, setStickers, setOpenWidgets);
+    }
+  };
+
+  const placedStickers = stickers.filter(sticker => sticker.placed && !sticker.docked);
+  const dockedStickers = stickers.filter(sticker => sticker.docked);
+
   return {
-    handleDragStart,
+    stickers,
+    background,
+    openWidgets,
+    hasSeenHint,
+    showHint,
+    placedStickers,
+    dockedStickers,
+    handleDragStart: enhancedHandlers.handleDragStart,
     handleDrop,
     handleDragOver,
-    handleStickerClick,
+    handleStickerClick: enhancedHandlers.handleStickerClick,
     handleCloseModal,
     handleDockWidget,
     handleUndockWidget,
+    handleBackgroundChange,
     handleStickerDelete,
-    handleUpdateSticker,
+    handleUpdateSticker: enhancedHandlers.handleUpdateSticker,
     handleStickerCreated,
     handleImportStickers
   };
 }
+
+export { addCustomWidget };

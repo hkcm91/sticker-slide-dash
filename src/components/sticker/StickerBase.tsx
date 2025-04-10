@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
@@ -148,6 +147,7 @@ const StickerBase = ({
         });
       }
     } else {
+      // The issue may be here - make sure we're not modifying the sticker in a way that makes it disappear
       onClick(sticker);
     }
   };
