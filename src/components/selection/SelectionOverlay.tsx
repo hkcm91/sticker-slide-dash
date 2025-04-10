@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useDashboardStore } from '@/store/dashboard';
-import { useSelection } from './hooks/useSelection';
+import { useSelection } from '@/contexts/SelectionContext';
 import { useDrag } from './hooks/useDrag';
 import { useResize } from './hooks/useResize';
 import SelectionBoundingBox from './SelectionBoundingBox';

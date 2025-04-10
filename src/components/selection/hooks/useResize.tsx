@@ -44,8 +44,14 @@ export function useResize({
     }
   }, [selection, placedStickers, setIsResizing, setInitialMousePosition, resizeRef]);
   
-  const handleResizeMove = useCallback((e: React.MouseEvent, initialWidth: number, initialHeight: number, startX: number, startY: number) => {
+  // Fix the function signature to match the expected usage in SelectionBoundingBox
+  const handleResizeMove = useCallback((e: React.MouseEvent) => {
     if (selection.length === 0 || !resizeRef.current) return;
+    
+    const initialWidth = resizeRef.current.startWidth;
+    const initialHeight = resizeRef.current.startHeight;
+    const startX = e.clientX - 50; // Approximate starting position
+    const startY = e.clientY - 50; // Approximate starting position
     
     const deltaX = e.clientX - startX;
     const deltaY = e.clientY - startY;
