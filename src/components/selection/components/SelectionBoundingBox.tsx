@@ -30,10 +30,13 @@ const SelectionBoundingBox: React.FC<SelectionBoundingBoxProps> = ({
   // Log the areAllLocked prop to confirm it's a boolean
   console.log('[SelectionBoundingBox] Received areAllLocked prop:', areAllLocked, 'type:', typeof areAllLocked);
   
+  // Force boolean conversion to ensure we never pass non-boolean value to JSX
+  const isLocked = Boolean(areAllLocked);
+  
   return (
     <div 
       ref={overlayRef}
-      className={`absolute border-2 border-dashed ${isDragging ? 'border-blue-600 bg-blue-400/20' : 'border-blue-500 bg-blue-400/10'} z-50 ${areAllLocked ? 'cursor-not-allowed' : 'cursor-move'}`}
+      className={`absolute border-2 border-dashed ${isDragging ? 'border-blue-600 bg-blue-400/20' : 'border-blue-500 bg-blue-400/10'} z-50 ${isLocked ? 'cursor-not-allowed' : 'cursor-move'}`}
       style={{
         left: `${boundingBox.x}px`,
         top: `${boundingBox.y}px`,
@@ -42,11 +45,11 @@ const SelectionBoundingBox: React.FC<SelectionBoundingBoxProps> = ({
         pointerEvents: 'all',
         backdropFilter: 'blur(2px)'
       }}
-      onMouseDown={areAllLocked ? undefined : onMouseDown}
+      onMouseDown={isLocked ? undefined : onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
-      onWheel={areAllLocked ? undefined : onWheel}
+      onWheel={isLocked ? undefined : onWheel}
     >
       {/* Selection count badge */}
       <div className="absolute -top-9 left-0 bg-black/85 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-2">
@@ -55,7 +58,7 @@ const SelectionBoundingBox: React.FC<SelectionBoundingBoxProps> = ({
         </span>
         <span>selected</span>
         
-        {areAllLocked && (
+        {isLocked && (
           <span className="flex items-center ml-1">
             <Lock className="w-3.5 h-3.5 ml-1 text-red-400" />
           </span>
@@ -64,7 +67,7 @@ const SelectionBoundingBox: React.FC<SelectionBoundingBoxProps> = ({
       
       {/* Move indicators */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center opacity-30 pointer-events-none">
-        {!areAllLocked ? (
+        {!isLocked ? (
           <>
             <MoveHorizontal className="w-6 h-6 text-blue-500" />
             <ArrowUpDown className="w-6 h-6 text-blue-500 mt-1" />
@@ -75,7 +78,7 @@ const SelectionBoundingBox: React.FC<SelectionBoundingBoxProps> = ({
       </div>
       
       {/* Resize handle */}
-      {!areAllLocked && (
+      {!isLocked && (
         <div 
           className="absolute -right-3 -bottom-3 w-6 h-6 bg-blue-500 rounded-full cursor-se-resize flex items-center justify-center shadow-md"
           title="Drag to resize or use mouse wheel"

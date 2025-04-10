@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 
+// Explicitly return a boolean type
 export function useStickerState(placedStickers: StickerType[]): { areAllLocked: boolean } {
   const { selectedStickers } = useSelection();
   

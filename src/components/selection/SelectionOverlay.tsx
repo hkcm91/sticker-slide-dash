@@ -29,6 +29,22 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const { selectedStickers, isMultiSelectMode } = useSelection();
   
+  // Detailed logging of selected stickers' locked property
+  console.log('--- [SelectionOverlay] Inspecting placedStickers data: ---');
+  const relevantStickers = placedStickers.filter(p => selectedStickers.has(p.id));
+  if (relevantStickers.length > 0) {
+    relevantStickers.forEach((sticker) => {
+      console.log(`  Sticker ID: ${sticker.id}, Locked Value: ${sticker.locked}, Locked Type: ${typeof sticker.locked}`);
+    });
+  } else if (selectedStickers.size > 0) {
+    console.log('  Selected stickers not found in placedStickers array!');
+    console.log('  Selected IDs:', [...selectedStickers]);
+    console.log('  Placed IDs:', placedStickers.map(s => s.id));
+  } else {
+    console.log('  No stickers selected.');
+  }
+  console.log('--- End Inspection ---');
+  
   console.log('[SelectionOverlay] placedStickers before hook:', placedStickers.length, 'stickers');
   console.log('[SelectionOverlay] selectedStickers from context:', [...selectedStickers]);
   
