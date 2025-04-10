@@ -65,6 +65,18 @@ class WidgetEventBus {
         }
       });
     }
+    
+    // Also notify wildcard listeners
+    const wildcardListeners = this.listeners.get('*');
+    if (wildcardListeners && event.type !== '*') {
+      wildcardListeners.forEach(callback => {
+        try {
+          callback(event);
+        } catch (error) {
+          console.error(`[WidgetEventBus] Error in wildcard listener for ${event.type}:`, error);
+        }
+      });
+    }
   }
 
   /**

@@ -1,3 +1,4 @@
+
 /**
  * Debug utility functions for the application
  */
@@ -29,7 +30,9 @@ export const captureState = (name: string, data: any) => {
  * Enable or disable debug mode
  */
 export const setDebugMode = (enabled: boolean) => {
-  widgetEventBus.setDebug(enabled);
+  if (widgetEventBus.setDebug) {
+    widgetEventBus.setDebug(enabled);
+  }
   console.log(`[Debug] Debug mode ${enabled ? 'enabled' : 'disabled'}`);
 };
 
@@ -76,7 +79,7 @@ export const captureStickersState = (stickers: any[]) => {
 export const logStickerAction = (action: string, stickerId: string, before: any, after: any) => {
   console.log(`[Sticker] Action: ${action}, ID: ${stickerId}`);
   
-  const isDebug = widgetEventBus.isDebugEnabled();
+  const isDebug = widgetEventBus.isDebugEnabled ? widgetEventBus.isDebugEnabled() : false;
   if (isDebug) {
     console.log(`[Sticker] Before:`, before);
     console.log(`[Sticker] After:`, after);

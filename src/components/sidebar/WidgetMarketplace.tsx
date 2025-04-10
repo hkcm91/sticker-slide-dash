@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Lock, ShoppingCart } from 'lucide-react';
 import { Sticker } from '@/types/stickers';
 import { useToast } from '@/hooks/use-toast';
 import { getAllWidgets, getFreeWidgets, getPremiumWidgets } from '@/lib/widgetSystem';
+import { createDebuggingWidgetSticker } from '@/widgets/builtin';
 
 interface WidgetMarketplaceProps {
   onAddSticker: (sticker: Sticker) => void;

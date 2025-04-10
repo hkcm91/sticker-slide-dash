@@ -122,7 +122,7 @@ const DebuggingWidget: React.FC<DebuggingWidgetProps> = ({
   // Format time
   const formatTime = (timestamp: number): string => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   };
 
   // Get badge color by log level

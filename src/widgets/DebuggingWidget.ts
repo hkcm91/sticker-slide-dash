@@ -41,4 +41,17 @@ export const initializeDebuggingWidget = () => {
   });
 
   console.log('Debugging Widget initialized and registered');
+  
+  // Also make the widget available globally for direct testing from console
+  if (typeof window !== 'undefined') {
+    (window as any).openDebugWidget = () => {
+      // This function can be called from the console to simulate opening the widget
+      console.log('Debug widget requested via console');
+      if ((window as any).dashboardApi && (window as any).dashboardApi.openWidget) {
+        (window as any).dashboardApi.openWidget('DebuggingWidget');
+      } else {
+        console.log('Dashboard API not available');
+      }
+    };
+  }
 };
