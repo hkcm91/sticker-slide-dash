@@ -3,11 +3,11 @@ import { useCallback } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 
-export function useStickerState(placedStickers: StickerType[]) {
+export function useStickerState(placedStickers: StickerType[]): { areAllLocked: boolean } {
   const { selectedStickers } = useSelection();
   
   // Check if all selected stickers are locked
-  const areAllLocked = useCallback((): boolean => {
+  const areAllSelectedLocked = useCallback((): boolean => {
     if (selectedStickers.size === 0) return false;
     
     return [...selectedStickers].every(id => {
@@ -17,8 +17,11 @@ export function useStickerState(placedStickers: StickerType[]) {
     });
   }, [selectedStickers, placedStickers]);
   
+  // Calculate the value once
+  const allLocked: boolean = areAllSelectedLocked();
+  
   return {
-    // Use Boolean constructor to guarantee a boolean return type
-    areAllLocked: Boolean(areAllLocked())
+    // Return the strictly typed boolean value
+    areAllLocked: allLocked
   };
 }
