@@ -12,7 +12,7 @@ import SelectionOverlay from '../selection/SelectionOverlay';
 import StorageMonitor from '../debug/StorageMonitor';
 
 interface DashboardLayoutProps {
-  theme: { mode: string; sidebarStyle: string };
+  theme: { mode: string; sidebarStyle: "default" | "minimal" | "colorful" };
   background: string | null;
   showHint: boolean;
   hasSeenHint: boolean;

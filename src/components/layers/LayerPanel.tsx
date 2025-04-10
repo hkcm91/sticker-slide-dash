@@ -1,19 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSelection } from '@/contexts/SelectionContext';
-import { useToast } from '@/hooks/use-toast';
-import {
-  LayerItem,
-  LayerGroup,
-  LayerHeader,
-  LayerSelectionControls,
+import { useLayerGroupOperations } from '@/hooks/layers/useLayerGroupOperations';
+import { 
+  LayerHeader, 
+  LayerSelectionControls, 
   LayerFooter,
-  LayerNoContent
+  LayerPanelContent,
+  LayerKeyboardShortcuts
 } from './components';
-import { Button } from '@/components/ui/button';
-import { Keyboard } from 'lucide-react';
 
 interface LayerPanelProps {
   placedStickers: StickerType[];
@@ -25,6 +21,9 @@ interface LayerPanelProps {
   onToggleVisibility?: (sticker: StickerType) => void;
 }
 
+/**
+ * Panel for managing layers and sticker ordering
+ */
 const LayerPanel: React.FC<LayerPanelProps> = ({
   placedStickers,
   onStickerUpdate,
@@ -41,31 +40,21 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
     selectAll,
     clearSelection 
   } = useSelection();
-  const { toast } = useToast();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+
+  // Custom hook for layer group operations
+  const {
+    expandedGroups,
+    handleGroupClick,
+    handleUngroupClick,
+    toggleGroupExpansion,
+    hasSelectedGroup,
+    isAllSameGroup
+  } = useLayerGroupOperations(placedStickers, onGroupStickers, onUngroupStickers);
 
   // Sort stickers by z-index (highest first)
   const sortedStickers = [...placedStickers].sort((a, b) => 
     (b.zIndex || 0) - (a.zIndex || 0)
   );
-
-  // Auto-expand all groups on first render
-  useEffect(() => {
-    if (expandedGroups.size === 0) {
-      const groupIds = new Set<string>();
-      
-      placedStickers.forEach(sticker => {
-        if (sticker.groupId) {
-          groupIds.add(sticker.groupId);
-        }
-      });
-      
-      if (groupIds.size > 0) {
-        setExpandedGroups(groupIds);
-      }
-    }
-  }, [placedStickers, expandedGroups.size]);
 
   const handleToggleLock = (sticker: StickerType) => {
     if (onToggleLock) {
@@ -77,49 +66,6 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
     if (onToggleVisibility) {
       onToggleVisibility(sticker);
     }
-  };
-
-  const handleGroupSelected = () => {
-    if (selectedStickers.size > 1) {
-      onGroupStickers([...selectedStickers]);
-      clearSelection();
-      
-      toast({
-        title: "Stickers grouped",
-        description: `${selectedStickers.size} stickers have been grouped together.`,
-        duration: 2000,
-      });
-    }
-  };
-
-  const handleUngroupSelected = () => {
-    const selectedArray = [...selectedStickers];
-    if (selectedArray.length === 1) {
-      const sticker = placedStickers.find(s => s.id === selectedArray[0]);
-      if (sticker && sticker.groupId) {
-        onUngroupStickers(sticker.groupId);
-        clearSelection();
-        
-        toast({
-          title: "Group disbanded",
-          description: "The stickers have been ungrouped.",
-          duration: 2000,
-        });
-      }
-    }
-  };
-
-  // Toggle group expansion
-  const toggleGroupExpansion = (groupId: string) => {
-    setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupId)) {
-        newSet.delete(groupId);
-      } else {
-        newSet.add(groupId);
-      }
-      return newSet;
-    });
   };
 
   // Group stickers by groupId
@@ -146,23 +92,8 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
     return acc;
   }, [] as (StickerType | StickerType[])[]);
 
-  // Check if any selected stickers are part of a group
-  const hasGroupSelected = [...selectedStickers].some(id => {
-    const sticker = placedStickers.find(s => s.id === id);
-    return sticker && sticker.groupId;
-  });
-
   // Check if we can create a group from the selection
   const canGroup = selectedStickers.size > 1;
-
-  const keyboardShortcuts = [
-    { key: "Shift + Click", description: "Add to selection" },
-    { key: "Alt + L", description: "Toggle layer panel" },
-    { key: "Shift + Mouse Wheel", description: "Resize selected stickers" },
-    { key: "R", description: "Rotate sticker (when hovering)" },
-    { key: "[ ]", description: "Adjust opacity (when hovering)" },
-    { key: "- =", description: "Adjust z-index (when hovering)" }
-  ];
 
   return (
     <div className="w-64 h-full border-l border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-950 shadow-lg">
@@ -176,83 +107,26 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
         <LayerSelectionControls 
           onSelectAll={selectAll}
           onClearSelection={clearSelection}
-          onGroupSelected={handleGroupSelected}
-          onUngroupSelected={handleUngroupSelected}
+          onGroupSelected={handleGroupClick}
+          onUngroupSelected={handleUngroupClick}
           canGroup={canGroup}
-          hasGroupSelected={hasGroupSelected}
+          hasGroupSelected={hasSelectedGroup}
         />
       )}
       
-      <ScrollArea className="flex-1">
-        <div className="p-2">
-          {sortedStickers.length === 0 ? (
-            <LayerNoContent />
-          ) : (
-            <div className="space-y-1">
-              {groupedStickers.map((item, index) => {
-                if (Array.isArray(item)) {
-                  // This is a group
-                  const groupId = item[0].groupId;
-                  const isExpanded = expandedGroups.has(groupId!);
-                  
-                  return (
-                    <LayerGroup 
-                      key={`group-${groupId}`}
-                      groupId={groupId!}
-                      items={item}
-                      isExpanded={isExpanded}
-                      onToggleExpand={toggleGroupExpansion}
-                      onToggleLock={handleToggleLock}
-                      onMoveLayer={onMoveLayer}
-                      onToggleVisibility={handleToggleVisibility}
-                    />
-                  );
-                } else {
-                  // This is an individual sticker
-                  return (
-                    <LayerItem 
-                      key={item.id}
-                      sticker={item}
-                      onToggleLock={handleToggleLock}
-                      onMoveUp={() => onMoveLayer(item.id, 1)}
-                      onMoveDown={() => onMoveLayer(item.id, -1)}
-                      onToggleVisibility={() => handleToggleVisibility(item)}
-                    />
-                  );
-                }
-              })}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      <LayerPanelContent
+        stickers={sortedStickers}
+        groupedStickers={groupedStickers}
+        expandedGroups={expandedGroups}
+        onToggleExpand={toggleGroupExpansion}
+        onToggleLock={handleToggleLock}
+        onMoveLayer={onMoveLayer}
+        onToggleVisibility={handleToggleVisibility}
+      />
       
       <LayerFooter selectedCount={selectedStickers.size} />
       
-      {/* Keyboard Shortcuts Button */}
-      <div className="border-t border-gray-200 dark:border-gray-800 p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
-          className="text-xs w-full justify-start"
-        >
-          <Keyboard className="w-3.5 h-3.5 mr-2" />
-          {showKeyboardShortcuts ? "Hide Shortcuts" : "Keyboard Shortcuts"}
-        </Button>
-        
-        {showKeyboardShortcuts && (
-          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-md p-2">
-            <ul className="space-y-1">
-              {keyboardShortcuts.map((shortcut, index) => (
-                <li key={index} className="flex justify-between">
-                  <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">{shortcut.key}</span>
-                  <span>{shortcut.description}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      <LayerKeyboardShortcuts />
     </div>
   );
 };
