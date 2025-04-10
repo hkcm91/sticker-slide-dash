@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Sticker as StickerType, WidgetData } from '@/types/stickers';
-import PomodoroWidgetUI from '../PomodoroWidget';
-import WeatherWidget from '../WeatherWidget';
-import StockWidget from '../StockWidget';
-import EventLogWidget from '../EventLogWidget';
+import { 
+  PomodoroRenderer, 
+  WeatherRenderer, 
+  StockRenderer, 
+  EventLogRenderer 
+} from './builtin';
 
 interface BuiltinWidgetRendererProps {
   sticker: StickerType;
@@ -16,40 +18,16 @@ const BuiltinWidgetRenderer: React.FC<BuiltinWidgetRendererProps> = ({
   sticker, 
   className 
 }) => {
-  // Handle built-in widgets
-  if (sticker.widgetType === 'Pomodoro') {
-    return (
-      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
-        <PomodoroWidgetUI widgetName="Pomodoro" />
-      </div>
-    );
-  }
+  // Handle built-in widgets using type map pattern
+  const widgetTypeMap: Record<string, React.ReactNode> = {
+    'Pomodoro': <PomodoroRenderer className={className} />,
+    'WeatherWidget': <WeatherRenderer className={className} />,
+    'StockWidget': <StockRenderer className={className} />,
+    'EventLog': <EventLogRenderer className={className} />
+  };
   
-  if (sticker.widgetType === 'WeatherWidget') {
-    return (
-      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
-        <WeatherWidget widgetName="WeatherWidget" />
-      </div>
-    );
-  }
-  
-  if (sticker.widgetType === 'StockWidget') {
-    return (
-      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
-        <StockWidget widgetName="StockWidget" />
-      </div>
-    );
-  }
-  
-  if (sticker.widgetType === 'EventLog') {
-    return (
-      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
-        <EventLogWidget maxEvents={20} />
-      </div>
-    );
-  }
-  
-  return null;
+  // Return the appropriate widget renderer based on widget type
+  return widgetTypeMap[sticker.widgetType] || null;
 };
 
 export default BuiltinWidgetRenderer;

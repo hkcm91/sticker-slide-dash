@@ -1,5 +1,5 @@
 
-import { useEffect, useState, DependencyList } from 'react';
+import React, { useEffect, useState, DependencyList } from 'react';
 import { widgetEventBus, WidgetEvent } from '@/lib/widgetEventBus';
 
 /**
