@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -120,7 +119,7 @@ const DebuggingWidget: React.FC<DebuggingWidgetProps> = ({
     });
   };
 
-  // Format time
+  // Format time - Fixed date formatting issue
   const formatTime = (timestamp: number): string => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });

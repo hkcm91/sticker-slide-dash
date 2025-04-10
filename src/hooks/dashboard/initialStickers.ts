@@ -60,7 +60,7 @@ export const initialStickers: Sticker[] = [
     icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzE0YjhhNiIgLz48cGF0aCBkPSJNMTggOGwtMiAyLTQtNC00IDRMNiA4IDEwIDQiIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTggMTZsLTItMi00IDQtNC00LTIgMkwxMCAyMCI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9zdmc+',
     widgetType: 'DebuggingWidget',
     position: { x: 0, y: 0 },
-    placed: false,
+    placed: true,  // Set to true to make it visible by default
     size: 65,
     rotation: 0,
     isCustom: false
