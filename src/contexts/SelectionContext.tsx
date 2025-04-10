@@ -1,118 +1,106 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Sticker as StickerType } from '@/types/stickers';
-import { useToast } from '@/hooks/use-toast';
+import { Sticker } from '@/types/stickers';
 
 interface SelectionContextType {
   selectedStickers: Set<string>;
+  selection: string[]; // Add this for backward compatibility
   isMultiSelectMode: boolean;
-  toggleSelection: (stickerId: string, isShiftKey: boolean) => void;
-  selectAll: () => void;
+  startSelection: (point: { x: number; y: number }) => void;
+  endSelection: (point: { x: number; y: number }) => void;
   clearSelection: () => void;
-  toggleMultiSelectMode: () => void;
-  isSelected: (stickerId: string) => boolean;
+  toggleSelect: (id: string) => void;
+  selectSticker: (id: string) => void;
+  deselectSticker: (id: string) => void;
+  selectMultiple: (ids: string[]) => void;
 }
 
-const SelectionContext = createContext<SelectionContextType>({
-  selectedStickers: new Set(),
-  isMultiSelectMode: false,
-  toggleSelection: () => {},
-  selectAll: () => {},
-  clearSelection: () => {},
-  toggleMultiSelectMode: () => {},
-  isSelected: () => false,
-});
+const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
 
-export const useSelection = () => useContext(SelectionContext);
-
-interface SelectionProviderProps {
-  children: React.ReactNode;
-  stickers: StickerType[];
-}
-
-export const SelectionProvider: React.FC<SelectionProviderProps> = ({ 
-  children, 
+export const SelectionProvider: React.FC<{ children: React.ReactNode, stickers: Sticker[] }> = ({ 
+  children,
   stickers 
 }) => {
   const [selectedStickers, setSelectedStickers] = useState<Set<string>>(new Set());
+  const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const { toast } = useToast();
 
-  const toggleSelection = useCallback((stickerId: string, isShiftKey: boolean) => {
-    setSelectedStickers(prev => {
-      const newSelection = new Set(prev);
-      
-      if (!isShiftKey && !isMultiSelectMode) {
-        // If not using shift key or multi-select mode, clear and select only this one
-        newSelection.clear();
-        newSelection.add(stickerId);
-      } else {
-        // Toggle the selection
-        if (newSelection.has(stickerId)) {
-          newSelection.delete(stickerId);
-        } else {
-          newSelection.add(stickerId);
-        }
-      }
-      
-      return newSelection;
-    });
-  }, [isMultiSelectMode]);
+  const startSelection = useCallback((point: { x: number; y: number }) => {
+    setSelectionStart(point);
+    setIsMultiSelectMode(true);
+  }, []);
 
-  const selectAll = useCallback(() => {
-    // Include both visible and hidden stickers in selectAll to provide access to hidden ones
-    const allStickerIds = stickers
-      .filter(sticker => sticker.placed && !sticker.docked)
-      .map(sticker => sticker.id);
-    
-    setSelectedStickers(new Set(allStickerIds));
-    
-    toast({
-      title: `Selected ${allStickerIds.length} stickers`,
-      description: "All stickers are now selected",
-      duration: 2000,
-    });
-  }, [stickers, toast]);
+  const endSelection = useCallback((point: { x: number; y: number }) => {
+    setSelectionStart(null);
+    setIsMultiSelectMode(false);
+    // Actual selection logic would happen here in a full implementation
+  }, []);
 
   const clearSelection = useCallback(() => {
     setSelectedStickers(new Set());
   }, []);
 
-  const toggleMultiSelectMode = useCallback(() => {
-    setIsMultiSelectMode(prev => {
-      const newMode = !prev;
-      if (!newMode) {
-        // When exiting multi-select mode, clear the selection
-        setSelectedStickers(new Set());
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedStickers(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(id)) {
+        newSelection.delete(id);
       } else {
-        // When entering multi-select mode, provide feedback
-        toast({
-          title: "Multi-select mode activated",
-          description: "Click on stickers to select multiple items",
-          duration: 3000,
-        });
+        newSelection.add(id);
       }
-      return newMode;
+      return newSelection;
     });
-  }, [toast]);
+  }, []);
 
-  const isSelected = useCallback((stickerId: string) => {
-    return selectedStickers.has(stickerId);
-  }, [selectedStickers]);
+  const selectSticker = useCallback((id: string) => {
+    setSelectedStickers(prev => {
+      const newSelection = new Set(prev);
+      newSelection.add(id);
+      return newSelection;
+    });
+  }, []);
+
+  const deselectSticker = useCallback((id: string) => {
+    setSelectedStickers(prev => {
+      const newSelection = new Set(prev);
+      newSelection.delete(id);
+      return newSelection;
+    });
+  }, []);
+
+  const selectMultiple = useCallback((ids: string[]) => {
+    setSelectedStickers(new Set(ids));
+  }, []);
+
+  // Convert Set to array for compatibility with components expecting an array
+  const selection = Array.from(selectedStickers);
 
   return (
-    <SelectionContext.Provider
+    <SelectionContext.Provider 
       value={{
         selectedStickers,
+        selection,
         isMultiSelectMode,
-        toggleSelection,
-        selectAll,
+        startSelection,
+        endSelection,
         clearSelection,
-        toggleMultiSelectMode,
-        isSelected
+        toggleSelect,
+        selectSticker,
+        deselectSticker,
+        selectMultiple
       }}
     >
       {children}
     </SelectionContext.Provider>
   );
+};
+
+export const useSelection = (): SelectionContextType => {
+  const context = useContext(SelectionContext);
+  
+  if (context === undefined) {
+    throw new Error('useSelection must be used within a SelectionProvider');
+  }
+  
+  return context;
 };

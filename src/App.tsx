@@ -15,9 +15,9 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <React.StrictMode>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
           <TooltipProvider>
             <BrowserRouter>
               <Routes>
@@ -29,9 +29,9 @@ const App = () => {
             <Toaster />
             <Sonner />
           </TooltipProvider>
-        </React.StrictMode>
-      </ThemeProvider>
-    </QueryClientProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 

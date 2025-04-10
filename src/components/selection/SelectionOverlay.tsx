@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { useDashboardStore } from '@/store/dashboard';
@@ -22,7 +23,14 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   onGroupStickers,
   onUngroupStickers,
 }) => {
-  const { selection, startSelection, endSelection, clearSelection, toggleSelect } = useSelection();
+  const { 
+    selection, 
+    startSelection, 
+    endSelection, 
+    clearSelection, 
+    toggleSelect 
+  } = useSelection();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [initialMousePosition, setInitialMousePosition] = useState({ x: 0, y: 0 });
