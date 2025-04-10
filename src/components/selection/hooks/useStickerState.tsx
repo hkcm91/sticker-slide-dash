@@ -8,16 +8,26 @@ export function useStickerState(placedStickers: StickerType[]): { areAllLocked: 
   
   // Check if all selected stickers are locked
   const areAllSelectedLocked = useCallback((): boolean => {
-    if (selectedStickers.size === 0) return false;
+    if (selectedStickers.size === 0) {
+      console.log('No stickers selected, returning false');
+      return false;
+    }
     
-    return [...selectedStickers].every(id => {
+    console.log('Selected stickers IDs:', [...selectedStickers]);
+    
+    const result = [...selectedStickers].every(id => {
       const sticker = placedStickers.find(s => s.id === id);
+      console.log('Sticker found:', sticker?.id, 'locked value:', sticker?.locked, 'type:', typeof sticker?.locked);
       return sticker?.locked === true;
     });
+    
+    console.log('Are all selected stickers locked?', result, 'type:', typeof result);
+    return result;
   }, [selectedStickers, placedStickers]);
   
-  // Ensure we have a boolean value by using double negation
-  const allLocked = !!areAllSelectedLocked();
+  // Ensure we have a boolean value
+  const allLocked = Boolean(areAllSelectedLocked());
+  console.log('Final areAllLocked value:', allLocked, 'type:', typeof allLocked);
   
   return {
     areAllLocked: allLocked
