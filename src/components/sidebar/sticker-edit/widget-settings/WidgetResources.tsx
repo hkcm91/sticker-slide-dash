@@ -3,6 +3,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 interface WidgetResourcesProps {
   widgetZipFile: File | null;
@@ -17,6 +18,27 @@ const WidgetResources: React.FC<WidgetResourcesProps> = ({
   widgetLottieFile,
   handleWidgetLottieChange
 }) => {
+  const { toast } = useToast();
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'zip' | 'lottie') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Show visual feedback for file selection
+    toast({
+      title: `${type === 'zip' ? 'Widget package' : 'Lottie animation'} selected`,
+      description: `File: ${file.name} (${Math.round(file.size / 1024)} KB)`,
+      duration: 3000,
+    });
+    
+    // Call the appropriate handler
+    if (type === 'zip') {
+      handleWidgetZipChange(e);
+    } else {
+      handleWidgetLottieChange(e);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -25,13 +47,13 @@ const WidgetResources: React.FC<WidgetResourcesProps> = ({
           <Input
             id="widget-zip"
             type="file"
-            onChange={handleWidgetZipChange}
+            onChange={(e) => handleFileUpload(e, 'zip')}
             accept=".zip"
             className="flex-1"
           />
           {widgetZipFile && (
-            <div className="text-xs text-green-600">
-              ✓ {widgetZipFile.name}
+            <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-md">
+              ✓ {widgetZipFile.name} ({Math.round(widgetZipFile.size / 1024)} KB)
             </div>
           )}
         </div>
@@ -46,13 +68,13 @@ const WidgetResources: React.FC<WidgetResourcesProps> = ({
           <Input
             id="widget-lottie"
             type="file"
-            onChange={handleWidgetLottieChange}
+            onChange={(e) => handleFileUpload(e, 'lottie')}
             accept=".json"
             className="flex-1"
           />
           {widgetLottieFile && (
-            <div className="text-xs text-green-600">
-              ✓ {widgetLottieFile.name}
+            <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-md">
+              ✓ {widgetLottieFile.name} ({Math.round(widgetLottieFile.size / 1024)} KB)
             </div>
           )}
         </div>

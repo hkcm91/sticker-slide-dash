@@ -8,12 +8,15 @@ import {
 } from './stickerHandlers';
 import { useBackgroundAndHints } from './useBackgroundAndHints';
 import { addCustomWidget } from './widgetDataInitializer';
+import { useToast } from '@/hooks/use-toast';
 
 export function useStickerHandlers(
   stickers: StickerType[],
   setStickers: React.Dispatch<React.SetStateAction<StickerType[]>>,
   setOpenWidgets: React.Dispatch<React.SetStateAction<Map<string, { sticker: StickerType, isOpen: boolean }>>>
 ) {
+  const { toast } = useToast();
+  
   // Get handlers from separated hooks
   const {
     isRepositioning,
@@ -55,8 +58,14 @@ export function useStickerHandlers(
   };
   
   const handleStickerClick = (sticker: StickerType) => {
-    // Fix: Make sure we're not modifying the sticker in a way that makes it disappear
-    // Only update the last used timestamp and open widgets if appropriate
+    // Show debug toast for each sticker click
+    toast({
+      title: "Sticker Clicked",
+      description: `Sticker: ${sticker.name || 'Unnamed'} (ID: ${sticker.id.substr(0, 5)}...)`,
+      duration: 1500,
+    });
+    
+    // Update timestamp but don't modify position/placement state
     updateLastUsedTimestamp(sticker.id);
     
     // Call widget handlers without modifying the sticker placement state
@@ -90,6 +99,13 @@ export function useStickerHandlers(
   };
 
   const handleUpdateSticker = (updatedSticker: StickerType) => {
+    // Add debug toast
+    toast({
+      title: "Sticker Updated",
+      description: `Sticker: ${updatedSticker.name || 'Unnamed'} (ID: ${updatedSticker.id.substr(0, 5)}...)`,
+      duration: 1500,
+    });
+    
     updateStickerHandler(updatedSticker, setStickers, setOpenWidgets);
   };
 
@@ -112,7 +128,7 @@ export function useStickerHandlers(
     },
     handleUpdateSticker: (updatedSticker: StickerType) => {
       updatedSticker.lastUsed = new Date().toISOString();
-      updateStickerHandler(updatedSticker, setStickers, setOpenWidgets);
+      handleUpdateSticker(updatedSticker);
     }
   };
 

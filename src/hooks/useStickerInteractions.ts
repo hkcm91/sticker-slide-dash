@@ -58,8 +58,13 @@ export const useStickerInteractions = ({
   }, [sticker.size, sticker.rotation, sticker.opacity, sticker.zIndex]);
   
   // Update the sticker when local state changes
+  // FIX: Only call onUpdate when values have actually changed to avoid infinite loop
   useEffect(() => {
-    if (sticker.placed && onUpdate) {
+    if (sticker.placed && onUpdate && 
+        (size !== sticker.size || 
+         rotation !== sticker.rotation || 
+         opacity !== sticker.opacity || 
+         zIndex !== sticker.zIndex)) {
       onUpdate({
         ...sticker,
         size,
