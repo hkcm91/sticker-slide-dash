@@ -15,5 +15,6 @@ export function useStickerState(placedStickers: StickerType[]) {
     });
   };
   
+  // Return a proper boolean value
   return { areAllLocked: areAllLocked() };
 }
