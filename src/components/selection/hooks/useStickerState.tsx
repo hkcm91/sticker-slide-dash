@@ -2,11 +2,11 @@
 import { Sticker as StickerType } from '@/types/stickers';
 import { useSelection } from '@/contexts/SelectionContext';
 
-export function useStickerState(placedStickers: StickerType[]) {
+export function useStickerState(placedStickers: StickerType[]): { areAllLocked: boolean } {
   const { selectedStickers } = useSelection();
   
-  // Check if all selected stickers are locked
-  const areAllLocked = (): boolean => {
+  // Rename function to avoid shadowing
+  const checkIfAllLocked = (): boolean => {
     if (selectedStickers.size === 0) return false;
     
     return [...selectedStickers].every(id => {
@@ -15,6 +15,6 @@ export function useStickerState(placedStickers: StickerType[]) {
     });
   };
   
-  // Return a proper boolean value - explicitly converting to boolean to ensure type safety
-  return { areAllLocked: Boolean(areAllLocked()) };
+  // Return the boolean directly without wrapping in Boolean()
+  return { areAllLocked: checkIfAllLocked() };
 }
