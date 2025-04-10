@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
+import { useStickerEffects } from './useStickerEffects';
 
 interface UseStickerInteractionsProps {
   sticker: StickerType;
@@ -21,6 +22,8 @@ interface StickerInteractions {
   handleResize: (e: React.WheelEvent) => void;
   handleOpacityChange: (opacity: number) => void;
   setIsHovered: (value: boolean) => void;
+  getStickerStyle: () => React.CSSProperties;
+  getStickerTypeClasses: (className?: string) => string;
 }
 
 export const useStickerInteractions = ({ 
@@ -34,6 +37,17 @@ export const useStickerInteractions = ({
   const [opacity, setOpacity] = useState(sticker.opacity || 1);
   const [zIndex, setZIndex] = useState(sticker.zIndex || 10);
   const stickerRef = useRef<HTMLDivElement>(null);
+  
+  // Use the extracted effects hook
+  const isVisuallyHidden = sticker.hidden;
+  const { getStickerStyle, getStickerTypeClasses } = useStickerEffects(
+    sticker, 
+    size, 
+    rotation, 
+    zIndex, 
+    opacity, 
+    isVisuallyHidden
+  );
   
   // Update local state when sticker props change
   useEffect(() => {
@@ -152,6 +166,8 @@ export const useStickerInteractions = ({
     handleRotate,
     handleResize,
     handleOpacityChange,
-    setIsHovered
+    setIsHovered,
+    getStickerStyle,
+    getStickerTypeClasses
   };
 };
