@@ -18,6 +18,7 @@ export function useStickerState(placedStickers: StickerType[]): { areAllLocked: 
     const result = [...selectedStickers].every(id => {
       const sticker = placedStickers.find(s => s.id === id);
       console.log('Sticker found:', sticker?.id, 'locked value:', sticker?.locked, 'type:', typeof sticker?.locked);
+      // Explicitly check that locked is boolean true, not truthy value
       return sticker?.locked === true;
     });
     
@@ -25,7 +26,7 @@ export function useStickerState(placedStickers: StickerType[]): { areAllLocked: 
     return result;
   }, [selectedStickers, placedStickers]);
   
-  // Ensure we have a boolean value
+  // Explicitly cast to boolean using Boolean constructor
   const allLocked = Boolean(areAllSelectedLocked());
   console.log('Final areAllLocked value:', allLocked, 'type:', typeof allLocked);
   

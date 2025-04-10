@@ -59,7 +59,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     <SelectionBoundingBox
       isDragging={isDragging}
       boundingBox={boundingBox}
-      areAllLocked={Boolean(areAllLocked)}
+      areAllLocked={areAllLocked}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
