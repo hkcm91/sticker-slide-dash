@@ -40,7 +40,6 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
 
   const { isLocked } = useStickerState();
 
-  // Determine if all selected stickers are locked
   useEffect(() => {
     if (selection.length > 0) {
       const allLocked = selection.every(stickerId => {
@@ -58,10 +57,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
   }, [clearSelection]);
 
   useEffect(() => {
-    // Attach the event listener
     document.addEventListener('click', handleCanvasClick);
-
-    // Detach the event listener on unmount
     return () => {
       document.removeEventListener('click', handleCanvasClick);
     };
@@ -79,9 +75,7 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Only update if the left button is pressed
     if (e.buttons === 1) {
-      // Check if the target is the dashboard container
       if ((e.target as HTMLElement).id === 'dashboard-container') {
         endSelection({ x: e.clientX, y: e.clientY });
       }
@@ -137,7 +131,6 @@ const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     };
   }, [selection, placedStickers]);
 
-  // Convert locked value to boolean before passing it to the component
   const isLockedValue = useMemo(() => {
     if (lockedState === true || lockedState === "true") {
       return true;

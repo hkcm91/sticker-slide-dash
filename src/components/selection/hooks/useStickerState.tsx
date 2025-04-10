@@ -9,6 +9,7 @@ export function useStickerState() {
   };
 
   const isVisible = (sticker: StickerType) => {
+    // Handle both boolean and string representation of visible state
     return sticker.visible !== false && sticker.visible !== "false";
   };
 
