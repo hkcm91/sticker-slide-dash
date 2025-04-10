@@ -5,7 +5,8 @@ import {
   PomodoroRenderer, 
   WeatherRenderer, 
   StockRenderer, 
-  EventLogRenderer 
+  EventLogRenderer,
+  DebuggingRenderer
 } from './builtin';
 
 interface BuiltinWidgetRendererProps {
@@ -23,7 +24,8 @@ const BuiltinWidgetRenderer: React.FC<BuiltinWidgetRendererProps> = ({
     'Pomodoro': <PomodoroRenderer className={className} />,
     'WeatherWidget': <WeatherRenderer className={className} />,
     'StockWidget': <StockRenderer className={className} />,
-    'EventLog': <EventLogRenderer className={className} />
+    'EventLog': <EventLogRenderer className={className} />,
+    'DebuggingWidget': <DebuggingRenderer className={className} />
   };
   
   // Return the appropriate widget renderer based on widget type

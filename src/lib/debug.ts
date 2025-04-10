@@ -1,4 +1,3 @@
-
 /**
  * Debug utility functions for the application
  */
@@ -77,7 +76,8 @@ export const captureStickersState = (stickers: any[]) => {
 export const logStickerAction = (action: string, stickerId: string, before: any, after: any) => {
   console.log(`[Sticker] Action: ${action}, ID: ${stickerId}`);
   
-  if (widgetEventBus.isDebugEnabled()) {
+  const isDebug = widgetEventBus.isDebugEnabled();
+  if (isDebug) {
     console.log(`[Sticker] Before:`, before);
     console.log(`[Sticker] After:`, after);
   }
@@ -86,8 +86,8 @@ export const logStickerAction = (action: string, stickerId: string, before: any,
   emitDebugEvent('sticker-action', { 
     action, 
     stickerId,
-    before: widgetEventBus.isDebugEnabled() ? before : undefined,
-    after: widgetEventBus.isDebugEnabled() ? after : undefined 
+    before: isDebug ? before : undefined,
+    after: isDebug ? after : undefined 
   });
 };
 

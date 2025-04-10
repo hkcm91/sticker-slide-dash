@@ -10,9 +10,20 @@ const bookIcon = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.
 import { Sticker as StickerType } from '@/types/stickers';
 import pomodoroSticker from '@/widgets/PomodoroSticker';
 import { toDoListSticker } from '@/widgets/ToDoListWidget';
-import { builtInWidgets } from '@/widgets/builtin';
+import { registerWidgetData } from '@/utils/widgetRegistry';
 
-const builtInWidgetStickers = builtInWidgets.map(widget => widget.sticker);
+// Set up a fallback for when builtInWidgets import fails
+let builtInWidgetStickers: StickerType[] = [];
+
+// Try to get built-in widgets if available
+try {
+  const { builtInWidgets } = require('@/widgets/builtin');
+  if (builtInWidgets && Array.isArray(builtInWidgets)) {
+    builtInWidgetStickers = builtInWidgets.map(widget => widget.sticker);
+  }
+} catch (error) {
+  console.warn('Failed to load built-in widgets for initial stickers', error);
+}
 
 export const initialStickers: StickerType[] = [
   { id: '1', name: 'Heart', icon: heartIcon, position: { x: 0, y: 0 }, placed: false, size: 60, rotation: 0 },

@@ -29,6 +29,13 @@ class WidgetEventBus {
   }
 
   /**
+   * Check if debug mode is enabled
+   */
+  isDebugEnabled(): boolean {
+    return this.debug;
+  }
+
+  /**
    * Emit an event to all listeners
    */
   emit(event: WidgetEvent) {
