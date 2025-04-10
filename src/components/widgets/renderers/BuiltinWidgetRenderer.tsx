@@ -4,6 +4,7 @@ import { Sticker as StickerType, WidgetData } from '@/types/stickers';
 import PomodoroWidgetUI from '../PomodoroWidget';
 import WeatherWidget from '../WeatherWidget';
 import StockWidget from '../StockWidget';
+import EventLogWidget from '../EventLogWidget';
 
 interface BuiltinWidgetRendererProps {
   sticker: StickerType;
@@ -36,6 +37,14 @@ const BuiltinWidgetRenderer: React.FC<BuiltinWidgetRendererProps> = ({
     return (
       <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
         <StockWidget widgetName="StockWidget" />
+      </div>
+    );
+  }
+  
+  if (sticker.widgetType === 'EventLog') {
+    return (
+      <div className={`bg-background/80 backdrop-blur-md rounded-lg overflow-hidden shadow-md ${className}`}>
+        <EventLogWidget maxEvents={20} />
       </div>
     );
   }

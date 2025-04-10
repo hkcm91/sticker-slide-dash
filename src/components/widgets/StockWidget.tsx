@@ -5,6 +5,8 @@ import { getWidget } from '@/lib/widgetAPI';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RefreshCw } from 'lucide-react';
+import { useWidgetEvent } from '@/hooks/useWidgetEvent';
+import { toast } from 'sonner';
 
 interface StockWidgetProps {
   widgetName: string;
@@ -33,6 +35,29 @@ const StockWidget: React.FC<StockWidgetProps> = ({ widgetName }) => {
       return () => clearInterval(interval);
     }
   }, [widget]);
+  
+  // Listen for Pomodoro events to demonstrate widget communication
+  useWidgetEvent('pomodoro:started', (payload) => {
+    toast.info('Focus time started - Markets will auto-refresh less frequently', {
+      description: 'Stock widget is now in focus mode'
+    });
+  }, []);
+  
+  useWidgetEvent('pomodoro:paused', (payload) => {
+    toast.info('Focus time paused - Markets will refresh normally', {
+      description: 'Stock widget restored to normal refresh rate'
+    });
+    // Refresh the data when focus mode ends
+    handleRefresh();
+  }, []);
+  
+  useWidgetEvent('pomodoro:timeMilestone', (payload) => {
+    if (payload.minutesLeft === 0) {
+      toast.info('Focus time almost complete!', {
+        description: 'Stock widget will return to normal refresh rate soon'
+      });
+    }
+  }, []);
   
   const handleRefresh = () => {
     if (widget) {
