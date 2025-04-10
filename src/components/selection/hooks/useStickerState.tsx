@@ -16,10 +16,9 @@ export function useStickerState(placedStickers: StickerType[]) {
     });
   }, [selectedStickers, placedStickers]);
   
-  // Important: We need to ensure we're returning a strict boolean value
-  const allLocked: boolean = areAllLocked();
-  
+  // Ensure we're returning a strict boolean value by using double negation
+  // This will convert any truthy/falsy value to a strict boolean
   return {
-    areAllLocked: allLocked
+    areAllLocked: !!areAllLocked()
   };
 }
