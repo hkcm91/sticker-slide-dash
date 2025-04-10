@@ -60,15 +60,16 @@ export const SelectionProvider: React.FC<SelectionProviderProps> = ({
   }, [isMultiSelectMode]);
 
   const selectAll = useCallback(() => {
+    // Include both visible and hidden stickers in selectAll to provide access to hidden ones
     const allStickerIds = stickers
-      .filter(sticker => sticker.placed && !sticker.docked && !sticker.hidden)
+      .filter(sticker => sticker.placed && !sticker.docked)
       .map(sticker => sticker.id);
     
     setSelectedStickers(new Set(allStickerIds));
     
     toast({
       title: `Selected ${allStickerIds.length} stickers`,
-      description: "All visible stickers are now selected",
+      description: "All stickers are now selected",
       duration: 2000,
     });
   }, [stickers, toast]);

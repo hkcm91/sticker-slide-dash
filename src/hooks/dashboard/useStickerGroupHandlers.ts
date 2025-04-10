@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +10,6 @@ export function useStickerGroupHandlers(
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const { toast } = useToast();
 
-  // Check if we should show a hint about the layer panel
   useEffect(() => {
     const hasGroups = stickers.some(sticker => sticker.groupId);
     const hasMultipleVisibleStickers = stickers.filter(s => s.placed && !s.hidden && !s.docked).length > 2;
@@ -34,7 +32,6 @@ export function useStickerGroupHandlers(
   const handleMultiMove = useCallback((stickerIds: string[], deltaX: number, deltaY: number) => {
     const stickerGroups = new Map<string | undefined, StickerType[]>();
     
-    // Group stickers by their groupId
     stickers.forEach(sticker => {
       if (stickerIds.includes(sticker.id) && !sticker.locked) {
         const key = sticker.groupId || undefined;
@@ -47,7 +44,6 @@ export function useStickerGroupHandlers(
       }
     });
     
-    // Move each sticker
     stickerGroups.forEach((groupStickers, groupId) => {
       groupStickers.forEach(sticker => {
         updateSticker({
@@ -67,11 +63,9 @@ export function useStickerGroupHandlers(
       if (stickerIds.includes(sticker.id) && !sticker.locked) {
         const currentSize = sticker.size || 60;
         
-        // Get min/max from sticker config or use defaults
         const minSize = sticker.widgetConfig?.size?.minWidth || 30;
         const maxSize = sticker.widgetConfig?.size?.maxWidth || 300;
         
-        // Apply scale ratio but stay within bounds
         const newSize = Math.max(minSize, Math.min(maxSize, currentSize * scaleRatio));
         
         updateSticker({
@@ -89,7 +83,6 @@ export function useStickerGroupHandlers(
     const groupId = uuidv4();
     let groupedCount = 0;
     
-    // Find the highest zIndex among the stickers to be grouped
     const highestZIndex = Math.max(
       ...stickers
         .filter(s => stickerIds.includes(s.id))
@@ -98,12 +91,10 @@ export function useStickerGroupHandlers(
     
     stickers.forEach(sticker => {
       if (stickerIds.includes(sticker.id)) {
-        // Ensure all grouped stickers have the same z-index level or
-        // are very close so they stay together visually
         const updatedSticker = {
           ...sticker,
           groupId,
-          zIndex: highestZIndex + Math.floor(Math.random() * 2), // Small random offset for better selection
+          zIndex: highestZIndex + Math.floor(Math.random() * 2),
           lastUsed: new Date().toISOString()
         };
         
@@ -145,38 +136,44 @@ export function useStickerGroupHandlers(
   }, [stickers, updateSticker, toast]);
 
   const handleMoveLayer = useCallback((stickerId: string, change: number) => {
-    // Find the sticker to update
     const stickerToUpdate = stickers.find(s => s.id === stickerId);
     if (!stickerToUpdate) return;
     
-    // Get current z-index
     const currentZIndex = stickerToUpdate.zIndex || 10;
     const newZIndex = currentZIndex + change;
     
-    // If this sticker is part of a group, we need to update all stickers in the group
+    const updates: StickerType[] = [];
+    
     if (stickerToUpdate.groupId) {
       const groupId = stickerToUpdate.groupId;
       const groupStickers = stickers.filter(s => s.groupId === groupId);
       
       groupStickers.forEach(sticker => {
-        updateSticker({
+        updates.push({
           ...sticker,
           zIndex: (sticker.zIndex || 10) + change,
           lastUsed: new Date().toISOString()
         });
       });
       
-      toast({
-        title: change > 0 ? "Group moved forward" : "Group moved backward",
-        description: `The entire group of ${groupStickers.length} stickers was moved.`,
-        duration: 2000,
+      requestAnimationFrame(() => {
+        updates.forEach(updatedSticker => {
+          updateSticker(updatedSticker);
+        });
+        
+        toast({
+          title: change > 0 ? "Group moved forward" : "Group moved backward",
+          description: `The entire group of ${groupStickers.length} stickers was moved.`,
+          duration: 2000,
+        });
       });
     } else {
-      // Just update the single sticker
-      updateSticker({
-        ...stickerToUpdate,
-        zIndex: newZIndex,
-        lastUsed: new Date().toISOString()
+      requestAnimationFrame(() => {
+        updateSticker({
+          ...stickerToUpdate,
+          zIndex: newZIndex,
+          lastUsed: new Date().toISOString()
+        });
       });
     }
   }, [stickers, updateSticker, toast]);

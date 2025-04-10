@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
@@ -52,14 +51,14 @@ const Sticker = ({
   const { isMultiSelectMode, isSelected, toggleSelection } = useSelection();
   const { toast } = useToast();
 
-  // Highlight effect when selected
+  const isVisuallyHidden = sticker.hidden;
+
   useEffect(() => {
     if (isSelected(sticker.id) && sticker.placed) {
       const stickerElement = stickerRef.current;
       if (stickerElement) {
         stickerElement.classList.add('ring-2', 'ring-blue-500');
         
-        // Remove highlight after 300ms if no longer selected
         const timeout = setTimeout(() => {
           if (!isSelected(sticker.id)) {
             stickerElement.classList.remove('ring-2', 'ring-blue-500');
@@ -92,7 +91,6 @@ const Sticker = ({
     if (isMultiSelectMode) {
       toggleSelection(sticker.id, e.shiftKey);
       
-      // Only show toast if selecting (not deselecting)
       if (!isSelected(sticker.id)) {
         toast({
           title: "Sticker selected",
@@ -161,6 +159,7 @@ const Sticker = ({
         isDraggable && !sticker.locked ? 'cursor-grab active:cursor-grabbing' : '',
         sticker.locked ? 'cursor-not-allowed' : '',
         isSelected(sticker.id) && sticker.placed ? 'ring-2 ring-blue-500 ring-offset-2' : '',
+        isVisuallyHidden ? 'opacity-30 hover:opacity-60' : '',
         getStickerTypeClasses(),
         className
       )}
@@ -182,8 +181,9 @@ const Sticker = ({
               transform: `rotate(${rotation}deg)${sticker.transformStyle ? ' ' + sticker.transformStyle : ''}`,
               transformOrigin: sticker.transformOrigin || 'center',
               zIndex: zIndex || 10,
-              opacity: opacity,
+              opacity: isVisuallyHidden ? 0.3 : opacity,
               transition: 'transform 0.2s ease, opacity 0.3s ease, box-shadow 0.3s ease',
+              pointerEvents: isVisuallyHidden ? 'auto' : 'auto',
               ...getEffectsStyle()
             } 
           : {}
