@@ -12,13 +12,13 @@ export function useStickerState(placedStickers: StickerType[]) {
     
     return [...selectedStickers].every(id => {
       const sticker = placedStickers.find(s => s.id === id);
+      // Explicitly convert to boolean using === true to ensure boolean return
       return sticker?.locked === true;
     });
   }, [selectedStickers, placedStickers]);
   
-  // Ensure we're returning a strict boolean value by using double negation
-  // This will convert any truthy/falsy value to a strict boolean
   return {
-    areAllLocked: !!areAllLocked()
+    // Use Boolean constructor to guarantee a boolean return type
+    areAllLocked: Boolean(areAllLocked())
   };
 }
