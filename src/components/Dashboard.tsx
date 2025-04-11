@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboardState } from '@/hooks/useDashboardState';
@@ -7,6 +6,8 @@ import { useStickerGroupHandlers } from '@/hooks/dashboard/useStickerGroupHandle
 import { useToast } from '@/hooks/use-toast';
 import { useKeyboardShortcuts } from '@/hooks/dashboard/useKeyboardShortcuts';
 import DashboardLayout from './dashboard/DashboardLayout';
+import PublishBar from './dashboard/PublishBar';
+import { useParams } from 'react-router-dom';
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
   // This function is now imported from useDashboardState
@@ -18,6 +19,7 @@ export const addCustomWidget = (name: string, title: string, content: string) =>
 
 const Dashboard = () => {
   const { theme } = useTheme();
+  const { dashboardId } = useParams();
   const [showStorageMonitor, setShowStorageMonitor] = useState(false);
   const { toast } = useToast();
   
@@ -53,12 +55,9 @@ const Dashboard = () => {
     toggleLayerPanel
   } = useStickerGroupHandlers(stickers, handleUpdateSticker);
 
-  // Use our keyboard shortcuts hook
   useKeyboardShortcuts({ toggleLayerPanel });
 
-  // Double-click handler to toggle storage monitor for debugging
   const handleDoubleClick = (e: React.MouseEvent) => {
-    // Only respond to double-clicks in the bottom-right corner
     if (e.clientX > window.innerWidth - 50 && e.clientY > window.innerHeight - 50) {
       setShowStorageMonitor(!showStorageMonitor);
     }
@@ -112,7 +111,6 @@ const Dashboard = () => {
     }
   };
 
-  // Combine all handlers for passing to layout
   const handlers = {
     handleDragStart,
     handleDrop,
@@ -153,6 +151,8 @@ const Dashboard = () => {
         handlers={handlers}
         handleDoubleClick={handleDoubleClick}
       />
+      
+      <PublishBar dashboardId={dashboardId || "1"} />
     </SelectionProvider>
   );
 };
