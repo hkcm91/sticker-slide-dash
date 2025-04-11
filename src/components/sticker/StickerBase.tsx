@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
@@ -64,8 +65,33 @@ const StickerBase = ({
     getStickerTypeClasses
   } = useStickerInteractions({ sticker, onUpdate });
 
-  // Get selection-related functions from context
-  const { isMultiSelectMode, isSelected, toggleSelection } = useSelection();
+  // Create a fallback for when SelectionProvider is not available
+  const useSelectionSafely = () => {
+    try {
+      return useSelection();
+    } catch (error) {
+      // Return a default object with empty functions if SelectionProvider is not available
+      return {
+        selectedStickers: new Set<string>(),
+        selection: [],
+        isMultiSelectMode: false,
+        startSelection: () => {},
+        endSelection: () => {},
+        clearSelection: () => {},
+        toggleSelect: () => {},
+        selectSticker: () => {},
+        deselectSticker: () => {},
+        selectMultiple: () => {},
+        toggleMultiSelectMode: () => {},
+        selectAll: () => {},
+        isSelected: () => false,
+        toggleSelection: () => {}
+      };
+    }
+  };
+
+  // Get selection-related functions from context with fallback
+  const { isMultiSelectMode, isSelected, toggleSelection } = useSelectionSafely();
   const { toast } = useToast();
 
   // Track if the sticker is visually hidden (but still in DOM)
