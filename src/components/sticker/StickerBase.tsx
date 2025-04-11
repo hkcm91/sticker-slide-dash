@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
 import { cn } from '@/lib/utils';
 import StickerContent from './StickerContent';
 import StickerControls from './StickerControls';
 import { useStickerInteractions } from '@/hooks/useStickerInteractions';
 import { useSafeSelection } from '@/hooks/useSafeSelection';
-import { useToast } from '@/hooks/use-toast';
+import { useStickerClickHandlers } from '@/hooks/sticker/useStickerClickHandlers';
+import { useStickerDragHandlers } from '@/hooks/sticker/useStickerDragHandlers';
+import { useStickerSelectionEffect } from '@/hooks/sticker/useStickerSelectionEffect';
+import { useStickerControlHandlers } from '@/hooks/sticker/useStickerControlHandlers';
 
 interface StickerBaseProps {
   /** The sticker data object */
@@ -65,85 +69,40 @@ const StickerBase = ({
   } = useStickerInteractions({ sticker, onUpdate });
 
   // Use the safe selection hook that provides fallback values
-  const { isMultiSelectMode, isSelected, toggleSelection } = useSafeSelection();
-  const { toast } = useToast();
+  const { isMultiSelectMode, isSelected } = useSafeSelection();
 
   // Track if the sticker is visually hidden (but still in DOM)
   const isVisuallyHidden = sticker.hidden;
 
-  /**
-   * Effect to highlight selected stickers
-   * Adds a blue ring around selected stickers when they're placed on the dashboard
-   */
-  useEffect(() => {
-    if (isSelected(sticker.id) && sticker.placed) {
-      const stickerElement = stickerRef.current;
-      if (stickerElement) {
-        stickerElement.classList.add('ring-2', 'ring-blue-500');
-        
-        const timeout = setTimeout(() => {
-          if (!isSelected(sticker.id)) {
-            stickerElement.classList.remove('ring-2', 'ring-blue-500');
-          }
-        }, 300);
-        
-        return () => clearTimeout(timeout);
-      }
-    }
-  }, [isSelected, sticker.id, sticker.placed, stickerRef]);
+  // Use the click handlers hook
+  const { handleStickerClick } = useStickerClickHandlers({ sticker, onClick });
 
-  /**
-   * Handles drag start events, combining the component's internal handler
-   * with the parent-provided handler.
-   */
-  const combinedDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    // Prevent dragging if sticker is locked
-    if (sticker.locked) {
-      e.preventDefault();
-      return;
-    }
-    
-    // Special handling for multi-select mode
-    if (isMultiSelectMode && isSelected(sticker.id)) {
-      parentDragStart(e, sticker);
-      return;
-    }
+  // Use the drag handlers hook
+  const { combinedDragStart } = useStickerDragHandlers({
+    sticker,
+    isSelected,
+    isMultiSelectMode,
+    parentDragStart,
+    handleDragStart,
+    handleDragEnd
+  });
 
-    // Normal drag handling
-    handleDragStart(e);
-    parentDragStart(e, sticker);
-  };
+  // Use the selection effect hook
+  useStickerSelectionEffect({ sticker, isSelected, stickerRef });
 
-  /**
-   * Handles click events on the sticker - FIXED
-   * In multi-select mode, toggles selection
-   * Otherwise, triggers the onClick handler WITHOUT modifying sticker
-   */
-  const handleStickerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (isMultiSelectMode) {
-      toggleSelection(sticker.id, e.shiftKey);
-      
-      if (!isSelected(sticker.id)) {
-        toast({
-          title: "Sticker selected",
-          description: `${sticker.name || 'Sticker'} added to selection`,
-          duration: 1500,
-        });
-      }
-    } else {
-      // FIXED: Simply pass the sticker to onClick without any state modifications
-      // This ensures stickers don't disappear when clicked
-      onClick(sticker);
-    }
-  };
-
-  // Handler functions for various sticker controls
-  const handleDelete = () => onDelete?.(sticker);
-  const handleToggleLock = () => onToggleLock?.(sticker);
-  const handleChangeZIndex = (change: number) => onChangeZIndex?.(sticker, change);
-  const handleToggleVisibility = () => onToggleVisibility?.(sticker);
+  // Use the control handlers hook
+  const {
+    handleDelete,
+    handleToggleLock,
+    handleChangeZIndex,
+    handleToggleVisibility
+  } = useStickerControlHandlers({
+    sticker,
+    onDelete,
+    onToggleLock,
+    onChangeZIndex,
+    onToggleVisibility
+  });
 
   return (
     <div
