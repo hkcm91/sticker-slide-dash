@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Sticker } from '@/types/stickers';
 
@@ -20,7 +19,8 @@ interface SelectionContextType {
   toggleSelection: (id: string, useShift?: boolean) => void;
 }
 
-const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
+// Export the SelectionContext so it can be imported in other files
+export const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
 
 export const SelectionProvider: React.FC<{ children: React.ReactNode, stickers: Sticker[] }> = ({ 
   children,
