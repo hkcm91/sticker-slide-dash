@@ -31,6 +31,8 @@ const DockedWidgets: React.FC<DockedWidgetsProps> = ({
         {dockedWidgets.map(sticker => {
           const widgetData = getWidgetDataById(sticker.widgetType || '');
           
+          if (!widgetData) return null;
+          
           return (
             <Card 
               key={sticker.id} 
@@ -58,14 +60,12 @@ const DockedWidgets: React.FC<DockedWidgetsProps> = ({
               )}
               
               <div className="flex-1 overflow-auto">
-                {widgetData && (
-                  <WidgetRenderer
-                    sticker={sticker}
-                    widgetData={widgetData}
-                    className="h-full"
-                    hideHeader={true}
-                  />
-                )}
+                <WidgetRenderer
+                  sticker={sticker}
+                  widgetData={widgetData}
+                  className="h-full"
+                  hideHeader={true}
+                />
               </div>
             </Card>
           );

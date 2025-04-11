@@ -1,5 +1,6 @@
 
-import { registerWidgetData } from '@/utils/widgetRegistry';
+import { registerWidgetData, getWidgetData } from '@/utils/widgetRegistry';
+import { WidgetData } from '@/types/stickers';
 
 // Initialize widget data map with default widgets
 export const initializeWidgetDataMap = () => {
@@ -18,4 +19,9 @@ export const initializeWidgetDataMap = () => {
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
   registerWidgetData(name, title, content);
+};
+
+// Add the missing function to get widget data by ID
+export const getWidgetDataById = (widgetId: string): WidgetData | null => {
+  return getWidgetData(widgetId);
 };
