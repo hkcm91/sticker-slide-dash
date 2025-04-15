@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+
+import React from 'react';
+import StickerSidebar from './sidebar/StickerSidebar';
+import ThemeCustomizer from './ThemeCustomizer';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboardState } from '@/hooks/useDashboardState';
-import { SelectionProvider } from '@/contexts/SelectionContext';
-import { useStickerGroupHandlers } from '@/hooks/dashboard/useStickerGroupHandlers';
-import { useToast } from '@/hooks/use-toast';
-import { useKeyboardShortcuts } from '@/hooks/dashboard/useKeyboardShortcuts';
-import DashboardLayout from './dashboard/DashboardLayout';
-import PublishBar from './dashboard/PublishBar';
-import { useParams } from 'react-router-dom';
+import DashboardContainer from './dashboard/DashboardContainer';
+import WidgetModals from './dashboard/WidgetModals';
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
   // This function is now imported from useDashboardState
@@ -19,10 +17,6 @@ export const addCustomWidget = (name: string, title: string, content: string) =>
 
 const Dashboard = () => {
   const { theme } = useTheme();
-  const { dashboardId } = useParams();
-  const [showStorageMonitor, setShowStorageMonitor] = useState(false);
-  const { toast } = useToast();
-  
   const {
     stickers,
     background,
@@ -45,115 +39,46 @@ const Dashboard = () => {
     handleImportStickers
   } = useDashboardState();
 
-  const {
-    showLayerPanel,
-    handleMultiMove,
-    handleMultiResize,
-    handleGroupStickers,
-    handleUngroupStickers,
-    handleMoveLayer,
-    toggleLayerPanel
-  } = useStickerGroupHandlers(stickers, handleUpdateSticker);
-
-  useKeyboardShortcuts({ toggleLayerPanel });
-
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    if (e.clientX > window.innerWidth - 50 && e.clientY > window.innerHeight - 50) {
-      setShowStorageMonitor(!showStorageMonitor);
-    }
-  };
-
-  const handleToggleLock = (sticker: {id: string, locked?: boolean}) => {
-    const stickerToUpdate = stickers.find(s => s.id === sticker.id);
-    if (stickerToUpdate) {
-      handleUpdateSticker({
-        ...stickerToUpdate,
-        locked: !stickerToUpdate.locked
-      });
-      
-      toast({
-        title: stickerToUpdate.locked ? "Sticker unlocked" : "Sticker locked",
-        description: stickerToUpdate.locked ? "You can now move this sticker" : "This sticker is now locked in place",
-        duration: 2000,
-      });
-    }
-  };
-
-  const handleChangeZIndex = (sticker: {id: string}, change: number) => {
-    const stickerToUpdate = stickers.find(s => s.id === sticker.id);
-    if (stickerToUpdate) {
-      handleUpdateSticker({
-        ...stickerToUpdate,
-        zIndex: (stickerToUpdate.zIndex || 10) + change
-      });
-      
-      toast({
-        title: change > 0 ? "Moved Forward" : "Moved Backward",
-        description: "Layer position changed",
-        duration: 1500,
-      });
-    }
-  };
-  
-  const handleToggleVisibility = (sticker: {id: string, hidden?: boolean}) => {
-    const stickerToUpdate = stickers.find(s => s.id === sticker.id);
-    if (stickerToUpdate) {
-      handleUpdateSticker({
-        ...stickerToUpdate,
-        hidden: !stickerToUpdate.hidden
-      });
-      
-      toast({
-        title: stickerToUpdate.hidden ? "Sticker shown" : "Sticker hidden",
-        description: stickerToUpdate.hidden ? "Sticker is now visible" : "Sticker is now hidden",
-        duration: 2000,
-      });
-    }
-  };
-
-  const handlers = {
-    handleDragStart,
-    handleDrop,
-    handleDragOver,
-    handleStickerClick,
-    handleCloseModal,
-    handleDockWidget,
-    handleUndockWidget,
-    handleBackgroundChange,
-    handleStickerDelete,
-    handleUpdateSticker,
-    handleStickerCreated,
-    handleImportStickers,
-    handleToggleLock,
-    handleChangeZIndex,
-    handleToggleVisibility,
-    handleMultiMove,
-    handleMultiResize,
-    handleGroupStickers,
-    handleUngroupStickers,
-    handleMoveLayer,
-    toggleLayerPanel
-  };
-
   return (
-    <SelectionProvider stickers={stickers}>
-      <DashboardLayout
-        theme={theme}
+    <div className={`flex h-screen overflow-hidden ${theme.mode === 'dark' ? 'dark' : ''}`}>
+      <StickerSidebar 
+        stickers={stickers} 
+        onDragStart={handleDragStart} 
+        onStickerClick={handleStickerClick}
+        onStickerCreated={handleStickerCreated}
+        onStickerDelete={handleStickerDelete}
+        onStickerUpdate={handleUpdateSticker}
+        onImportStickers={handleImportStickers}
+        sidebarStyle={theme.sidebarStyle}
+      />
+      
+      <DashboardContainer
         background={background}
         showHint={showHint}
         hasSeenHint={hasSeenHint}
-        stickers={stickers}
         placedStickers={placedStickers}
         dockedStickers={dockedStickers}
-        openWidgets={openWidgets}
-        showStorageMonitor={showStorageMonitor}
-        showLayerPanel={showLayerPanel}
-        handlers={handlers}
-        handleDoubleClick={handleDoubleClick}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onDragStart={handleDragStart}
+        onStickerClick={handleStickerClick}
+        onStickerDelete={handleStickerDelete}
+        onStickerUpdate={handleUpdateSticker}
+        onUndockWidget={handleUndockWidget}
+        onCloseDockedWidget={handleStickerDelete}
       />
       
-      <PublishBar dashboardId={dashboardId || "1"} />
-    </SelectionProvider>
+      <ThemeCustomizer 
+        onBackgroundChange={handleBackgroundChange} 
+        currentBackground={background} 
+      />
+      
+      <WidgetModals 
+        openWidgets={openWidgets}
+        onCloseModal={handleCloseModal}
+        onDockWidget={handleDockWidget}
+      />
+    </div>
   );
 };
 

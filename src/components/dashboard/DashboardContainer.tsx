@@ -21,10 +21,6 @@ interface DashboardContainerProps {
   onStickerUpdate: (sticker: StickerType) => void;
   onUndockWidget?: (sticker: StickerType) => void;
   onCloseDockedWidget?: (sticker: StickerType) => void;
-  onToggleLock?: (sticker: StickerType) => void;
-  onChangeZIndex?: (sticker: StickerType, change: number) => void;
-  onToggleVisibility?: (sticker: StickerType) => void;
-  children?: React.ReactNode;
 }
 
 const DashboardContainer: React.FC<DashboardContainerProps> = ({
@@ -40,11 +36,7 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
   onStickerDelete,
   onStickerUpdate,
   onUndockWidget,
-  onCloseDockedWidget,
-  onToggleLock,
-  onChangeZIndex,
-  onToggleVisibility,
-  children
+  onCloseDockedWidget
 }) => {
   const { theme } = useTheme();
 
@@ -92,7 +84,6 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
             <div className="h-full flex items-center justify-center opacity-40">
               <div className="text-center text-gray-400">
                 <Sparkles className="h-12 w-12 mx-auto mb-2 animate-pulse" />
-                <p className="text-sm mt-2">Add stickers to your dashboard by dragging them here</p>
               </div>
             </div>
           )}
@@ -104,16 +95,10 @@ const DashboardContainer: React.FC<DashboardContainerProps> = ({
               onStickerClick={onStickerClick}
               onStickerDelete={onStickerDelete}
               onStickerUpdate={onStickerUpdate}
-              onToggleLock={onToggleLock}
-              onChangeZIndex={onChangeZIndex}
-              onToggleVisibility={onToggleVisibility}
             />
           </div>
         </div>
       </div>
-      
-      {/* Render the children (for selection overlay) */}
-      {children}
       
       {/* Docked widgets area */}
       {dockedStickers.length > 0 && onUndockWidget && onCloseDockedWidget && (

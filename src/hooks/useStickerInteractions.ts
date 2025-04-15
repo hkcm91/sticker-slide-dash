@@ -1,7 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
-import { useStickerEffects } from './useStickerEffects';
 
 interface UseStickerInteractionsProps {
   sticker: StickerType;
@@ -18,12 +17,10 @@ interface StickerInteractions {
   stickerRef: React.RefObject<HTMLDivElement>;
   handleDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
   handleDragEnd: () => void;
-  handleRotate: () => void;
+  handleRotate: (e: React.MouseEvent) => void;
   handleResize: (e: React.WheelEvent) => void;
   handleOpacityChange: (opacity: number) => void;
   setIsHovered: (value: boolean) => void;
-  getStickerStyle: () => React.CSSProperties;
-  getStickerTypeClasses: (className?: string) => string;
 }
 
 export const useStickerInteractions = ({ 
@@ -38,33 +35,8 @@ export const useStickerInteractions = ({
   const [zIndex, setZIndex] = useState(sticker.zIndex || 10);
   const stickerRef = useRef<HTMLDivElement>(null);
   
-  // Use the extracted effects hook
-  const isVisuallyHidden = sticker.hidden;
-  const { getStickerStyle, getStickerTypeClasses } = useStickerEffects(
-    sticker, 
-    size, 
-    rotation, 
-    zIndex, 
-    opacity, 
-    isVisuallyHidden
-  );
-  
-  // Update local state when sticker props change
   useEffect(() => {
-    setSize(sticker.size || 60);
-    setRotation(sticker.rotation || 0);
-    setOpacity(sticker.opacity || 1);
-    setZIndex(sticker.zIndex || 10);
-  }, [sticker.size, sticker.rotation, sticker.opacity, sticker.zIndex]);
-  
-  // Update the sticker when local state changes
-  // FIX: Only call onUpdate when values have actually changed to avoid infinite loop
-  useEffect(() => {
-    if (sticker.placed && onUpdate && 
-        (size !== sticker.size || 
-         rotation !== sticker.rotation || 
-         opacity !== sticker.opacity || 
-         zIndex !== sticker.zIndex)) {
+    if (sticker.placed && onUpdate) {
       onUpdate({
         ...sticker,
         size,
@@ -73,9 +45,8 @@ export const useStickerInteractions = ({
         zIndex
       });
     }
-  }, [size, rotation, opacity, zIndex, sticker.placed, onUpdate, sticker]);
+  }, [size, rotation, opacity, zIndex, sticker.placed]);
 
-  // Keyboard shortcuts for sticker manipulation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isHovered || sticker.locked) return;
@@ -131,8 +102,10 @@ export const useStickerInteractions = ({
     setIsDragging(false);
   };
 
-  const handleRotate = () => {
+  const handleRotate = (e: React.MouseEvent) => {
     if (sticker.locked) return;
+    
+    e.stopPropagation();
     setRotation((prev) => (prev + 15) % 360);
   };
 
@@ -171,8 +144,6 @@ export const useStickerInteractions = ({
     handleRotate,
     handleResize,
     handleOpacityChange,
-    setIsHovered,
-    getStickerStyle,
-    getStickerTypeClasses
+    setIsHovered
   };
 };

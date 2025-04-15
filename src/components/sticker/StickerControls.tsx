@@ -1,176 +1,145 @@
 
 import React from 'react';
 import { Sticker as StickerType } from '@/types/stickers';
-import { Lock, Unlock, Trash2, RotateCw, ChevronUp, ChevronDown, SquareCheck, Eye, EyeOff } from 'lucide-react';
-import { Slider } from '../ui/slider';
-import { useSelection } from '@/contexts/SelectionContext';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeftCircle, RotateCw, Eye, Layers, Lock, Unlock } from 'lucide-react';
 
 interface StickerControlsProps {
   sticker: StickerType;
   isHovered: boolean;
-  onDelete?: () => void;
-  onRotate?: () => void;
+  onDelete?: (sticker: StickerType) => void;
+  onRotate: (e: React.MouseEvent) => void;
   onOpacityChange?: (opacity: number) => void;
-  onToggleLock?: () => void;
+  onToggleLock?: (sticker: StickerType) => void;
+  onToggleVisibility?: (sticker: StickerType) => void;
   onChangeZIndex?: (change: number) => void;
-  onToggleVisibility?: () => void;
 }
 
-const StickerControls = ({
-  sticker,
-  isHovered,
+const StickerControls: React.FC<StickerControlsProps> = ({ 
+  sticker, 
+  isHovered, 
   onDelete,
   onRotate,
   onOpacityChange,
   onToggleLock,
-  onChangeZIndex,
-  onToggleVisibility
-}: StickerControlsProps) => {
-  const { toggleSelection, isSelected } = useSelection();
-  const { toast } = useToast();
-  
-  if (!sticker.placed) return null;
+  onToggleVisibility,
+  onChangeZIndex
+}) => {
+  if (!sticker.placed || !isHovered) {
+    return null;
+  }
 
-  // Show controls when hovered or locked
-  const showControls = isHovered || sticker.locked;
-  
-  if (!showControls) return null;
-  
-  const handleToggleLock = () => {
-    if (onToggleLock) {
-      onToggleLock();
-      
-      // Show feedback toast
-      toast({
-        title: sticker.locked ? "Sticker unlocked" : "Sticker locked",
-        description: sticker.locked ? "The sticker can now be moved." : "The sticker is now locked in place.",
-        duration: 2000,
-      });
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(sticker);
     }
   };
-  
-  const handleChangeZIndex = (change: number) => {
+
+  const handleToggleLock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleLock) {
+      onToggleLock(sticker);
+    }
+  };
+
+  const handleToggleVisibility = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleVisibility) {
+      onToggleVisibility(sticker);
+    }
+  };
+
+  const handleChangeZIndex = (change: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (onChangeZIndex) {
       onChangeZIndex(change);
-      
-      // Show feedback toast
-      toast({
-        title: change > 0 ? "Brought forward" : "Sent backward",
-        description: `Sticker layer position changed.`,
-        duration: 1500,
-      });
-    }
-  };
-  
-  const handleToggleVisibility = () => {
-    if (onToggleVisibility) {
-      onToggleVisibility();
-      
-      // Show feedback toast
-      toast({
-        title: sticker.hidden ? "Sticker shown" : "Sticker hidden",
-        description: sticker.hidden ? "The sticker is now visible." : "The sticker is now hidden.",
-        duration: 1500,
-      });
     }
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-      {/* Top controls - based on the reference image */}
-      <div 
-        className="absolute top-0 left-0 right-0 flex justify-center space-x-1 bg-black/85 backdrop-blur-sm text-white p-2 rounded-t-md pointer-events-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button 
-          className="p-1.5 hover:bg-white/30 rounded-full transition-colors flex items-center" 
-          onClick={() => toggleSelection(sticker.id, false)}
-          title={isSelected(sticker.id) ? "Deselect" : "Select"}
-        >
-          <SquareCheck className={`w-4 h-4 ${isSelected(sticker.id) ? "text-blue-400" : "text-white/70"}`} />
-        </button>
-        
-        {onToggleVisibility && (
-          <button 
-            className="p-1.5 hover:bg-white/30 rounded-full transition-colors" 
-            onClick={handleToggleVisibility}
-            title={sticker.hidden ? "Show" : "Hide"}
-          >
-            {sticker.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        )}
-        
-        {onRotate && (
-          <button 
-            className="p-1.5 hover:bg-white/30 rounded-full transition-colors" 
-            onClick={onRotate}
-            title="Rotate"
-          >
-            <RotateCw className="w-4 h-4" />
-          </button>
-        )}
-        
-        {onToggleLock && (
-          <button 
-            className="p-1.5 hover:bg-white/30 rounded-full transition-colors" 
-            onClick={handleToggleLock}
-            title={sticker.locked ? "Unlock" : "Lock"}
-          >
-            {sticker.locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-          </button>
-        )}
-        
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute -top-2 -left-2 right-2 flex gap-1 justify-between">
+        {/* Top left controls */}
         {onDelete && (
-          <button 
-            className="p-1.5 hover:bg-red-500/70 rounded-full transition-colors" 
-            onClick={onDelete}
-            title="Delete"
+          <div 
+            className="bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20 shadow-md"
+            onClick={handleDelete}
+            title="Return to tray"
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <ArrowLeftCircle size={12} />
+          </div>
         )}
+        
+        {/* Top right controls - optional */}
+        <div className="flex gap-1">
+          {onToggleLock && (
+            <div 
+              className="bg-amber-500 text-white rounded-full p-1 cursor-pointer hover:bg-amber-600 transition-colors z-20 shadow-md"
+              onClick={handleToggleLock}
+              title={sticker.locked ? "Unlock sticker" : "Lock sticker"}
+            >
+              {sticker.locked ? <Unlock size={12} /> : <Lock size={12} />}
+            </div>
+          )}
+          
+          {onToggleVisibility && (
+            <div 
+              className="bg-purple-500 text-white rounded-full p-1 cursor-pointer hover:bg-purple-600 transition-colors z-20 shadow-md"
+              onClick={handleToggleVisibility}
+              title={sticker.visible === false ? "Show sticker" : "Hide sticker"}
+            >
+              <Eye size={12} className={sticker.visible === false ? "opacity-50" : ""} />
+            </div>
+          )}
+        </div>
       </div>
       
-      {/* Z-index controls - reference image shows vertical controls */}
-      {onChangeZIndex && (
-        <div 
-          className="absolute right-0 top-1/3 flex flex-col space-y-0.5 pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button 
-            className="p-1.5 bg-black/85 hover:bg-black rounded-l-md transition-colors text-white"
-            onClick={() => handleChangeZIndex(1)}
-            title="Bring forward"
-          >
-            <ChevronUp className="w-4 h-4" />
-          </button>
-          <button 
-            className="p-1.5 bg-black/85 hover:bg-black rounded-l-md transition-colors text-white"
-            onClick={() => handleChangeZIndex(-1)}
-            title="Send backward"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-      
-      {/* Opacity slider - similar to the reference image */}
-      {onOpacityChange && (
-        <div 
-          className="absolute bottom-0 left-0 right-0 flex justify-center bg-black/85 backdrop-blur-sm p-2 rounded-b-md pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="w-full px-2">
-            <Slider 
-              defaultValue={[sticker.opacity || 1]}
-              min={0.1}
-              max={1}
-              step={0.1} 
-              onValueChange={(value) => onOpacityChange(value[0])}
-              className="h-3"
-            />
+      {/* Bottom controls */}
+      <div className="absolute -bottom-2 flex justify-between gap-1 w-full px-2">
+        {/* Z-index controls */}
+        {onChangeZIndex && (
+          <div className="flex gap-1">
+            <div 
+              className="bg-indigo-500 text-white rounded-full p-1 cursor-pointer hover:bg-indigo-600 transition-colors z-20 shadow-md"
+              onClick={handleChangeZIndex(-1)}
+              title="Send backward"
+            >
+              <Layers size={12} className="opacity-50" />
+            </div>
+            <div 
+              className="bg-indigo-500 text-white rounded-full p-1 cursor-pointer hover:bg-indigo-600 transition-colors z-20 shadow-md"
+              onClick={handleChangeZIndex(1)}
+              title="Bring forward"
+            >
+              <Layers size={12} />
+            </div>
           </div>
+        )}
+        
+        {/* Rotation control */}
+        <div 
+          className="bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors z-20 shadow-md"
+          onClick={onRotate}
+          title="Rotate sticker (or press R)"
+        >
+          <RotateCw size={12} />
+        </div>
+      </div>
+      
+      {/* Opacity slider - only show when opacity control is available */}
+      {onOpacityChange && (
+        <div className="absolute -right-16 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+          <input
+            type="range"
+            min="10"
+            max="100"
+            value={(sticker.opacity || 1) * 100}
+            onChange={(e) => onOpacityChange(parseInt(e.target.value) / 100)}
+            className="h-1 appearance-none bg-blue-200 rounded-full opacity-70 hover:opacity-100 transition-opacity"
+            style={{ transform: "rotate(90deg)", width: "60px" }}
+            title="Adjust opacity"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

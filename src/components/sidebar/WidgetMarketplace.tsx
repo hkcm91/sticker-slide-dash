@@ -1,13 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Lock, ShoppingCart } from 'lucide-react';
+import { builtInWidgets } from '@/widgets/builtin';
 import { Sticker } from '@/types/stickers';
 import { useToast } from '@/hooks/use-toast';
-import { getAllWidgets, getFreeWidgets, getPremiumWidgets } from '@/lib/widgetSystem';
-import { createDebuggingWidgetSticker } from '@/widgets/builtin';
 
 interface WidgetMarketplaceProps {
   onAddSticker: (sticker: Sticker) => void;
@@ -15,15 +14,10 @@ interface WidgetMarketplaceProps {
 
 const WidgetMarketplace: React.FC<WidgetMarketplaceProps> = ({ onAddSticker }) => {
   const [purchasedWidgetIds, setPurchasedWidgetIds] = useState<string[]>([]);
-  const [freeWidgets, setFreeWidgets] = useState<any[]>([]);
-  const [premiumWidgets, setPremiumWidgets] = useState<any[]>([]);
   const { toast } = useToast();
   
-  useEffect(() => {
-    // Get widgets from the widget system
-    setFreeWidgets(getFreeWidgets());
-    setPremiumWidgets(getPremiumWidgets());
-  }, []);
+  const premiumWidgets = builtInWidgets.filter(widget => widget.isPremium);
+  const freeWidgets = builtInWidgets.filter(widget => !widget.isPremium);
   
   const handleAddFreeWidget = (widget: any) => {
     onAddSticker(widget.sticker);
@@ -88,11 +82,6 @@ const WidgetMarketplace: React.FC<WidgetMarketplaceProps> = ({ onAddSticker }) =
                 </Button>
               </div>
             ))}
-            {freeWidgets.length === 0 && (
-              <div className="p-6 text-center text-muted-foreground">
-                No free widgets available
-              </div>
-            )}
           </div>
         </ScrollArea>
       </div>
@@ -143,11 +132,6 @@ const WidgetMarketplace: React.FC<WidgetMarketplaceProps> = ({ onAddSticker }) =
                 </div>
               );
             })}
-            {premiumWidgets.length === 0 && (
-              <div className="p-6 text-center text-muted-foreground">
-                No premium widgets available
-              </div>
-            )}
           </div>
         </ScrollArea>
       </div>

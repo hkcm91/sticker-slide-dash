@@ -5,8 +5,6 @@ import { getWidget } from '@/lib/widgetAPI';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RefreshCw } from 'lucide-react';
-import { useWidgetEvent } from '@/hooks/useWidgetEvent';
-import { toast } from 'sonner';
 
 interface WeatherWidgetProps {
   widgetName: string;
@@ -28,40 +26,6 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ widgetName }) => {
       setState(widget.getState());
     }
   }, [widget]);
-  
-  // Listen for stock widget updates to demonstrate widget communication
-  useWidgetEvent('stock:symbolChanged', (payload) => {
-    // Example: If user is looking at TSLA, suggest Palo Alto, if AAPL suggest Cupertino
-    const locationMap: Record<string, string> = {
-      'TSLA': 'Palo Alto',
-      'AAPL': 'Cupertino',
-      'MSFT': 'Redmond',
-      'AMZN': 'Seattle',
-      'GOOG': 'Mountain View'
-    };
-    
-    if (locationMap[payload.symbol]) {
-      toast.info(`Stock location suggestion`, {
-        description: `Would you like to see weather for ${locationMap[payload.symbol]}?`,
-        action: {
-          label: 'Update',
-          onClick: () => {
-            if (widget) {
-              widget.trigger('updateLocation', locationMap[payload.symbol]);
-              setState(widget.getState());
-            }
-          }
-        }
-      });
-    }
-  }, [widget]);
-  
-  // Also listen for Pomodoro events
-  useWidgetEvent('pomodoro:started', () => {
-    toast.info('Focus mode active', {
-      description: 'Weather updates paused during focus time'
-    });
-  }, []);
   
   const handleRefresh = () => {
     if (widget) {

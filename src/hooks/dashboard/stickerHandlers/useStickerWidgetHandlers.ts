@@ -9,41 +9,11 @@ export function useStickerWidgetHandlers() {
     sticker: StickerType, 
     setOpenWidgets: React.Dispatch<React.SetStateAction<Map<string, { sticker: StickerType, isOpen: boolean }>>>
   ) => {
-    // Debug information
-    console.log("Widget click handler called for sticker:", sticker.id, sticker.name);
-    
-    // FIXED: Don't modify the sticker's placement, just handle widget opening
-    // Only open widget if the sticker is placed
     if (sticker.placed) {
       setOpenWidgets(prev => {
         const newMap = new Map(prev);
-        
-        // If widget is already open, don't change anything
-        if (prev.has(sticker.id) && prev.get(sticker.id)?.isOpen) {
-          console.log("Widget already open:", sticker.id);
-          return prev;
-        }
-        
-        // Show toast for better visual feedback
-        toast({
-          title: "Opening widget",
-          description: `Opening ${sticker.name || "widget"} (ID: ${sticker.id.substring(0, 5)}...)`,
-          duration: 2000
-        });
-        
-        console.log("Opening widget for sticker:", sticker.id);
         newMap.set(sticker.id, { sticker, isOpen: true });
         return newMap;
-      });
-    } else {
-      console.log("Sticker not placed, widget not opened");
-      
-      // Show toast for better visual feedback
-      toast({
-        title: "Can't open widget",
-        description: "Sticker must be placed on dashboard to open widget",
-        variant: "destructive",
-        duration: 2000
       });
     }
   };
@@ -56,12 +26,6 @@ export function useStickerWidgetHandlers() {
       const newMap = new Map(prev);
       newMap.delete(stickerId);
       return newMap;
-    });
-    
-    toast({
-      title: "Widget closed",
-      description: `Widget ID: ${stickerId.substring(0, 5)}...`,
-      duration: 1500,
     });
   };
 

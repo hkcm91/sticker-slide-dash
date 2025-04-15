@@ -47,7 +47,6 @@ const defaultTheme: ThemeOptions = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Make sure React is properly imported
   const [theme, setTheme] = useState<ThemeOptions>(() => {
     const savedTheme = localStorage.getItem('theme-preferences');
     return savedTheme ? JSON.parse(savedTheme) : defaultTheme;

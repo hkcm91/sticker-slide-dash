@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { getWidget } from '@/lib/widgetAPI';
 import { Timer, RotateCcw, Play, Pause } from 'lucide-react';
-import { widgetEventBus } from '@/lib/widgetEventBus';
+import { WidgetState } from '@/lib/widgetAPI';
 
 // Helper function to format seconds into MM:SS
 const formatTime = (seconds: number): string => {
@@ -26,7 +25,6 @@ const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
   const [state, setState] = useState<PomodoroWidgetState>({ timeLeft: 1500, isRunning: false });
   const widget = getWidget(widgetName);
   const previousStateRef = useRef<PomodoroWidgetState>({ timeLeft: 1500, isRunning: false });
-  const lastEmittedTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Initialize the widget if it exists
@@ -61,34 +59,6 @@ const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
             isRunning: newIsRunning
           });
           
-          // Emit events on significant state changes
-          if (newIsRunning !== previousStateRef.current.isRunning) {
-            widgetEventBus.emit({
-              type: newIsRunning ? 'pomodoro:started' : 'pomodoro:paused',
-              source: widgetName,
-              payload: { timeLeft: newTimeLeft }
-            });
-          }
-          
-          // Emit time milestone events (every 5 minutes and when < 1 minute)
-          const timeInMinutes = Math.floor(newTimeLeft / 60);
-          if (
-            (timeInMinutes % 5 === 0 && timeInMinutes < Math.floor(previousStateRef.current.timeLeft / 60)) ||
-            (timeInMinutes === 0 && Math.floor(previousStateRef.current.timeLeft / 60) > 0)
-          ) {
-            if (lastEmittedTimeRef.current !== timeInMinutes) {
-              widgetEventBus.emit({
-                type: 'pomodoro:timeMilestone',
-                source: widgetName,
-                payload: { 
-                  timeLeft: newTimeLeft, 
-                  minutesLeft: timeInMinutes 
-                }
-              });
-              lastEmittedTimeRef.current = timeInMinutes;
-            }
-          }
-          
           // Update the ref with new state
           previousStateRef.current = {
             timeLeft: newTimeLeft,
@@ -103,24 +73,10 @@ const PomodoroWidgetUI: React.FC<PomodoroWidgetProps> = ({ widgetName }) => {
 
   const handleStart = () => {
     widget?.trigger(state.isRunning ? 'pause' : 'start');
-    
-    // Emit event for starting/pausing
-    widgetEventBus.emit({
-      type: state.isRunning ? 'pomodoro:pauseRequested' : 'pomodoro:startRequested',
-      source: widgetName,
-      payload: { currentTimeLeft: state.timeLeft }
-    });
   };
 
   const handleReset = () => {
     widget?.trigger('reset');
-    
-    // Emit event for reset
-    widgetEventBus.emit({
-      type: 'pomodoro:resetRequested',
-      source: widgetName,
-      payload: { previousTimeLeft: state.timeLeft }
-    });
   };
 
   return (
