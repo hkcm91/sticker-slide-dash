@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import StickerSidebar from './sidebar/StickerSidebar';
 import ThemeCustomizer from './ThemeCustomizer';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboardState } from '@/hooks/useDashboardState';
 import DashboardContainer from './dashboard/DashboardContainer';
 import WidgetModals from './dashboard/WidgetModals';
+import StorageMonitor from './debug/StorageMonitor';
 
 export const addCustomWidget = (name: string, title: string, content: string) => {
   // This function is now imported from useDashboardState
@@ -17,6 +18,8 @@ export const addCustomWidget = (name: string, title: string, content: string) =>
 
 const Dashboard = () => {
   const { theme } = useTheme();
+  const [showStorageMonitor, setShowStorageMonitor] = useState(false);
+  
   const {
     stickers,
     background,
@@ -39,8 +42,19 @@ const Dashboard = () => {
     handleImportStickers
   } = useDashboardState();
 
+  // Double-click handler to toggle storage monitor for debugging
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    // Only respond to double-clicks in the bottom-right corner
+    if (e.clientX > window.innerWidth - 50 && e.clientY > window.innerHeight - 50) {
+      setShowStorageMonitor(!showStorageMonitor);
+    }
+  };
+
   return (
-    <div className={`flex h-screen overflow-hidden ${theme.mode === 'dark' ? 'dark' : ''}`}>
+    <div 
+      className={`flex h-screen overflow-hidden ${theme.mode === 'dark' ? 'dark' : ''}`}
+      onDoubleClick={handleDoubleClick}
+    >
       <StickerSidebar 
         stickers={stickers} 
         onDragStart={handleDragStart} 
@@ -78,6 +92,8 @@ const Dashboard = () => {
         onCloseModal={handleCloseModal}
         onDockWidget={handleDockWidget}
       />
+      
+      <StorageMonitor visible={showStorageMonitor} />
     </div>
   );
 };
